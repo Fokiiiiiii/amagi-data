@@ -1,0 +1,129 @@
+name: Update data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 21 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: AzurLaneTools/AzurLaneData
+          ref: main
+          path: _external/AzurLaneData
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            JP/sharecfgdata/item_data_statistics.json
+            JP/sharecfgdata/ship_data_statistics.json
+            JP/sharecfgdata/weapon_property.json
+            JP/sharecfgdata/equip_data_template.json
+            JP/ShareCfg/ship_skin_template.json
+
+      - uses: actions/checkout@v4
+        with:
+          repository: AzurLaneTools/AzurLaneLuaScripts
+          ref: main
+          path: _external/AzurLaneLuaScripts
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            versions/CN.txt
+            versions/EN.txt
+            versions/JP.txt
+            versions/KR.txt
+            versions/TW.txt
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ggmolly/belfast-data
+          path: _external/belfast-data
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            JP/sharecfgdata/item_data_statistics.json
+            JP/sharecfgdata/ship_data_statistics.json
+            JP/sharecfgdata/weapon_property.json
+            JP/sharecfgdata/equip_data_template.json
+            JP/ShareCfg/ship_skin_template.json
+            build_pools.json
+            build_times.json
+            requisition_ships.json
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          function Invoke-Native {
+            param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
+            & $Args[0] $Args[1..($Args.Count - 1)]
+            if ($LASTEXITCODE -ne 0) {
+              throw "$($Args -join ' ') failed with exit code $LASTEXITCODE"
+            }
+          }
+
+          $env:AMAGI_DATA_TEST_AZURLANE_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneData"
+          $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts"
+          $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT = "$env:GITHUB_WORKSPACE\_external\belfast-data"
+
+          Write-Host "AzurLaneData root exists: $(Test-Path $env:AMAGI_DATA_TEST_AZURLANE_ROOT)"
+          Write-Host "AzurLaneLuaScripts root exists: $(Test-Path $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT)"
+          Write-Host "belfast-data root exists: $(Test-Path $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT)"
+
+          Invoke-Native go test ./...
+
+          $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
+          Invoke-Native go run ./cmd/belfast_json_mvp `
+            -source-root $env:AMAGI_DATA_TEST_AZURLANE_ROOT `
+            -luascripts-root $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT `
+            -output-root $out `
+            -copy-helper-fallback-from $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT
+
+          $reportPath = Join-Path $out "belfast-json-mvp-report.json"
+          $report = Get-Content -Raw $reportPath | ConvertFrom-Json
+          if ($report.converted_files.Count -ne 5) { throw "converted_files count mismatch" }
+          if (-not ($report.generated_helper_files -contains "versions.json")) { throw "versions.json missing from generated_helper_files" }
+          if (@($report.fallback_helper_files).Count -ne 3) { throw "fallback_helper_files count mismatch" }
+          foreach ($expected in @("build_pools.json", "build_times.json", "requisition_ships.json")) {
+            if (-not ($report.fallback_helper_files -contains $expected)) { throw "missing fallback helper $expected" }
+          }
+          if (@($report.unsupported_helper_files).Count -ne 0) { throw "unsupported_helper_files must be empty" }
+          if ($report.item_usage_drop_kept -ne 51) { throw "item_usage_drop_kept mismatch" }
+          if ($report.item_usage_drop_dropped -ne 356) { throw "item_usage_drop_dropped mismatch" }
+
+          $filesToCopy = @(
+            "build_pools.json",
+            "build_times.json",
+            "requisition_ships.json",
+            "versions.json",
+            "JP"
+          )
+          foreach ($rel in $filesToCopy) {
+            $src = Join-Path $out $rel
+            $dst = Join-Path $env:GITHUB_WORKSPACE $rel
+            if (Test-Path $dst) {
+              Remove-Item -LiteralPath $dst -Recurse -Force
+            }
+            if (Test-Path $src) {
+              Copy-Item -LiteralPath $src -Destination $dst -Recurse -Force
+            }
+          }
+
+          $changes = git status --short
+          if ($changes) {
+            git add build_pools.json build_times.json requisition_ships.json versions.json JP .github/workflows/update-data.yml .gitignore
+            git commit -m "data: update generated belfast json [skip ci]"
+            git push origin main
+          } else {
+            Write-Host "No generated file changes to commit."
+          }

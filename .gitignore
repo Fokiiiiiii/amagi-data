@@ -1,5 +1,6 @@
 _external/
 out/
 work/
+_artifact_*/
 *.log
 *.tmp
