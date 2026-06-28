@@ -48,6 +48,11 @@ jobs:
           path: _external/belfast-data
           sparse-checkout-cone-mode: false
           sparse-checkout: |
+            JP/sharecfgdata/item_data_statistics.json
+            JP/sharecfgdata/ship_data_statistics.json
+            JP/sharecfgdata/weapon_property.json
+            JP/sharecfgdata/equip_data_template.json
+            JP/ShareCfg/ship_skin_template.json
             build_pools.json
             build_times.json
             requisition_ships.json
@@ -69,6 +74,11 @@ jobs:
           $env:AMAGI_DATA_TEST_AZURLANE_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneData"
           $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts"
           $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT = "$env:GITHUB_WORKSPACE\_external\belfast-data"
+          Write-Host "AzurLaneData root exists: $(Test-Path $env:AMAGI_DATA_TEST_AZURLANE_ROOT)"
+          Write-Host "AzurLaneLuaScripts root exists: $(Test-Path $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT)"
+          Write-Host "belfast-data root exists: $(Test-Path $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT)"
+          Write-Host "belfast item_data_statistics exists: $(Test-Path (Join-Path $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT 'JP/sharecfgdata/item_data_statistics.json'))"
+          Write-Host "belfast build_pools exists: $(Test-Path (Join-Path $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT 'build_pools.json'))"
           Invoke-Native go test ./internal/belfastconv/... ./cmd/...
           $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
           Invoke-Native go run ./cmd/belfast_json_mvp `
