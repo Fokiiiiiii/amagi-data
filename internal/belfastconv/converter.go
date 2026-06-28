@@ -54,13 +54,19 @@ type Report struct {
 	ItemUsageDropDropped    int               `json:"item_usage_drop_dropped"`
 	ItemUsageDropKept       int               `json:"item_usage_drop_kept"`
 	UnsupportedHelperFiles  []string          `json:"unsupported_helper_files"`
+	GeneratedVersions       bool              `json:"generated_versions"`
 	LuaScriptsVersionsRoot  string            `json:"lua_scripts_versions_root,omitempty"`
 	LuaScriptsVersionSource map[string]string `json:"lua_scripts_version_source,omitempty"`
 }
 
 func MVPFiles() []string { return slices.Clone(mvpFiles) }
 
-func UnsupportedHelperFiles() []string { return []string{"versions.json"} }
+func UnsupportedHelperFiles(includeVersions bool) []string {
+	if includeVersions {
+		return []string{}
+	}
+	return []string{"versions.json"}
+}
 
 func FallbackHelperFiles() []string { return slices.Clone(fallbackHelperFiles) }
 
@@ -74,7 +80,7 @@ func ConvertMVP(opts Options) (*Report, error) {
 	report := &Report{
 		SourceRoot:             opts.SourceRoot,
 		OutputRoot:             opts.OutputRoot,
-		UnsupportedHelperFiles: UnsupportedHelperFiles(),
+		UnsupportedHelperFiles: UnsupportedHelperFiles(opts.LuaScriptsRoot != ""),
 	}
 	for _, rel := range mvpFiles {
 		if err := convertOne(rel, opts.SourceRoot, opts.OutputRoot, report); err != nil {
@@ -91,6 +97,7 @@ func ConvertMVP(opts Options) (*Report, error) {
 			return nil, err
 		}
 		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, "versions.json")
+		report.GeneratedVersions = true
 		report.LuaScriptsVersionsRoot = source
 	}
 	if opts.FallbackHelperSourceRoot != "" {

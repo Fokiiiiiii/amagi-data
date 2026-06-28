@@ -16,12 +16,26 @@ const (
 
 func TestConvertMVPMatchesBelfastReference(t *testing.T) {
 	out := t.TempDir()
-	report, err := ConvertMVP(Options{SourceRoot: testAzurRoot, OutputRoot: out, LuaScriptsRoot: testLuaScriptsRoot})
+	report, err := ConvertMVP(Options{
+		SourceRoot:               testAzurRoot,
+		OutputRoot:               out,
+		LuaScriptsRoot:           testLuaScriptsRoot,
+		FallbackHelperSourceRoot: testBelfastRoot,
+	})
 	if err != nil {
 		t.Fatalf("ConvertMVP: %v", err)
 	}
 	if report.ItemUsageDropKept != 51 || report.ItemUsageDropDropped != 356 {
 		t.Fatalf("unexpected item_usage_drop counts: kept=%d dropped=%d", report.ItemUsageDropKept, report.ItemUsageDropDropped)
+	}
+	if !containsString(report.GeneratedHelperFiles, "versions.json") {
+		t.Fatalf("expected generated_helper_files to contain versions.json, got %v", report.GeneratedHelperFiles)
+	}
+	if !reflect.DeepEqual(report.FallbackHelperFiles, []string{"build_pools.json", "build_times.json", "requisition_ships.json"}) {
+		t.Fatalf("unexpected fallback_helper_files: %v", report.FallbackHelperFiles)
+	}
+	if containsString(report.UnsupportedHelperFiles, "versions.json") {
+		t.Fatalf("versions.json should not be unsupported when generation succeeds: %v", report.UnsupportedHelperFiles)
 	}
 	for _, rel := range MVPFiles() {
 		got := mustLoad(t, filepath.Join(out, filepath.FromSlash(rel)))
@@ -83,4 +97,13 @@ func mustLoadArray(t *testing.T, path string) []any {
 		t.Fatalf("expected array at %s", path)
 	}
 	return a
+}
+
+func containsString(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
