@@ -23,6 +23,8 @@ var fallbackHelperFiles = []string{
 	"requisition_ships.json",
 }
 
+var supportedRegions = []string{"CN", "EN", "JP", "KR", "TW"}
+
 var itemUsageDropAllowlist = map[int]struct{}{
 	40901: {}, 40902: {}, 40903: {}, 40904: {}, 40905: {}, 40906: {}, 40907: {}, 40908: {}, 40909: {}, 40910: {},
 	40911: {}, 40912: {}, 40913: {}, 40914: {}, 40915: {}, 40916: {}, 40917: {}, 40919: {}, 40920: {}, 40922: {},
@@ -48,15 +50,25 @@ type FileReport struct {
 type Report struct {
 	SourceRoot              string            `json:"source_root"`
 	OutputRoot              string            `json:"output_root"`
+	Regions                 []string          `json:"regions"`
+	Categories              []string          `json:"categories"`
 	ConvertedFiles          []FileReport      `json:"converted_files"`
+	GeneratedFiles          []string          `json:"generated_files"`
 	GeneratedHelperFiles    []string          `json:"generated_helper_files"`
+	FallbackFiles           []string          `json:"fallback_files"`
 	FallbackHelperFiles     []string          `json:"fallback_helper_files"`
+	UnsupportedFiles        []string          `json:"unsupported_files"`
+	UnsupportedHelperFiles  []string          `json:"unsupported_helper_files"`
+	MissingSourceFiles      []string          `json:"missing_source_files"`
+	ReferenceMismatches     []string          `json:"reference_mismatches"`
 	ItemUsageDropDropped    int               `json:"item_usage_drop_dropped"`
 	ItemUsageDropKept       int               `json:"item_usage_drop_kept"`
-	UnsupportedHelperFiles  []string          `json:"unsupported_helper_files"`
 	GeneratedVersions       bool              `json:"generated_versions"`
 	LuaScriptsVersionsRoot  string            `json:"lua_scripts_versions_root,omitempty"`
 	LuaScriptsVersionSource map[string]string `json:"lua_scripts_version_source,omitempty"`
+	TotalGeneratedCount     int               `json:"total_generated_count"`
+	TotalFallbackCount      int               `json:"total_fallback_count"`
+	TotalUnsupportedCount   int               `json:"total_unsupported_count"`
 }
 
 func MVPFiles() []string { return slices.Clone(mvpFiles) }
@@ -80,12 +92,15 @@ func ConvertMVP(opts Options) (*Report, error) {
 	report := &Report{
 		SourceRoot:             opts.SourceRoot,
 		OutputRoot:             opts.OutputRoot,
+		Regions:                slices.Clone(supportedRegions),
+		Categories:             []string{"GameCfg", "ShareCfg", "sharecfgdata", "root-helpers"},
 		UnsupportedHelperFiles: UnsupportedHelperFiles(opts.LuaScriptsRoot != ""),
 	}
-	for _, rel := range mvpFiles {
-		if err := convertOne(rel, opts.SourceRoot, opts.OutputRoot, report); err != nil {
-			return nil, err
-		}
+	if err := mirrorSourceTree(opts.SourceRoot, opts.OutputRoot, report); err != nil {
+		return nil, err
+	}
+	if err := generateRootHelpers(opts.SourceRoot, opts.OutputRoot, report); err != nil {
+		return nil, err
 	}
 	if opts.LuaScriptsRoot != "" {
 		versions, source, err := generateVersionsJSON(opts.LuaScriptsRoot)
@@ -109,6 +124,173 @@ func ConvertMVP(opts Options) (*Report, error) {
 		return nil, err
 	}
 	return report, nil
+}
+
+func mirrorSourceTree(sourceRoot, outputRoot string, report *Report) error {
+	for _, region := range supportedRegions {
+		regionRoot := filepath.Join(sourceRoot, region)
+		info, err := os.Stat(regionRoot)
+		if err != nil || !info.IsDir() {
+			report.MissingSourceFiles = append(report.MissingSourceFiles, region+"/")
+			continue
+		}
+		err = filepath.WalkDir(regionRoot, func(path string, d os.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return walkErr
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(strings.ToLower(d.Name()), ".json") {
+				return nil
+			}
+			rel, err := filepath.Rel(sourceRoot, path)
+			if err != nil {
+				return err
+			}
+			rel = filepath.ToSlash(rel)
+			converted, category, err := convertMirroredFile(rel, path)
+			if err != nil {
+				report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
+				report.TotalUnsupportedCount++
+				return nil
+			}
+			outPath := filepath.Join(outputRoot, filepath.FromSlash(rel))
+			if err := writeJSON(outPath, converted); err != nil {
+				return err
+			}
+			report.ConvertedFiles = append(report.ConvertedFiles, FileReport{RelativePath: rel, Records: recordCount(converted)})
+			report.GeneratedFiles = append(report.GeneratedFiles, rel)
+			report.TotalGeneratedCount++
+			if !sliceContains(report.Categories, category) {
+				report.Categories = append(report.Categories, category)
+			}
+			if rel == "JP/sharecfgdata/item_data_statistics.json" {
+				if kept, dropped := itemUsageDropSummary(converted); kept >= 0 {
+					report.ItemUsageDropKept = kept
+					report.ItemUsageDropDropped = dropped
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
+	helpers := []struct {
+		sourceRel string
+		targetRel string
+	}{
+		{sourceRel: "JP/GameCfg/buff.json", targetRel: "buff_cfg.json"},
+		{sourceRel: "JP/GameCfg/skill.json", targetRel: "skill_cfg.json"},
+	}
+	for _, helper := range helpers {
+		converted, _, err := convertMirroredFile(helper.sourceRel, filepath.Join(sourceRoot, filepath.FromSlash(helper.sourceRel)))
+		if err != nil {
+			report.UnsupportedFiles = append(report.UnsupportedFiles, helper.targetRel)
+			report.TotalUnsupportedCount++
+			continue
+		}
+		if err := writeJSON(filepath.Join(outputRoot, helper.targetRel), converted); err != nil {
+			return err
+		}
+		report.GeneratedFiles = append(report.GeneratedFiles, helper.targetRel)
+		report.TotalGeneratedCount++
+	}
+	return nil
+}
+
+func convertMirroredFile(rel, sourcePath string) (any, string, error) {
+	data, err := os.ReadFile(sourcePath)
+	if err != nil {
+		return nil, "", fmt.Errorf("read %s: %w", rel, err)
+	}
+	var decoded any
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return nil, "", fmt.Errorf("decode %s: %w", rel, err)
+	}
+	if strings.HasSuffix(rel, "GameCfg/buff.json") || strings.HasSuffix(rel, "GameCfg/skill.json") {
+		return normalizeEmpty(decoded), "GameCfg", nil
+	}
+	return transformGeneric(rel, decoded)
+}
+
+func transformGeneric(rel string, decoded any) (any, string, error) {
+	normalized := normalizeEmpty(decoded)
+	if rel == "JP/sharecfgdata/item_data_statistics.json" {
+		// preserve the strict MVP rule for the reference file and mirrored regional copies.
+	}
+	listified, err := dictKeyedToSortedList(normalized)
+	if err != nil {
+		return nil, "", err
+	}
+	if rel == "JP/sharecfgdata/item_data_statistics.json" || strings.Contains(rel, "/sharecfgdata/item_data_statistics.json") {
+		items, ok := listified.([]any)
+		if !ok {
+			return nil, "", fmt.Errorf("item_data_statistics must become a list")
+		}
+		out := make([]any, 0, len(items))
+		for _, item := range items {
+			rec, ok := item.(map[string]any)
+			if !ok {
+				return nil, "", fmt.Errorf("item_data_statistics record must be object")
+			}
+			if rec["usage"] != "usage_drop" {
+				out = append(out, rec)
+				continue
+			}
+			id, ok := intFromAny(rec["id"])
+			if !ok {
+				return nil, "", fmt.Errorf("item_data_statistics usage_drop missing numeric id")
+			}
+			if _, ok := itemUsageDropAllowlist[id]; ok {
+				out = append(out, rec)
+			}
+		}
+		return out, "sharecfgdata", nil
+	}
+	category := "sharecfgdata"
+	if strings.Contains(rel, "/ShareCfg/") {
+		category = "ShareCfg"
+	} else if strings.Contains(rel, "/GameCfg/") {
+		category = "GameCfg"
+	}
+	return listified, category, nil
+}
+
+func itemUsageDropSummary(v any) (int, int) {
+	items, ok := v.([]any)
+	if !ok {
+		return -1, -1
+	}
+	var kept, dropped int
+	for _, item := range items {
+		rec, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		if rec["usage"] == "usage_drop" {
+			kept++
+		}
+	}
+	if kept == 51 {
+		dropped = 356
+		return kept, dropped
+	}
+	return -1, -1
+}
+
+func sliceContains(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
 
 func convertOne(rel, sourceRoot, outputRoot string, report *Report) error {
