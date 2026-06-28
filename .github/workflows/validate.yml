@@ -66,13 +66,16 @@ jobs:
               throw "$($Args -join ' ') failed with exit code $LASTEXITCODE"
             }
           }
+          $env:AMAGI_DATA_TEST_AZURLANE_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneData"
+          $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts"
+          $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT = "$env:GITHUB_WORKSPACE\_external\belfast-data"
           Invoke-Native go test ./internal/belfastconv/... ./cmd/...
           $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
           Invoke-Native go run ./cmd/belfast_json_mvp `
-            -source-root "$env:GITHUB_WORKSPACE\_external\AzurLaneData" `
-            -luascripts-root "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts" `
+            -source-root $env:AMAGI_DATA_TEST_AZURLANE_ROOT `
+            -luascripts-root $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT `
             -output-root $out `
-            -copy-helper-fallback-from "$env:GITHUB_WORKSPACE\_external\belfast-data"
+            -copy-helper-fallback-from $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT
 
       - uses: actions/upload-artifact@v4
         with:

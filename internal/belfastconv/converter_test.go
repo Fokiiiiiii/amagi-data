@@ -5,22 +5,47 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-const (
-	testAzurRoot       = `C:\Users\yutai\repos\azurlane-compare-last-json-jp\json-last-jp`
-	testBelfastRoot    = `C:\Users\yutai\repos\belfast-data`
-	testLuaScriptsRoot = `C:\Users\yutai\repos\AzurLaneLuaScripts`
-)
+func TestNormalizeEmptyAndDictOrdering(t *testing.T) {
+	got := normalizeEmpty(map[string]any{
+		"empty":  map[string]any{},
+		"nested": []any{map[string]any{}},
+	})
+	want := map[string]any{
+		"empty":  []any{},
+		"nested": []any{[]any{}},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("normalizeEmpty mismatch: %#v", got)
+	}
+
+	listified, err := dictKeyedToSortedList(map[string]any{
+		"2": map[string]any{"id": 2, "name": "b"},
+		"1": map[string]any{"id": 1, "name": "a"},
+	})
+	if err != nil {
+		t.Fatalf("dictKeyedToSortedList: %v", err)
+	}
+	gotList, ok := listified.([]any)
+	if !ok || len(gotList) != 2 {
+		t.Fatalf("unexpected listified result: %#v", listified)
+	}
+	if gotList[0].(map[string]any)["id"] != 1 || gotList[1].(map[string]any)["id"] != 2 {
+		t.Fatalf("expected id ordering 1,2 got %#v", gotList)
+	}
+}
 
 func TestConvertMVPMatchesBelfastReference(t *testing.T) {
+	azurRoot, luaScriptsRoot, belfastRoot := testFixtureRoots(t, true, true, true)
 	out := t.TempDir()
 	report, err := ConvertMVP(Options{
-		SourceRoot:               testAzurRoot,
+		SourceRoot:               azurRoot,
 		OutputRoot:               out,
-		LuaScriptsRoot:           testLuaScriptsRoot,
-		FallbackHelperSourceRoot: testBelfastRoot,
+		LuaScriptsRoot:           luaScriptsRoot,
+		FallbackHelperSourceRoot: belfastRoot,
 	})
 	if err != nil {
 		t.Fatalf("ConvertMVP: %v", err)
@@ -39,7 +64,7 @@ func TestConvertMVPMatchesBelfastReference(t *testing.T) {
 	}
 	for _, rel := range MVPFiles() {
 		got := mustLoad(t, filepath.Join(out, filepath.FromSlash(rel)))
-		want := mustLoad(t, filepath.Join(testBelfastRoot, filepath.FromSlash(rel)))
+		want := mustLoad(t, filepath.Join(belfastRoot, filepath.FromSlash(rel)))
 		if !reflect.DeepEqual(got, want) {
 			t.Fatalf("%s mismatch", rel)
 		}
@@ -51,8 +76,9 @@ func TestConvertMVPMatchesBelfastReference(t *testing.T) {
 }
 
 func TestVersionsGeneratedFromLuaScriptsMetadata(t *testing.T) {
+	azurRoot, luaScriptsRoot, _ := testFixtureRoots(t, true, true, false)
 	out := t.TempDir()
-	_, err := ConvertMVP(Options{SourceRoot: testAzurRoot, OutputRoot: out, LuaScriptsRoot: testLuaScriptsRoot})
+	_, err := ConvertMVP(Options{SourceRoot: azurRoot, OutputRoot: out, LuaScriptsRoot: luaScriptsRoot})
 	if err != nil {
 		t.Fatalf("ConvertMVP: %v", err)
 	}
@@ -64,8 +90,9 @@ func TestVersionsGeneratedFromLuaScriptsMetadata(t *testing.T) {
 }
 
 func TestFallbackHelpersCopiedOnlyWhenSourceProvided(t *testing.T) {
+	azurRoot, luaScriptsRoot, belfastRoot := testFixtureRoots(t, true, true, true)
 	out := t.TempDir()
-	_, err := ConvertMVP(Options{SourceRoot: testAzurRoot, OutputRoot: out, FallbackHelperSourceRoot: testBelfastRoot, LuaScriptsRoot: testLuaScriptsRoot})
+	_, err := ConvertMVP(Options{SourceRoot: azurRoot, OutputRoot: out, FallbackHelperSourceRoot: belfastRoot, LuaScriptsRoot: luaScriptsRoot})
 	if err != nil {
 		t.Fatalf("ConvertMVP: %v", err)
 	}
@@ -106,4 +133,24 @@ func containsString(values []string, target string) bool {
 		}
 	}
 	return false
+}
+
+func testFixtureRoots(t *testing.T, needAzur, needLua, needBelfast bool) (string, string, string) {
+	t.Helper()
+	azurRoot := testEnvRoot(t, "AMAGI_DATA_TEST_AZURLANE_ROOT", needAzur)
+	luaRoot := testEnvRoot(t, "AMAGI_DATA_TEST_LUASCRIPTS_ROOT", needLua)
+	belfastRoot := testEnvRoot(t, "AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT", needBelfast)
+	return azurRoot, luaRoot, belfastRoot
+}
+
+func testEnvRoot(t *testing.T, name string, required bool) string {
+	t.Helper()
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		if required {
+			t.Skipf("skipping external integration test: %s is not set", name)
+		}
+		return ""
+	}
+	return value
 }
