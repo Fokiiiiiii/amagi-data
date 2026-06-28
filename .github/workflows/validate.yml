@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  schedule:
+    - cron: "0 21 * * *"
 
 permissions:
   contents: read
@@ -16,14 +18,8 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          repository: Fokiiiiiii/amagi
-          ref: debug
-          path: _external/amagi
-
-      - uses: actions/checkout@v4
-        with:
           repository: AzurLaneTools/AzurLaneData
-          ref: dc6d9bbb033526b522f447ca5ebf93f6f420d8ef
+          ref: main
           path: _external/AzurLaneData
           sparse-checkout-cone-mode: false
           sparse-checkout: |
@@ -35,6 +31,19 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          repository: AzurLaneTools/AzurLaneLuaScripts
+          ref: main
+          path: _external/AzurLaneLuaScripts
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            versions/CN.txt
+            versions/EN.txt
+            versions/JP.txt
+            versions/KR.txt
+            versions/TW.txt
+
+      - uses: actions/checkout@v4
+        with:
           repository: ggmolly/belfast-data
           path: _external/belfast-data
           sparse-checkout-cone-mode: false
@@ -42,25 +51,23 @@ jobs:
             build_pools.json
             build_times.json
             requisition_ships.json
-            versions.json
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: _external/amagi/go.mod
+          go-version-file: go.mod
 
       - shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          cd _external/amagi
-          go test ./internal/gamedata/...
-          go test ./cmd/belfast_json_mvp
-          $Out = Join-Path $env:RUNNER_TEMP "amagi-data"
+          go test ./internal/belfastconv/... ./cmd/...
+          $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
           go run ./cmd/belfast_json_mvp `
             -source-root "$env:GITHUB_WORKSPACE\_external\AzurLaneData" `
-            -output-root $Out `
+            -luascripts-root "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts" `
+            -output-root $out `
             -copy-helper-fallback-from "$env:GITHUB_WORKSPACE\_external\belfast-data"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: amagi-data-output
-          path: ${{ runner.temp }}\amagi-data
+          name: amagi-belfast-json-mvp
+          path: ${{ runner.temp }}\amagi_belfast_json_mvp
