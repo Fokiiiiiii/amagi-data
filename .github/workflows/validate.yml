@@ -59,9 +59,16 @@ jobs:
       - shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          go test ./internal/belfastconv/... ./cmd/...
+          function Invoke-Native {
+            param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
+            & $Args[0] $Args[1..($Args.Count - 1)]
+            if ($LASTEXITCODE -ne 0) {
+              throw "$($Args -join ' ') failed with exit code $LASTEXITCODE"
+            }
+          }
+          Invoke-Native go test ./internal/belfastconv/... ./cmd/...
           $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
-          go run ./cmd/belfast_json_mvp `
+          Invoke-Native go run ./cmd/belfast_json_mvp `
             -source-root "$env:GITHUB_WORKSPACE\_external\AzurLaneData" `
             -luascripts-root "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts" `
             -output-root $out `
