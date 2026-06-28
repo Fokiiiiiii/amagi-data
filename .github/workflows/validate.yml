@@ -1,0 +1,66 @@
+name: Validate data
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: Fokiiiiiii/amagi
+          ref: debug
+          path: _external/amagi
+
+      - uses: actions/checkout@v4
+        with:
+          repository: AzurLaneTools/AzurLaneData
+          ref: dc6d9bbb033526b522f447ca5ebf93f6f420d8ef
+          path: _external/AzurLaneData
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            JP/sharecfgdata/item_data_statistics.json
+            JP/sharecfgdata/ship_data_statistics.json
+            JP/sharecfgdata/weapon_property.json
+            JP/sharecfgdata/equip_data_template.json
+            JP/ShareCfg/ship_skin_template.json
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ggmolly/belfast-data
+          path: _external/belfast-data
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            build_pools.json
+            build_times.json
+            requisition_ships.json
+            versions.json
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: _external/amagi/go.mod
+
+      - shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          cd _external/amagi
+          go test ./internal/gamedata/...
+          go test ./cmd/belfast_json_mvp
+          $Out = Join-Path $env:RUNNER_TEMP "amagi-data"
+          go run ./cmd/belfast_json_mvp `
+            -source-root "$env:GITHUB_WORKSPACE\_external\AzurLaneData" `
+            -output-root $Out `
+            -copy-helper-fallback-from "$env:GITHUB_WORKSPACE\_external\belfast-data"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amagi-data-output
+          path: ${{ runner.temp }}\amagi-data
