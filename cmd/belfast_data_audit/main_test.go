@@ -147,6 +147,80 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 			t.Fatalf("expected %s not to marshal as null in %s", field, text)
 		}
 	}
+
+	reportPath := filepath.Join("..", "..", "reports", "audit", "belfast-expansion-audit.json")
+	reportJSON, err := os.ReadFile(reportPath)
+	if err != nil {
+		t.Fatalf("read report json: %v", err)
+	}
+	var reportDoc map[string]any
+	if err := json.Unmarshal(reportJSON, &reportDoc); err != nil {
+		t.Fatalf("unmarshal report json: %v", err)
+	}
+	buckets, ok := reportDoc["schema_mismatch_buckets"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected schema_mismatch_buckets to be present in report json")
+	}
+	wantBucketCounts := map[string]int{
+		"map_vs_list_shape":          30,
+		"empty_object_vs_empty_array": 0,
+		"scalar_vs_array":             5,
+		"key_order_or_id_sort":        0,
+		"field_value_delta":           5,
+		"unknown_schema_mismatch":     0,
+	}
+	reportFiles := make(map[string]struct{}, len(report.SchemaMismatchFiles))
+	for _, file := range report.SchemaMismatchFiles {
+		reportFiles[file.RelativePath] = struct{}{}
+	}
+	seen := make(map[string]struct{}, len(reportFiles))
+	for bucketName, wantCount := range wantBucketCounts {
+		rawFiles, ok := buckets[bucketName]
+		if !ok {
+			t.Fatalf("expected schema_mismatch_buckets to include %s", bucketName)
+		}
+		files, ok := rawFiles.([]any)
+		if !ok {
+			t.Fatalf("expected schema_mismatch_buckets[%s] to be a JSON array", bucketName)
+		}
+		if len(files) != wantCount {
+			t.Fatalf("schema_mismatch_buckets[%s]=%d want %d", bucketName, len(files), wantCount)
+		}
+		for _, rawFile := range files {
+			rel, ok := rawFile.(string)
+			if !ok {
+				t.Fatalf("expected schema_mismatch_buckets[%s] entries to be strings", bucketName)
+			}
+			if _, dup := seen[rel]; dup {
+				t.Fatalf("schema_mismatch_buckets contains duplicate file %s", rel)
+			}
+			seen[rel] = struct{}{}
+		}
+	}
+	if len(seen) != len(reportFiles) {
+		t.Fatalf("schema_mismatch_buckets covered %d files, want %d", len(seen), len(reportFiles))
+	}
+	for rel := range reportFiles {
+		if _, ok := seen[rel]; !ok {
+			t.Fatalf("schema_mismatch_buckets missing %s", rel)
+		}
+	}
+
+	markdownPath := filepath.Join("..", "..", "reports", "audit", "belfast-expansion-audit.md")
+	markdown, err := os.ReadFile(markdownPath)
+	if err != nil {
+		t.Fatalf("read report markdown: %v", err)
+	}
+	for _, needle := range []string{
+		"## Schema Mismatch Buckets",
+		"map_vs_list_shape (30)",
+		"scalar_vs_array (5)",
+		"field_value_delta (5)",
+	} {
+		if !strings.Contains(string(markdown), needle) {
+			t.Fatalf("expected markdown to contain %q", needle)
+		}
+	}
 }
 
 func externalRoot(t *testing.T, envName, fallback string) string {

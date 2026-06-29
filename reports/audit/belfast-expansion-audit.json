@@ -56712,6 +56712,57 @@
       "reference_record_count": 16
     }
   ],
+  "schema_mismatch_buckets": {
+    "map_vs_list_shape": [
+      "CN/ShareCfg/error_message.json",
+      "CN/ShareCfg/expedition_data_by_map.json",
+      "CN/ShareCfg/illustrator.json",
+      "CN/ShareCfg/pay_level_award.json",
+      "CN/ShareCfg/ship_data_group.json",
+      "CN/ShareCfg/world_item_data_origin.json",
+      "EN/ShareCfg/error_message.json",
+      "EN/ShareCfg/expedition_data_by_map.json",
+      "EN/ShareCfg/illustrator.json",
+      "EN/ShareCfg/pay_level_award.json",
+      "EN/ShareCfg/ship_data_group.json",
+      "EN/ShareCfg/world_item_data_origin.json",
+      "JP/ShareCfg/error_message.json",
+      "JP/ShareCfg/expedition_data_by_map.json",
+      "JP/ShareCfg/illustrator.json",
+      "JP/ShareCfg/pay_level_award.json",
+      "JP/ShareCfg/ship_data_group.json",
+      "JP/ShareCfg/world_item_data_origin.json",
+      "KR/ShareCfg/error_message.json",
+      "KR/ShareCfg/expedition_data_by_map.json",
+      "KR/ShareCfg/illustrator.json",
+      "KR/ShareCfg/pay_level_award.json",
+      "KR/ShareCfg/ship_data_group.json",
+      "KR/ShareCfg/world_item_data_origin.json",
+      "TW/ShareCfg/error_message.json",
+      "TW/ShareCfg/expedition_data_by_map.json",
+      "TW/ShareCfg/illustrator.json",
+      "TW/ShareCfg/pay_level_award.json",
+      "TW/ShareCfg/ship_data_group.json",
+      "TW/ShareCfg/world_item_data_origin.json"
+    ],
+    "empty_object_vs_empty_array": [],
+    "scalar_vs_array": [
+      "CN/ShareCfg/guildset.json",
+      "EN/ShareCfg/guildset.json",
+      "JP/ShareCfg/guildset.json",
+      "KR/ShareCfg/guildset.json",
+      "TW/ShareCfg/guildset.json"
+    ],
+    "key_order_or_id_sort": [],
+    "field_value_delta": [
+      "CN/ShareCfg/auto_pilot_template.json",
+      "EN/ShareCfg/auto_pilot_template.json",
+      "JP/ShareCfg/auto_pilot_template.json",
+      "KR/ShareCfg/auto_pilot_template.json",
+      "TW/ShareCfg/auto_pilot_template.json"
+    ],
+    "unknown_schema_mismatch": []
+  },
   "belfast_only_files": [
     "CN/ShareCfg/battle_nodes_cfg.json",
     "CN/ShareCfg/dorm3_d_collect.json",
