@@ -3,7 +3,7 @@ name: Update data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 21 * * *"
+    - cron: "30 19 * * *"
 
 permissions:
   contents: write
@@ -47,16 +47,6 @@ jobs:
         with:
           repository: ggmolly/belfast-data
           path: _external/belfast-data
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            JP/sharecfgdata/item_data_statistics.json
-            JP/sharecfgdata/ship_data_statistics.json
-            JP/sharecfgdata/weapon_property.json
-            JP/sharecfgdata/equip_data_template.json
-            JP/ShareCfg/ship_skin_template.json
-            build_pools.json
-            build_times.json
-            requisition_ships.json
 
       - uses: actions/setup-go@v5
         with:
@@ -93,9 +83,9 @@ jobs:
           $reportPath = Join-Path $out "belfast-json-mvp-report.json"
           $report = Get-Content -Raw $reportPath | ConvertFrom-Json
           if ($report.generated_files.Count -lt 1) { throw "generated_files must not be empty" }
-          if (-not ($report.generated_helper_files -contains "versions.json")) { throw "versions.json missing from generated_helper_files" }
+          if (-not ($report.generated_helper_files -contains "global/versions.json")) { throw "versions.json missing from generated_helper_files" }
           if (@($report.fallback_helper_files).Count -ne 3) { throw "fallback_helper_files count mismatch" }
-          foreach ($expected in @("build_pools.json", "build_times.json", "requisition_ships.json")) {
+          foreach ($expected in @("global/build_pools.json", "global/build_times.json", "global/requisition_ships.json")) {
             if (-not ($report.fallback_helper_files -contains $expected)) { throw "missing fallback helper $expected" }
           }
           if (@($report.unsupported_files).Count -ne 0) { throw "unsupported_files must be empty" }
@@ -114,7 +104,7 @@ jobs:
 
           $changes = git status --short
           if ($changes) {
-            git add GameCfg ShareCfg sharecfgdata buff_cfg.json skill_cfg.json CN EN JP KR TW build_pools.json build_times.json requisition_ships.json versions.json .github/workflows/update-data.yml .gitignore
+            git add GameCfg ShareCfg sharecfgdata global CN EN JP KR TW .github/workflows/update-data.yml .gitignore
             git commit -m "data: update generated belfast json [skip ci]"
             git push origin main
           } else {

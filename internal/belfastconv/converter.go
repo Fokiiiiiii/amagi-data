@@ -14,10 +14,12 @@ import (
 //go:embed safe_to_promote_manifest.json safe_to_promote_allowlists.json
 var safeManifestFS embed.FS
 
+const globalDir = "global"
+
 var fallbackHelperFiles = []string{
-	"build_pools.json",
-	"build_times.json",
-	"requisition_ships.json",
+	"global/build_pools.json",
+	"global/build_times.json",
+	"global/requisition_ships.json",
 }
 
 var supportedRegions = []string{"CN", "EN", "JP", "KR", "TW"}
@@ -90,7 +92,7 @@ func UnsupportedHelperFiles(includeVersions bool) []string {
 	if includeVersions {
 		return []string{}
 	}
-	return []string{"versions.json"}
+	return []string{"global/versions.json"}
 }
 
 func FallbackHelperFiles() []string { return slices.Clone(fallbackHelperFiles) }
@@ -140,11 +142,11 @@ func ConvertMVP(opts Options) (*Report, error) {
 		if err != nil {
 			return nil, err
 		}
-		outPath := filepath.Join(opts.OutputRoot, "versions.json")
+		outPath := filepath.Join(opts.OutputRoot, filepath.FromSlash(globalVersionsPath()))
 		if err := writeJSON(outPath, versions); err != nil {
 			return nil, err
 		}
-		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, "versions.json")
+		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, globalVersionsPath())
 		report.GeneratedVersions = true
 		report.LuaScriptsVersionsRoot = source
 		report.LuaScriptsVersionSource = versions
@@ -224,8 +226,8 @@ func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
 		sourceRel string
 		targetRel string
 	}{
-		{sourceRel: "JP/GameCfg/buff.json", targetRel: "buff_cfg.json"},
-		{sourceRel: "JP/GameCfg/skill.json", targetRel: "skill_cfg.json"},
+		{sourceRel: "JP/GameCfg/buff.json", targetRel: "global/buff_cfg.json"},
+		{sourceRel: "JP/GameCfg/skill.json", targetRel: "global/skill_cfg.json"},
 	}
 	for _, helper := range helpers {
 		converted, err := convertAuditedFile(helper.sourceRel, filepath.Join(sourceRoot, filepath.FromSlash(helper.sourceRel)), "match_after_empty_normalization", nil)
@@ -241,6 +243,10 @@ func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
 	}
 	sortStrings(report.GeneratedHelperFiles)
 	return nil
+}
+
+func globalVersionsPath() string {
+	return filepath.ToSlash(filepath.Join(globalDir, "versions.json"))
 }
 
 func convertAuditedFile(rel, sourcePath, classification string, allowlist []int) (any, error) {

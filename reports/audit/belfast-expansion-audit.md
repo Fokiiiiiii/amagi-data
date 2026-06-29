@@ -36,7 +36,7 @@
 - schema_mismatch: 0
 - missing_reference: 36
 - unsupported: 0
-- belfast_only: 48
+- belfast_only: 52
 
 ## Count Mismatch Buckets
 - none
@@ -53,14 +53,14 @@
 - match_after_reference_id_subset: 10
 - match_known_family_transform: 15
 - Examples:
-  - CN/ShareCfg/guildset.json [CN/match_after_guildset_empty_key_args_array]
-  - EN/ShareCfg/guildset.json [EN/match_after_guildset_empty_key_args_array]
-  - JP/ShareCfg/guildset.json [JP/match_after_guildset_empty_key_args_array]
-  - KR/ShareCfg/guildset.json [KR/match_after_guildset_empty_key_args_array]
-  - TW/ShareCfg/guildset.json [TW/match_after_guildset_empty_key_args_array]
-  - CN/GameCfg/buff.json [CN/exact_raw_match]
-  - CN/GameCfg/card.json [CN/exact_raw_match]
-  - CN/GameCfg/dorm.json [CN/exact_raw_match]
+  - CN/sharecfgdata/item_data_statistics.json [CN/match_after_reference_id_subset]
+  - CN/sharecfgdata/shop_template.json [CN/match_after_reference_id_subset]
+  - EN/sharecfgdata/item_data_statistics.json [EN/match_after_reference_id_subset]
+  - EN/sharecfgdata/shop_template.json [EN/match_after_reference_id_subset]
+  - JP/sharecfgdata/item_data_statistics.json [JP/match_after_reference_id_subset]
+  - JP/sharecfgdata/shop_template.json [JP/match_after_reference_id_subset]
+  - KR/sharecfgdata/item_data_statistics.json [KR/match_after_reference_id_subset]
+  - KR/sharecfgdata/shop_template.json [KR/match_after_reference_id_subset]
   - ... 3029 more
 
 ## Count Mismatch Summary
@@ -72,7 +72,7 @@
 - Examples:
 
 ## Belfast Only Summary
-- Count: 48
+- Count: 52
 - Examples:
   - CN/ShareCfg/battle_nodes_cfg.json: no comparable source file was found
   - CN/ShareCfg/dorm3_d_collect.json: no comparable source file was found
@@ -82,7 +82,7 @@
   - CN/ShareCfg/inform_for_back_yard_theme_template_cfg.json: no comparable source file was found
   - CN/ShareCfg/voice_actor_cn.json: no comparable source file was found
   - CN/ShareCfg/world_sl_gbuff_data.json: no comparable source file was found
-  - ... 40 more
+  - ... 44 more
 
 ## Missing Reference Summary
 - Count: 36
@@ -107,18 +107,18 @@
 - confirmed: `JP/ShareCfg/guildset.json` Full match after normalizing empty string key_args fields to empty arrays for guildset records only.
 
 ## Helper Data Notes
-- `build_pools.json` [observed]: Currently treated as fallback/generated helper output; exact source fields are not confirmed.
-- `build_times.json` [observed]: Currently treated as fallback/generated helper output; exact source fields are not confirmed.
-- `requisition_ships.json` [observed]: Currently treated as fallback/generated helper output.
-- `versions.json` [hypothesis]: Currently treated as fallback/generated helper output; versions.json generation is not confirmed from public upstream code.
+- `global/build_pools.json` [observed]: Currently treated as fallback/generated helper output; exact source fields are not confirmed.
+- `global/build_times.json` [observed]: Currently treated as fallback/generated helper output; exact source fields are not confirmed.
+- `global/requisition_ships.json` [observed]: Currently treated as fallback/generated helper output.
+- `global/versions.json` [hypothesis]: Currently treated as fallback/generated helper output; versions.json generation is not confirmed from public upstream code.
 
 ## Special Files
-- buff_cfg.json: special root reference from JP/GameCfg/buff.json
-- build_pools.json: helper fallback/generated
-- build_times.json: helper fallback/generated
-- requisition_ships.json: helper fallback/generated
-- skill_cfg.json: special root reference from JP/GameCfg/skill.json
-- versions.json: helper generated/fallback
+- global/buff_cfg.json: special global reference from JP/GameCfg/buff.json
+- global/build_pools.json: helper fallback/generated
+- global/build_times.json: helper fallback/generated
+- global/requisition_ships.json: helper fallback/generated
+- global/skill_cfg.json: special global reference from JP/GameCfg/skill.json
+- global/versions.json: helper generated/fallback
 
 ## Recommended Next Steps
 1. Generate only the committed safe audited manifest files from the converter.

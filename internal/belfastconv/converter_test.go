@@ -170,17 +170,41 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	if !containsString(report.GeneratedFiles, "JP/sharecfgdata/ship_data_statistics.json") {
 		t.Fatalf("expected known audited safe file to be generated")
 	}
-	if !containsString(report.GeneratedHelperFiles, "versions.json") {
+	if !containsString(report.GeneratedHelperFiles, "global/versions.json") {
 		t.Fatalf("expected generated_helper_files to contain versions.json, got %v", report.GeneratedHelperFiles)
 	}
-	if !containsString(report.GeneratedHelperFiles, "buff_cfg.json") || !containsString(report.GeneratedHelperFiles, "skill_cfg.json") {
+	if !containsString(report.GeneratedHelperFiles, "global/buff_cfg.json") || !containsString(report.GeneratedHelperFiles, "global/skill_cfg.json") {
 		t.Fatalf("expected root helper files to be generated, got %v", report.GeneratedHelperFiles)
 	}
-	if !reflect.DeepEqual(report.FallbackHelperFiles, []string{"build_pools.json", "build_times.json", "requisition_ships.json"}) {
+	if !reflect.DeepEqual(report.FallbackHelperFiles, []string{"global/build_pools.json", "global/build_times.json", "global/requisition_ships.json"}) {
 		t.Fatalf("unexpected fallback_helper_files: %v", report.FallbackHelperFiles)
 	}
-	if containsString(report.UnsupportedHelperFiles, "versions.json") {
+	if containsString(report.UnsupportedHelperFiles, "global/versions.json") {
 		t.Fatalf("versions.json should not be unsupported when generation succeeds: %v", report.UnsupportedHelperFiles)
+	}
+	for _, rel := range []string{
+		"global/buff_cfg.json",
+		"global/skill_cfg.json",
+		"global/build_pools.json",
+		"global/build_times.json",
+		"global/requisition_ships.json",
+		"global/versions.json",
+	} {
+		if _, err := os.Stat(filepath.Join(out, filepath.FromSlash(rel))); err != nil {
+			t.Fatalf("expected helper output %s: %v", rel, err)
+		}
+	}
+	for _, rel := range []string{
+		"buff_cfg.json",
+		"skill_cfg.json",
+		"build_pools.json",
+		"build_times.json",
+		"requisition_ships.json",
+		"versions.json",
+	} {
+		if _, err := os.Stat(filepath.Join(out, filepath.FromSlash(rel))); err == nil {
+			t.Fatalf("did not expect legacy root helper output %s", rel)
+		}
 	}
 
 	for _, rel := range []string{
@@ -205,7 +229,7 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 // generation, eliminating a redundant full conversion run.
 func TestVersionsGeneratedFromLuaScriptsMetadata(t *testing.T) {
 	sc := requireSharedConv(t)
-	got := mustLoad(t, filepath.Join(sc.outDir, "versions.json"))
+	got := mustLoad(t, filepath.Join(sc.outDir, "global", "versions.json"))
 	want := map[string]any{"CN": "9.7.243", "EN": "9.3.222", "JP": "9.3.256", "KR": "8.5.33", "TW": "8.5.83"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("versions.json mismatch: %#v", got)

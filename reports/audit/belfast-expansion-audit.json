@@ -28119,6 +28119,132 @@
   ],
   "safe_to_promote_files": [
     {
+      "relative_path": "CN/sharecfgdata/item_data_statistics.json",
+      "region": "CN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "CN/sharecfgdata/shop_template.json",
+      "region": "CN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "EN/sharecfgdata/item_data_statistics.json",
+      "region": "EN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "EN/sharecfgdata/shop_template.json",
+      "region": "EN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "JP/sharecfgdata/item_data_statistics.json",
+      "region": "JP",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "JP/sharecfgdata/shop_template.json",
+      "region": "JP",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "KR/sharecfgdata/item_data_statistics.json",
+      "region": "KR",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "KR/sharecfgdata/shop_template.json",
+      "region": "KR",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "TW/sharecfgdata/item_data_statistics.json",
+      "region": "TW",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "TW/sharecfgdata/shop_template.json",
+      "region": "TW",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "CN/ShareCfg/class_upgrade_group.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "EN/ShareCfg/class_upgrade_group.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "JP/ShareCfg/class_upgrade_group.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "KR/ShareCfg/class_upgrade_group.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "TW/ShareCfg/class_upgrade_group.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "JP/ShareCfg/ship_skin_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_both_transformations"
+    },
+    {
+      "relative_path": "CN/ShareCfg/auto_pilot_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "EN/ShareCfg/auto_pilot_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "JP/ShareCfg/auto_pilot_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "KR/ShareCfg/auto_pilot_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "TW/ShareCfg/auto_pilot_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
       "relative_path": "CN/ShareCfg/guildset.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -29887,36 +30013,6 @@
       "region": "TW",
       "category": "ShareCfg",
       "classification": "exact_raw_match"
-    },
-    {
-      "relative_path": "CN/ShareCfg/class_upgrade_group.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "match_after_class_upgrade_group_key_id_rewrite"
-    },
-    {
-      "relative_path": "EN/ShareCfg/class_upgrade_group.json",
-      "region": "EN",
-      "category": "ShareCfg",
-      "classification": "match_after_class_upgrade_group_key_id_rewrite"
-    },
-    {
-      "relative_path": "JP/ShareCfg/class_upgrade_group.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_class_upgrade_group_key_id_rewrite"
-    },
-    {
-      "relative_path": "KR/ShareCfg/class_upgrade_group.json",
-      "region": "KR",
-      "category": "ShareCfg",
-      "classification": "match_after_class_upgrade_group_key_id_rewrite"
-    },
-    {
-      "relative_path": "TW/ShareCfg/class_upgrade_group.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "match_after_class_upgrade_group_key_id_rewrite"
     },
     {
       "relative_path": "CN/ShareCfg/achievement_data_template.json",
@@ -46243,102 +46339,6 @@
       "region": "TW",
       "category": "sharecfgdata",
       "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
-      "relative_path": "JP/ShareCfg/ship_skin_template.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_both_transformations"
-    },
-    {
-      "relative_path": "CN/sharecfgdata/item_data_statistics.json",
-      "region": "CN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "CN/sharecfgdata/shop_template.json",
-      "region": "CN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "EN/sharecfgdata/item_data_statistics.json",
-      "region": "EN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "EN/sharecfgdata/shop_template.json",
-      "region": "EN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "JP/sharecfgdata/item_data_statistics.json",
-      "region": "JP",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "JP/sharecfgdata/shop_template.json",
-      "region": "JP",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "KR/sharecfgdata/item_data_statistics.json",
-      "region": "KR",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "KR/sharecfgdata/shop_template.json",
-      "region": "KR",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "TW/sharecfgdata/item_data_statistics.json",
-      "region": "TW",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "TW/sharecfgdata/shop_template.json",
-      "region": "TW",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "CN/ShareCfg/auto_pilot_template.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "match_after_auto_pilot_template_key_id_rewrite"
-    },
-    {
-      "relative_path": "EN/ShareCfg/auto_pilot_template.json",
-      "region": "EN",
-      "category": "ShareCfg",
-      "classification": "match_after_auto_pilot_template_key_id_rewrite"
-    },
-    {
-      "relative_path": "JP/ShareCfg/auto_pilot_template.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_auto_pilot_template_key_id_rewrite"
-    },
-    {
-      "relative_path": "KR/ShareCfg/auto_pilot_template.json",
-      "region": "KR",
-      "category": "ShareCfg",
-      "classification": "match_after_auto_pilot_template_key_id_rewrite"
-    },
-    {
-      "relative_path": "TW/ShareCfg/auto_pilot_template.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "match_after_auto_pilot_template_key_id_rewrite"
     }
   ],
   "exact_raw_match_files": [
@@ -64484,36 +64484,6 @@
   ],
   "match_known_family_transform_files": [
     {
-      "relative_path": "CN/ShareCfg/guildset.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "match_after_guildset_empty_key_args_array"
-    },
-    {
-      "relative_path": "EN/ShareCfg/guildset.json",
-      "region": "EN",
-      "category": "ShareCfg",
-      "classification": "match_after_guildset_empty_key_args_array"
-    },
-    {
-      "relative_path": "JP/ShareCfg/guildset.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_guildset_empty_key_args_array"
-    },
-    {
-      "relative_path": "KR/ShareCfg/guildset.json",
-      "region": "KR",
-      "category": "ShareCfg",
-      "classification": "match_after_guildset_empty_key_args_array"
-    },
-    {
-      "relative_path": "TW/ShareCfg/guildset.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "match_after_guildset_empty_key_args_array"
-    },
-    {
       "relative_path": "CN/ShareCfg/class_upgrade_group.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -64572,6 +64542,36 @@
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "CN/ShareCfg/guildset.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "EN/ShareCfg/guildset.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "JP/ShareCfg/guildset.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "KR/ShareCfg/guildset.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "TW/ShareCfg/guildset.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
     }
   ],
   "count_mismatch_files": [],
@@ -64626,7 +64626,11 @@
     "TW/ShareCfg/voice_actor_cn.json",
     "TW/ShareCfg/world_sl_gbuff_data.json",
     "TW/buff_cfg.json",
-    "TW/skill_cfg.json"
+    "TW/skill_cfg.json",
+    "build_pools.json",
+    "build_times.json",
+    "requisition_ships.json",
+    "versions.json"
   ],
   "missing_reference_files": [
     "CN/ShareCfg/BattleNodesCfg.json",
@@ -64745,22 +64749,22 @@
   ],
   "helper_data_notes": [
     {
-      "relative_path": "build_pools.json",
+      "relative_path": "global/build_pools.json",
       "status": "observed",
       "note": "Currently treated as fallback/generated helper output; exact source fields are not confirmed."
     },
     {
-      "relative_path": "build_times.json",
+      "relative_path": "global/build_times.json",
       "status": "observed",
       "note": "Currently treated as fallback/generated helper output; exact source fields are not confirmed."
     },
     {
-      "relative_path": "requisition_ships.json",
+      "relative_path": "global/requisition_ships.json",
       "status": "observed",
       "note": "Currently treated as fallback/generated helper output."
     },
     {
-      "relative_path": "versions.json",
+      "relative_path": "global/versions.json",
       "status": "hypothesis",
       "note": "Currently treated as fallback/generated helper output; versions.json generation is not confirmed from public upstream code."
     }

@@ -40,12 +40,12 @@ var safePromotionClassifications = map[string]struct{}{
 }
 
 var specialFileStatuses = map[string]string{
-	"buff_cfg.json":          "special root reference from JP/GameCfg/buff.json",
-	"skill_cfg.json":         "special root reference from JP/GameCfg/skill.json",
-	"build_pools.json":       "helper fallback/generated",
-	"build_times.json":       "helper fallback/generated",
-	"requisition_ships.json": "helper fallback/generated",
-	"versions.json":          "helper generated/fallback",
+	"global/buff_cfg.json":          "special global reference from JP/GameCfg/buff.json",
+	"global/skill_cfg.json":         "special global reference from JP/GameCfg/skill.json",
+	"global/build_pools.json":       "helper fallback/generated",
+	"global/build_times.json":       "helper fallback/generated",
+	"global/requisition_ships.json": "helper fallback/generated",
+	"global/versions.json":          "helper generated/fallback",
 }
 
 type ExcludedSourceFile struct {
@@ -1280,22 +1280,22 @@ func defaultProbableTransformRules() []ProbableTransformRule {
 func defaultHelperDataNotes() []HelperDataNote {
 	return []HelperDataNote{
 		{
-			RelativePath: "build_pools.json",
+			RelativePath: "global/build_pools.json",
 			Status:       "observed",
 			Note:         "Currently treated as fallback/generated helper output; exact source fields are not confirmed.",
 		},
 		{
-			RelativePath: "build_times.json",
+			RelativePath: "global/build_times.json",
 			Status:       "observed",
 			Note:         "Currently treated as fallback/generated helper output; exact source fields are not confirmed.",
 		},
 		{
-			RelativePath: "requisition_ships.json",
+			RelativePath: "global/requisition_ships.json",
 			Status:       "observed",
 			Note:         "Currently treated as fallback/generated helper output.",
 		},
 		{
-			RelativePath: "versions.json",
+			RelativePath: "global/versions.json",
 			Status:       "hypothesis",
 			Note:         "Currently treated as fallback/generated helper output; versions.json generation is not confirmed from public upstream code.",
 		},
