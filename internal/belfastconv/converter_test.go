@@ -126,8 +126,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	out := sc.outDir
 	belfastRoot := sc.belfastRoot
 
-	if len(report.GeneratedFiles) != 3022 {
-		t.Fatalf("expected 3022 generated audited files, got %d", len(report.GeneratedFiles))
+	if len(report.GeneratedFiles) != 3037 {
+		t.Fatalf("expected 3037 generated audited files, got %d", len(report.GeneratedFiles))
 	}
 	for _, rel := range []string{
 		"CN/sharecfgdata/item_data_statistics.json",
@@ -143,11 +143,29 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	if !containsString(report.GeneratedFiles, "CN/ShareCfg/achievement_data_template.json") {
 		t.Fatalf("expected audited safe file to be generated")
 	}
-	if containsString(report.GeneratedFiles, "CN/ShareCfg/auto_pilot_template.json") {
-		t.Fatalf("schema_mismatch file should not be generated")
+	for _, rel := range []string{
+		"CN/ShareCfg/auto_pilot_template.json",
+		"EN/ShareCfg/auto_pilot_template.json",
+		"JP/ShareCfg/auto_pilot_template.json",
+		"KR/ShareCfg/auto_pilot_template.json",
+		"TW/ShareCfg/auto_pilot_template.json",
+		"CN/ShareCfg/class_upgrade_group.json",
+		"EN/ShareCfg/class_upgrade_group.json",
+		"JP/ShareCfg/class_upgrade_group.json",
+		"KR/ShareCfg/class_upgrade_group.json",
+		"TW/ShareCfg/class_upgrade_group.json",
+		"CN/ShareCfg/guildset.json",
+		"EN/ShareCfg/guildset.json",
+		"JP/ShareCfg/guildset.json",
+		"KR/ShareCfg/guildset.json",
+		"TW/ShareCfg/guildset.json",
+	} {
+		if !containsString(report.GeneratedFiles, rel) {
+			t.Fatalf("%s should now be generated", rel)
+		}
 	}
-	if !containsString(report.SkippedUnsafeFiles, "CN/ShareCfg/auto_pilot_template.json") {
-		t.Fatalf("expected skipped_unsafe_files to include known schema mismatch")
+	if len(report.SkippedUnsafeFiles) != 0 {
+		t.Fatalf("expected skipped_unsafe_files to be empty, got %v", report.SkippedUnsafeFiles)
 	}
 	if !containsString(report.GeneratedFiles, "JP/sharecfgdata/ship_data_statistics.json") {
 		t.Fatalf("expected known audited safe file to be generated")
@@ -170,6 +188,9 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 		"JP/sharecfgdata/weapon_property.json",
 		"JP/sharecfgdata/equip_data_template.json",
 		"JP/ShareCfg/ship_skin_template.json",
+		"JP/ShareCfg/auto_pilot_template.json",
+		"JP/ShareCfg/class_upgrade_group.json",
+		"JP/ShareCfg/guildset.json",
 	} {
 		got := mustLoad(t, filepath.Join(out, filepath.FromSlash(rel)))
 		want := mustLoad(t, filepath.Join(belfastRoot, filepath.FromSlash(rel)))

@@ -19,10 +19,24 @@ var supportedRegions = []string{"CN", "EN", "JP", "KR", "TW"}
 var categories = []string{"GameCfg", "ShareCfg", "sharecfgdata"}
 var excludedReason = "These files exist in the source region tree, but are excluded from ordinary comparable region-layout counting because they are handled through special Belfast root files or special audit handling."
 var safePromotionTargets = map[string]int{
-	"exact_raw_match":                      290,
-	"match_after_empty_normalization":      0,
-	"match_after_dict_keyed_to_list_by_id": 313,
-	"match_after_both_transformations":     1,
+	"exact_raw_match":                                290,
+	"match_after_empty_normalization":                0,
+	"match_after_dict_keyed_to_list_by_id":           2721,
+	"match_after_both_transformations":               1,
+	"match_after_reference_id_subset":                10,
+	"match_after_auto_pilot_template_key_id_rewrite": 5,
+	"match_after_class_upgrade_group_key_id_rewrite": 5,
+	"match_after_guildset_empty_key_args_array":      5,
+}
+var safePromotionClassifications = map[string]struct{}{
+	"exact_raw_match":                                {},
+	"match_after_empty_normalization":                {},
+	"match_after_dict_keyed_to_list_by_id":           {},
+	"match_after_both_transformations":               {},
+	"match_after_reference_id_subset":                {},
+	"match_after_auto_pilot_template_key_id_rewrite": {},
+	"match_after_class_upgrade_group_key_id_rewrite": {},
+	"match_after_guildset_empty_key_args_array":      {},
 }
 
 var specialFileStatuses = map[string]string{
@@ -104,29 +118,30 @@ type HelperDataNote struct {
 }
 
 type AuditReport struct {
-	SourceRegionFiles          map[string]int                  `json:"source_region_files"`
-	SourceRegionFilesTotal     int                             `json:"source_region_files_total"`
-	ComparableSourceFilesCount int                             `json:"comparable_source_files_count"`
-	ExcludedSourceFilesCount   int                             `json:"excluded_source_files_count"`
-	ExcludedSourceFiles        []ExcludedSourceFile            `json:"excluded_source_files"`
-	SafeToPromoteCount         int                             `json:"safe_to_promote_count"`
-	ClassifiedFiles            []ClassifiedFile                `json:"classified_files"`
-	SafeToPromoteFiles         []SafePromoteFile               `json:"safe_to_promote_files"`
-	ExactRawMatchFiles         []SafePromoteFile               `json:"exact_raw_match_files"`
-	MatchEmptyNormFiles        []SafePromoteFile               `json:"match_empty_norm_files"`
-	MatchDictToListFiles       []SafePromoteFile               `json:"match_dict_to_list_files"`
-	MatchBothFiles             []SafePromoteFile               `json:"match_both_files"`
-	MatchReferenceSubsetFiles  []SafePromoteFile               `json:"match_reference_subset_files"`
-	CountMismatchFiles         []ClassifiedFile                `json:"count_mismatch_files"`
-	CountMismatchBuckets       map[string]CountMismatchBucket  `json:"count_mismatch_buckets"`
-	SchemaMismatchFiles        []ClassifiedFile                `json:"schema_mismatch_files"`
-	SchemaMismatchBuckets      map[string]SchemaMismatchBucket `json:"schema_mismatch_buckets"`
-	BelfastOnlyFiles           []string                        `json:"belfast_only_files"`
-	MissingReferenceFiles      []string                        `json:"missing_reference_files"`
-	UnsupportedFiles           []string                        `json:"unsupported_files"`
-	TransformRuleEvidence      []TransformRuleEvidence         `json:"transform_rule_evidence"`
-	ProbableTransformRules     []ProbableTransformRule         `json:"probable_transform_rules"`
-	HelperDataNotes            []HelperDataNote                `json:"helper_data_notes"`
+	SourceRegionFiles              map[string]int                  `json:"source_region_files"`
+	SourceRegionFilesTotal         int                             `json:"source_region_files_total"`
+	ComparableSourceFilesCount     int                             `json:"comparable_source_files_count"`
+	ExcludedSourceFilesCount       int                             `json:"excluded_source_files_count"`
+	ExcludedSourceFiles            []ExcludedSourceFile            `json:"excluded_source_files"`
+	SafeToPromoteCount             int                             `json:"safe_to_promote_count"`
+	ClassifiedFiles                []ClassifiedFile                `json:"classified_files"`
+	SafeToPromoteFiles             []SafePromoteFile               `json:"safe_to_promote_files"`
+	ExactRawMatchFiles             []SafePromoteFile               `json:"exact_raw_match_files"`
+	MatchEmptyNormFiles            []SafePromoteFile               `json:"match_empty_norm_files"`
+	MatchDictToListFiles           []SafePromoteFile               `json:"match_dict_to_list_files"`
+	MatchBothFiles                 []SafePromoteFile               `json:"match_both_files"`
+	MatchReferenceSubsetFiles      []SafePromoteFile               `json:"match_reference_subset_files"`
+	MatchKnownFamilyTransformFiles []SafePromoteFile               `json:"match_known_family_transform_files"`
+	CountMismatchFiles             []ClassifiedFile                `json:"count_mismatch_files"`
+	CountMismatchBuckets           map[string]CountMismatchBucket  `json:"count_mismatch_buckets"`
+	SchemaMismatchFiles            []ClassifiedFile                `json:"schema_mismatch_files"`
+	SchemaMismatchBuckets          map[string]SchemaMismatchBucket `json:"schema_mismatch_buckets"`
+	BelfastOnlyFiles               []string                        `json:"belfast_only_files"`
+	MissingReferenceFiles          []string                        `json:"missing_reference_files"`
+	UnsupportedFiles               []string                        `json:"unsupported_files"`
+	TransformRuleEvidence          []TransformRuleEvidence         `json:"transform_rule_evidence"`
+	ProbableTransformRules         []ProbableTransformRule         `json:"probable_transform_rules"`
+	HelperDataNotes                []HelperDataNote                `json:"helper_data_notes"`
 }
 
 type SafeManifest struct {
@@ -172,25 +187,26 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, map[
 	}
 
 	report := &AuditReport{
-		SourceRegionFiles:         map[string]int{},
-		ExcludedSourceFiles:       []ExcludedSourceFile{},
-		ClassifiedFiles:           []ClassifiedFile{},
-		SafeToPromoteFiles:        []SafePromoteFile{},
-		ExactRawMatchFiles:        []SafePromoteFile{},
-		MatchEmptyNormFiles:       []SafePromoteFile{},
-		MatchDictToListFiles:      []SafePromoteFile{},
-		MatchBothFiles:            []SafePromoteFile{},
-		MatchReferenceSubsetFiles: []SafePromoteFile{},
-		CountMismatchFiles:        []ClassifiedFile{},
-		CountMismatchBuckets:      map[string]CountMismatchBucket{},
-		SchemaMismatchFiles:       []ClassifiedFile{},
-		SchemaMismatchBuckets:     map[string]SchemaMismatchBucket{},
-		BelfastOnlyFiles:          []string{},
-		MissingReferenceFiles:     []string{},
-		UnsupportedFiles:          []string{},
-		TransformRuleEvidence:     defaultTransformRuleEvidence(),
-		ProbableTransformRules:    defaultProbableTransformRules(),
-		HelperDataNotes:           defaultHelperDataNotes(),
+		SourceRegionFiles:              map[string]int{},
+		ExcludedSourceFiles:            []ExcludedSourceFile{},
+		ClassifiedFiles:                []ClassifiedFile{},
+		SafeToPromoteFiles:             []SafePromoteFile{},
+		ExactRawMatchFiles:             []SafePromoteFile{},
+		MatchEmptyNormFiles:            []SafePromoteFile{},
+		MatchDictToListFiles:           []SafePromoteFile{},
+		MatchBothFiles:                 []SafePromoteFile{},
+		MatchReferenceSubsetFiles:      []SafePromoteFile{},
+		MatchKnownFamilyTransformFiles: []SafePromoteFile{},
+		CountMismatchFiles:             []ClassifiedFile{},
+		CountMismatchBuckets:           map[string]CountMismatchBucket{},
+		SchemaMismatchFiles:            []ClassifiedFile{},
+		SchemaMismatchBuckets:          map[string]SchemaMismatchBucket{},
+		BelfastOnlyFiles:               []string{},
+		MissingReferenceFiles:          []string{},
+		UnsupportedFiles:               []string{},
+		TransformRuleEvidence:          defaultTransformRuleEvidence(),
+		ProbableTransformRules:         defaultProbableTransformRules(),
+		HelperDataNotes:                defaultHelperDataNotes(),
 	}
 
 	belfastFiles, err := collectBelfastFiles(belfastRoot)
@@ -199,11 +215,14 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, map[
 	}
 
 	safeCandidates := map[string][]SafePromoteFile{
-		"exact_raw_match":                      {},
-		"match_after_empty_normalization":      {},
-		"match_after_dict_keyed_to_list_by_id": {},
-		"match_after_both_transformations":     {},
-		"match_after_reference_id_subset":      {},
+		"exact_raw_match":                                {},
+		"match_after_empty_normalization":                {},
+		"match_after_dict_keyed_to_list_by_id":           {},
+		"match_after_both_transformations":               {},
+		"match_after_reference_id_subset":                {},
+		"match_after_auto_pilot_template_key_id_rewrite": {},
+		"match_after_class_upgrade_group_key_id_rewrite": {},
+		"match_after_guildset_empty_key_args_array":      {},
 	}
 	safeCandidateMeta := map[string]ClassifiedFile{}
 
@@ -330,9 +349,9 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, map[
 		}
 
 		switch result.classification {
-		case "exact_raw_match", "match_after_empty_normalization", "match_after_dict_keyed_to_list_by_id", "match_after_both_transformations", "match_after_reference_id_subset":
+		case "exact_raw_match", "match_after_empty_normalization", "match_after_dict_keyed_to_list_by_id", "match_after_both_transformations", "match_after_reference_id_subset", "match_after_auto_pilot_template_key_id_rewrite", "match_after_class_upgrade_group_key_id_rewrite", "match_after_guildset_empty_key_args_array":
 			if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-				entry.Notes = "Belfast reference-derived usage_drop allowlist"
+				entry.Notes = "output_confirmed / reference-derived usage_drop allowlist"
 			}
 			safe := SafePromoteFile{
 				RelativePath:   rel,
@@ -402,7 +421,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, map[
 }
 
 func writeAuditOutputs(report *AuditReport, manifest *SafeManifest, allowlists map[string][]int) error {
-	if report.SafeToPromoteCount != 3022 || len(report.SafeToPromoteFiles) != 3022 {
+	if report.SafeToPromoteCount != len(report.SafeToPromoteFiles) {
 		return fmt.Errorf("hard gate failed: safe_to_promote_count=%d len(safe_to_promote_files)=%d", report.SafeToPromoteCount, len(report.SafeToPromoteFiles))
 	}
 
@@ -548,6 +567,12 @@ func compareFile(sourcePath, refPath, rel string) (compareResult, error) {
 			return result, nil
 		}
 	}
+	if transformed, classification, ok := familySpecificExactTransform(rel, src); ok && reflect.DeepEqual(transformed, ref) {
+		result.classification = classification
+		result.sourceRecords = recordCount(transformed)
+		result.referenceRecords = recordCount(ref)
+		return result, nil
+	}
 	if recordCount(srcBoth) != recordCount(ref) {
 		result.classification = "count_mismatch"
 		result.referenceRecords = recordCount(ref)
@@ -562,13 +587,12 @@ func selectSafePromotionFiles(report *AuditReport, candidates map[string][]SafeP
 	ensureRequiredBothCandidate(candidates, metadata)
 	for classification := range candidates {
 		sortSafeFiles(candidates[classification])
-		target, ok := safePromotionTargets[classification]
-		if classification == "match_after_reference_id_subset" || classification == "match_after_dict_keyed_to_list_by_id" || classification == "match_after_list_to_map_keyed_by_id" || classification == "match_after_list_to_map_both_transformations" || classification == "match_after_singleton_object_to_one_item_list" || classification == "match_after_singleton_both_transformations" || classification == "match_after_both_transformations" {
-			target = len(candidates[classification])
-			ok = true
-		}
-		if !ok {
+		if !isSafePromotionClassification(classification) {
 			return fmt.Errorf("unknown safe promotion classification: %s", classification)
+		}
+		target, ok := safePromotionTargets[classification]
+		if !ok {
+			return fmt.Errorf("missing safe promotion target: %s", classification)
 		}
 		if len(candidates[classification]) < target {
 			return fmt.Errorf("not enough %s candidates: got %d want %d", classification, len(candidates[classification]), target)
@@ -597,15 +621,14 @@ func selectSafePromotionFiles(report *AuditReport, candidates map[string][]SafeP
 			report.MatchBothFiles = append(report.MatchBothFiles, selected...)
 		case "match_after_reference_id_subset":
 			report.MatchReferenceSubsetFiles = append(report.MatchReferenceSubsetFiles, selected...)
+		case "match_after_auto_pilot_template_key_id_rewrite", "match_after_class_upgrade_group_key_id_rewrite", "match_after_guildset_empty_key_args_array":
+			report.MatchKnownFamilyTransformFiles = append(report.MatchKnownFamilyTransformFiles, selected...)
 		}
 	}
 
 	report.SafeToPromoteCount = len(report.SafeToPromoteFiles)
-	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles) {
+	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles)+len(report.MatchKnownFamilyTransformFiles) {
 		return errors.New("safe_to_promote_count relationship mismatch")
-	}
-	if report.SafeToPromoteCount != 3022 {
-		return fmt.Errorf("safe_to_promote_count mismatch: got %d want 3022", report.SafeToPromoteCount)
 	}
 	return nil
 }
@@ -638,6 +661,11 @@ func ensureRequiredBothCandidate(candidates map[string][]SafePromoteFile, metada
 			return
 		}
 	}
+}
+
+func isSafePromotionClassification(classification string) bool {
+	_, ok := safePromotionClassifications[classification]
+	return ok
 }
 
 func excludedSourceFile(rel string) (ExcludedSourceFile, bool) {
@@ -856,6 +884,93 @@ func singletonObjectToOneItemList(v any) (any, error) {
 	return v, nil
 }
 
+func familySpecificExactTransform(rel string, v any) (any, string, bool) {
+	switch {
+	case strings.HasSuffix(rel, "/ShareCfg/auto_pilot_template.json"):
+		out, err := keyedRecordListWithIDFromKey(v)
+		return out, "match_after_auto_pilot_template_key_id_rewrite", err == nil
+	case strings.HasSuffix(rel, "/ShareCfg/class_upgrade_group.json"):
+		out, err := keyedRecordListWithIDFromKey(v)
+		return out, "match_after_class_upgrade_group_key_id_rewrite", err == nil
+	case strings.HasSuffix(rel, "/ShareCfg/guildset.json"):
+		out, err := guildsetEmptyKeyArgsToArray(v)
+		return out, "match_after_guildset_empty_key_args_array", err == nil
+	default:
+		return nil, "", false
+	}
+}
+
+func keyedRecordListWithIDFromKey(v any) (any, error) {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return v, nil
+	}
+	type pair struct {
+		key string
+		id  int
+		val map[string]any
+	}
+	pairs := make([]pair, 0, len(obj))
+	for key, raw := range obj {
+		id, err := strconv.Atoi(key)
+		if err != nil {
+			continue
+		}
+		val, ok := raw.(map[string]any)
+		if !ok {
+			return v, fmt.Errorf("non-record value for %s", key)
+		}
+		cloned := make(map[string]any, len(val)+1)
+		for k, value := range val {
+			cloned[k] = value
+		}
+		cloned["id"] = float64(id)
+		pairs = append(pairs, pair{key: key, id: id, val: cloned})
+	}
+	if len(pairs) == 0 {
+		return v, nil
+	}
+	slices.SortFunc(pairs, func(a, b pair) int {
+		if a.id < b.id {
+			return -1
+		}
+		if a.id > b.id {
+			return 1
+		}
+		return strings.Compare(a.key, b.key)
+	})
+	out := make([]any, 0, len(pairs))
+	for _, pair := range pairs {
+		out = append(out, pair.val)
+	}
+	return out, nil
+}
+
+func guildsetEmptyKeyArgsToArray(v any) (any, error) {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return v, nil
+	}
+	out := make(map[string]any, len(obj))
+	for key, raw := range obj {
+		record, ok := raw.(map[string]any)
+		if !ok {
+			out[key] = raw
+			continue
+		}
+		cloned := make(map[string]any, len(record))
+		for field, value := range record {
+			if field == "key_args" && value == "" {
+				cloned[field] = []any{}
+				continue
+			}
+			cloned[field] = value
+		}
+		out[key] = cloned
+	}
+	return out, nil
+}
+
 func mustInt(value string) int {
 	n, _ := strconv.Atoi(value)
 	return n
@@ -910,6 +1025,8 @@ func generateMarkdown(report *AuditReport) string {
 	b.WriteString(fmt.Sprintf("- match_after_empty_normalization: %d\n", len(report.MatchEmptyNormFiles)))
 	b.WriteString(fmt.Sprintf("- match_after_dict_keyed_to_list_by_id: %d\n", len(report.MatchDictToListFiles)))
 	b.WriteString(fmt.Sprintf("- match_after_both_transformations: %d\n", len(report.MatchBothFiles)))
+	b.WriteString(fmt.Sprintf("- match_after_reference_id_subset: %d\n", len(report.MatchReferenceSubsetFiles)))
+	b.WriteString(fmt.Sprintf("- match_known_family_transform: %d\n", len(report.MatchKnownFamilyTransformFiles)))
 	b.WriteString(fmt.Sprintf("- count_mismatch: %d\n", len(report.CountMismatchFiles)))
 	b.WriteString(fmt.Sprintf("- schema_mismatch: %d\n", len(report.SchemaMismatchFiles)))
 	b.WriteString(fmt.Sprintf("- missing_reference: %d\n", len(report.MissingReferenceFiles)))
@@ -929,6 +1046,7 @@ func generateMarkdown(report *AuditReport) string {
 	b.WriteString(fmt.Sprintf("- match_after_dict_keyed_to_list_by_id: %d\n", len(report.MatchDictToListFiles)))
 	b.WriteString(fmt.Sprintf("- match_after_both_transformations: %d\n", len(report.MatchBothFiles)))
 	b.WriteString(fmt.Sprintf("- match_after_reference_id_subset: %d\n", len(report.MatchReferenceSubsetFiles)))
+	b.WriteString(fmt.Sprintf("- match_known_family_transform: %d\n", len(report.MatchKnownFamilyTransformFiles)))
 	appendSafeExamples(&b, report.SafeToPromoteFiles)
 	b.WriteString("\n")
 
@@ -962,7 +1080,7 @@ func generateMarkdown(report *AuditReport) string {
 	b.WriteString("## Recommended Next Steps\n")
 	b.WriteString("1. Generate only the committed safe audited manifest files from the converter.\n")
 	b.WriteString("2. Keep helper fallback and helper-generated outputs separate from audited region files.\n")
-	b.WriteString("3. Leave count-mismatch, schema-mismatch, and item_data_statistics out of promotion until a future audit proves them safe.\n")
+	b.WriteString("3. Keep count-mismatch and schema-mismatch files visible in the audit until an exact transform proves them safe.\n")
 	return b.String()
 }
 
@@ -1102,6 +1220,24 @@ func defaultTransformRuleEvidence() []TransformRuleEvidence {
 			Classification: "match_after_both_transformations",
 			Status:         "confirmed",
 			Evidence:       "Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.",
+		},
+		{
+			RelativePath:   "JP/ShareCfg/auto_pilot_template.json",
+			Classification: "match_after_auto_pilot_template_key_id_rewrite",
+			Status:         "confirmed",
+			Evidence:       "Full match after rewriting each record id from the numeric map key and sorting the keyed table into an id-sorted list.",
+		},
+		{
+			RelativePath:   "JP/ShareCfg/class_upgrade_group.json",
+			Classification: "match_after_class_upgrade_group_key_id_rewrite",
+			Status:         "confirmed",
+			Evidence:       "Full match after rewriting each record id from the numeric map key and sorting the keyed table into an id-sorted list.",
+		},
+		{
+			RelativePath:   "JP/ShareCfg/guildset.json",
+			Classification: "match_after_guildset_empty_key_args_array",
+			Status:         "confirmed",
+			Evidence:       "Full match after normalizing empty string key_args fields to empty arrays for guildset records only.",
 		},
 	}
 }

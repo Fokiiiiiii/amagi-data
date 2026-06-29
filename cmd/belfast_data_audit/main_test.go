@@ -57,11 +57,11 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 			t.Fatalf("expected excluded_source_files to contain %s", path)
 		}
 	}
-	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles) {
+	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles)+len(report.MatchKnownFamilyTransformFiles) {
 		t.Fatalf(
-			"safe_to_promote_count=%d want exact_raw_match+match_empty_norm+match_dict_to_list+match_both+match_reference_subset=%d",
+			"safe_to_promote_count=%d want exact_raw_match+match_empty_norm+match_dict_to_list+match_both+match_reference_subset+match_known_family_transform=%d",
 			report.SafeToPromoteCount,
-			len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles),
+			len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles)+len(report.MatchKnownFamilyTransformFiles),
 		)
 	}
 	if len(report.MatchEmptyNormFiles) != 0 {
@@ -90,6 +90,27 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		}
 		if containsClassifiedFile(report.CountMismatchFiles, rel) {
 			t.Fatalf("%s should not remain a count mismatch", rel)
+		}
+	}
+	for _, rel := range []string{
+		"CN/ShareCfg/auto_pilot_template.json",
+		"EN/ShareCfg/auto_pilot_template.json",
+		"JP/ShareCfg/auto_pilot_template.json",
+		"KR/ShareCfg/auto_pilot_template.json",
+		"TW/ShareCfg/auto_pilot_template.json",
+		"CN/ShareCfg/class_upgrade_group.json",
+		"EN/ShareCfg/class_upgrade_group.json",
+		"JP/ShareCfg/class_upgrade_group.json",
+		"KR/ShareCfg/class_upgrade_group.json",
+		"TW/ShareCfg/class_upgrade_group.json",
+		"CN/ShareCfg/guildset.json",
+		"EN/ShareCfg/guildset.json",
+		"JP/ShareCfg/guildset.json",
+		"KR/ShareCfg/guildset.json",
+		"TW/ShareCfg/guildset.json",
+	} {
+		if !containsSafeFile(report.SafeToPromoteFiles, rel) {
+			t.Fatalf("%s should be promoted by a known family transform", rel)
 		}
 	}
 	if len(report.CountMismatchFiles) != 0 {
@@ -122,8 +143,17 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 			t.Fatalf("%s should be in safe_to_promote_manifest", rel)
 		}
 	}
-	if len(report.TransformRuleEvidence) != 4 {
-		t.Fatalf("transform_rule_evidence=%d want 4", len(report.TransformRuleEvidence))
+	if len(report.TransformRuleEvidence) != 7 {
+		t.Fatalf("transform_rule_evidence=%d want 7", len(report.TransformRuleEvidence))
+	}
+	for _, rel := range []string{
+		"JP/ShareCfg/auto_pilot_template.json",
+		"JP/ShareCfg/class_upgrade_group.json",
+		"JP/ShareCfg/guildset.json",
+	} {
+		if !containsTransformRuleEvidence(report.TransformRuleEvidence, rel, "confirmed", "") {
+			t.Fatalf("expected transform_rule_evidence to contain %s", rel)
+		}
 	}
 
 	data, err := json.Marshal(report)
@@ -140,6 +170,7 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		"match_dict_to_list_files",
 		"match_both_files",
 		"match_reference_subset_files",
+		"match_known_family_transform_files",
 		"count_mismatch_files",
 		"count_mismatch_buckets",
 		"schema_mismatch_files",
@@ -173,11 +204,11 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		t.Fatalf("expected count_mismatch_buckets to be empty")
 	}
 
-	if len(report.SchemaMismatchFiles) != 15 {
-		t.Fatalf("schema_mismatch_files=%d want 15", len(report.SchemaMismatchFiles))
+	if len(report.SchemaMismatchFiles) != 0 {
+		t.Fatalf("schema_mismatch_files=%d want 0", len(report.SchemaMismatchFiles))
 	}
-	if len(report.SchemaMismatchBuckets) == 0 {
-		t.Fatalf("expected schema_mismatch_buckets to be populated")
+	if len(report.SchemaMismatchBuckets) != 0 {
+		t.Fatalf("expected schema_mismatch_buckets to be empty")
 	}
 	schemaSeen := make(map[string]struct{})
 	schemaBucketSum := 0
@@ -221,10 +252,14 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	for _, needle := range []string{
 		"## Count Mismatch Buckets",
 		"## Schema Mismatch Buckets",
+		"match_known_family_transform",
 	} {
 		if !strings.Contains(string(markdown), needle) {
 			t.Fatalf("expected markdown to contain %q", needle)
 		}
+	}
+	if !classifiedFileHasNote(report.ClassifiedFiles, "JP/sharecfgdata/item_data_statistics.json", "output_confirmed / reference-derived") {
+		t.Fatalf("expected item_data_statistics to stay labeled as output_confirmed / reference-derived")
 	}
 
 	var exactPromoted, subsetPromoted string
@@ -253,6 +288,24 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		filepath.Join(sourceRoot, filepath.FromSlash(subsetPromoted)),
 		filepath.Join(belfastRoot, filepath.FromSlash(subsetPromoted)),
 	)
+	assertKnownFamilyTransformMatches(
+		t,
+		filepath.Join(sourceRoot, filepath.FromSlash("JP/ShareCfg/auto_pilot_template.json")),
+		filepath.Join(belfastRoot, filepath.FromSlash("JP/ShareCfg/auto_pilot_template.json")),
+		"JP/ShareCfg/auto_pilot_template.json",
+	)
+	assertKnownFamilyTransformMatches(
+		t,
+		filepath.Join(sourceRoot, filepath.FromSlash("JP/ShareCfg/class_upgrade_group.json")),
+		filepath.Join(belfastRoot, filepath.FromSlash("JP/ShareCfg/class_upgrade_group.json")),
+		"JP/ShareCfg/class_upgrade_group.json",
+	)
+	assertKnownFamilyTransformMatches(
+		t,
+		filepath.Join(sourceRoot, filepath.FromSlash("JP/ShareCfg/guildset.json")),
+		filepath.Join(belfastRoot, filepath.FromSlash("JP/ShareCfg/guildset.json")),
+		"JP/ShareCfg/guildset.json",
+	)
 }
 
 func assertKeyedExactMatch(t *testing.T, sourcePath, refPath string) {
@@ -278,6 +331,97 @@ func assertReferenceSubsetMatch(t *testing.T, sourcePath, refPath string) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("expected reference subset transform to equal Belfast reference for %s", sourcePath)
+	}
+}
+
+func assertKnownFamilyTransformMatches(t *testing.T, sourcePath, refPath, rel string) {
+	t.Helper()
+	src := readJSONAny(t, sourcePath)
+	ref := readJSONAny(t, refPath)
+	got, _, ok := familySpecificExactTransform(rel, src)
+	if !ok {
+		t.Fatalf("familySpecificExactTransform rejected %s", sourcePath)
+	}
+	if !reflect.DeepEqual(got, ref) {
+		t.Fatalf("expected family-specific transform to equal Belfast reference for %s", sourcePath)
+	}
+}
+
+func TestCompareFileFailClosedRules(t *testing.T) {
+	t.Run("unknown file with raw exact match is safe", func(t *testing.T) {
+		classification := compareClassification(t, "ZZ/ShareCfg/custom_raw.json", map[string]any{"id": 1.0, "name": "ok"}, map[string]any{"id": 1.0, "name": "ok"})
+		if classification != "exact_raw_match" || !isSafePromotionClassification(classification) {
+			t.Fatalf("got %s, want exact_raw_match safe", classification)
+		}
+	})
+
+	t.Run("unknown file with canonical exact match is safe", func(t *testing.T) {
+		classification := compareClassification(t, "ZZ/ShareCfg/custom_dict.json",
+			map[string]any{
+				"2": map[string]any{"id": 2.0, "name": "b"},
+				"1": map[string]any{"id": 1.0, "name": "a"},
+			},
+			[]any{
+				map[string]any{"id": 1.0, "name": "a"},
+				map[string]any{"id": 2.0, "name": "b"},
+			},
+		)
+		if classification != "match_after_dict_keyed_to_list_by_id" || !isSafePromotionClassification(classification) {
+			t.Fatalf("got %s, want match_after_dict_keyed_to_list_by_id safe", classification)
+		}
+	})
+
+	t.Run("unknown file with no exact match is not safe", func(t *testing.T) {
+		classification := compareClassification(t, "ZZ/ShareCfg/custom_mismatch.json", map[string]any{"id": 1.0, "name": "left"}, map[string]any{"id": 1.0, "name": "right"})
+		if classification != "schema_mismatch" {
+			t.Fatalf("got %s, want schema_mismatch", classification)
+		}
+		if isSafePromotionClassification(classification) {
+			t.Fatalf("%s should not be safe", classification)
+		}
+	})
+
+	t.Run("count-only match is not safe", func(t *testing.T) {
+		classification := compareClassification(t, "ZZ/ShareCfg/custom_count.json",
+			map[string]any{
+				"1": map[string]any{"id": 1.0, "name": "a"},
+				"2": map[string]any{"id": 2.0, "name": "b"},
+			},
+			[]any{
+				map[string]any{"id": 3.0, "name": "c"},
+			},
+		)
+		if classification != "count_mismatch" {
+			t.Fatalf("got %s, want count_mismatch", classification)
+		}
+		if isSafePromotionClassification(classification) {
+			t.Fatalf("%s should not be safe", classification)
+		}
+	})
+}
+
+func compareClassification(t *testing.T, rel string, source, ref any) string {
+	t.Helper()
+	dir := t.TempDir()
+	sourcePath := filepath.Join(dir, "source.json")
+	refPath := filepath.Join(dir, "ref.json")
+	writeJSONValue(t, sourcePath, source)
+	writeJSONValue(t, refPath, ref)
+	result, err := compareFile(sourcePath, refPath, rel)
+	if err != nil {
+		t.Fatalf("compareFile: %v", err)
+	}
+	return result.classification
+}
+
+func writeJSONValue(t *testing.T, path string, value any) {
+	t.Helper()
+	data, err := json.Marshal(value)
+	if err != nil {
+		t.Fatalf("marshal %s: %v", path, err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatalf("write %s: %v", path, err)
 	}
 }
 
@@ -327,6 +471,15 @@ func containsClassifiedFile(files []ClassifiedFile, target string) bool {
 func containsExcludedFile(files []ExcludedSourceFile, target string) bool {
 	for _, file := range files {
 		if file.RelativePath == target {
+			return true
+		}
+	}
+	return false
+}
+
+func classifiedFileHasNote(files []ClassifiedFile, target, needle string) bool {
+	for _, file := range files {
+		if file.RelativePath == target && strings.Contains(file.Notes, needle) {
 			return true
 		}
 	}

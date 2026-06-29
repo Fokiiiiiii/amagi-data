@@ -81,7 +81,7 @@
       "reason": "These files exist in the source region tree, but are excluded from ordinary comparable region-layout counting because they are handled through special Belfast root files or special audit handling."
     }
   ],
-  "safe_to_promote_count": 3022,
+  "safe_to_promote_count": 3037,
   "classified_files": [
     {
       "relative_path": "CN/GameCfg/buff.json",
@@ -1122,8 +1122,8 @@
       "relative_path": "CN/ShareCfg/auto_pilot_template.json",
       "region": "CN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_auto_pilot_template_key_id_rewrite",
+      "safe_to_promote": true,
       "source_record_count": 458,
       "reference_record_count": 458
     },
@@ -1806,9 +1806,9 @@
       "relative_path": "CN/ShareCfg/class_upgrade_group.json",
       "region": "CN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
+      "classification": "match_after_class_upgrade_group_key_id_rewrite",
+      "safe_to_promote": true,
+      "source_record_count": 7,
       "reference_record_count": 7
     },
     {
@@ -3048,8 +3048,8 @@
       "relative_path": "CN/ShareCfg/guildset.json",
       "region": "CN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_guildset_empty_key_args_array",
+      "safe_to_promote": true,
       "source_record_count": 46,
       "reference_record_count": 46
     },
@@ -5563,7 +5563,7 @@
       "safe_to_promote": true,
       "source_record_count": 2568,
       "reference_record_count": 2568,
-      "notes": "Belfast reference-derived usage_drop allowlist"
+      "notes": "output_confirmed / reference-derived usage_drop allowlist"
     },
     {
       "relative_path": "CN/sharecfgdata/item_virtual_data_statistics.json",
@@ -6721,8 +6721,8 @@
       "relative_path": "EN/ShareCfg/auto_pilot_template.json",
       "region": "EN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_auto_pilot_template_key_id_rewrite",
+      "safe_to_promote": true,
       "source_record_count": 458,
       "reference_record_count": 458
     },
@@ -7387,9 +7387,9 @@
       "relative_path": "EN/ShareCfg/class_upgrade_group.json",
       "region": "EN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
+      "classification": "match_after_class_upgrade_group_key_id_rewrite",
+      "safe_to_promote": true,
+      "source_record_count": 7,
       "reference_record_count": 7
     },
     {
@@ -8620,8 +8620,8 @@
       "relative_path": "EN/ShareCfg/guildset.json",
       "region": "EN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_guildset_empty_key_args_array",
+      "safe_to_promote": true,
       "source_record_count": 46,
       "reference_record_count": 46
     },
@@ -11144,7 +11144,7 @@
       "safe_to_promote": true,
       "source_record_count": 2250,
       "reference_record_count": 2250,
-      "notes": "Belfast reference-derived usage_drop allowlist"
+      "notes": "output_confirmed / reference-derived usage_drop allowlist"
     },
     {
       "relative_path": "EN/sharecfgdata/item_virtual_data_statistics.json",
@@ -12302,8 +12302,8 @@
       "relative_path": "JP/ShareCfg/auto_pilot_template.json",
       "region": "JP",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_auto_pilot_template_key_id_rewrite",
+      "safe_to_promote": true,
       "source_record_count": 458,
       "reference_record_count": 458
     },
@@ -12986,9 +12986,9 @@
       "relative_path": "JP/ShareCfg/class_upgrade_group.json",
       "region": "JP",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
+      "classification": "match_after_class_upgrade_group_key_id_rewrite",
+      "safe_to_promote": true,
+      "source_record_count": 7,
       "reference_record_count": 7
     },
     {
@@ -14210,8 +14210,8 @@
       "relative_path": "JP/ShareCfg/guildset.json",
       "region": "JP",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_guildset_empty_key_args_array",
+      "safe_to_promote": true,
       "source_record_count": 46,
       "reference_record_count": 46
     },
@@ -16735,7 +16735,7 @@
       "safe_to_promote": true,
       "source_record_count": 2378,
       "reference_record_count": 2378,
-      "notes": "Belfast reference-derived usage_drop allowlist"
+      "notes": "output_confirmed / reference-derived usage_drop allowlist"
     },
     {
       "relative_path": "JP/sharecfgdata/item_virtual_data_statistics.json",
@@ -17947,8 +17947,8 @@
       "relative_path": "KR/ShareCfg/auto_pilot_template.json",
       "region": "KR",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_auto_pilot_template_key_id_rewrite",
+      "safe_to_promote": true,
       "source_record_count": 458,
       "reference_record_count": 458
     },
@@ -18613,9 +18613,9 @@
       "relative_path": "KR/ShareCfg/class_upgrade_group.json",
       "region": "KR",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
+      "classification": "match_after_class_upgrade_group_key_id_rewrite",
+      "safe_to_promote": true,
+      "source_record_count": 7,
       "reference_record_count": 7
     },
     {
@@ -19855,8 +19855,8 @@
       "relative_path": "KR/ShareCfg/guildset.json",
       "region": "KR",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_guildset_empty_key_args_array",
+      "safe_to_promote": true,
       "source_record_count": 46,
       "reference_record_count": 46
     },
@@ -22379,7 +22379,7 @@
       "safe_to_promote": true,
       "source_record_count": 2209,
       "reference_record_count": 2209,
-      "notes": "Belfast reference-derived usage_drop allowlist"
+      "notes": "output_confirmed / reference-derived usage_drop allowlist"
     },
     {
       "relative_path": "KR/sharecfgdata/item_virtual_data_statistics.json",
@@ -23537,8 +23537,8 @@
       "relative_path": "TW/ShareCfg/auto_pilot_template.json",
       "region": "TW",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_auto_pilot_template_key_id_rewrite",
+      "safe_to_promote": true,
       "source_record_count": 458,
       "reference_record_count": 458
     },
@@ -24221,9 +24221,9 @@
       "relative_path": "TW/ShareCfg/class_upgrade_group.json",
       "region": "TW",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
+      "classification": "match_after_class_upgrade_group_key_id_rewrite",
+      "safe_to_promote": true,
+      "source_record_count": 7,
       "reference_record_count": 7
     },
     {
@@ -25450,8 +25450,8 @@
       "relative_path": "TW/ShareCfg/guildset.json",
       "region": "TW",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
+      "classification": "match_after_guildset_empty_key_args_array",
+      "safe_to_promote": true,
       "source_record_count": 46,
       "reference_record_count": 46
     },
@@ -27997,7 +27997,7 @@
       "safe_to_promote": true,
       "source_record_count": 1730,
       "reference_record_count": 1730,
-      "notes": "Belfast reference-derived usage_drop allowlist"
+      "notes": "output_confirmed / reference-derived usage_drop allowlist"
     },
     {
       "relative_path": "TW/sharecfgdata/item_virtual_data_statistics.json",
@@ -28118,6 +28118,36 @@
     }
   ],
   "safe_to_promote_files": [
+    {
+      "relative_path": "CN/ShareCfg/guildset.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "EN/ShareCfg/guildset.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "JP/ShareCfg/guildset.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "KR/ShareCfg/guildset.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "TW/ShareCfg/guildset.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
     {
       "relative_path": "CN/GameCfg/buff.json",
       "region": "CN",
@@ -29857,6 +29887,36 @@
       "region": "TW",
       "category": "ShareCfg",
       "classification": "exact_raw_match"
+    },
+    {
+      "relative_path": "CN/ShareCfg/class_upgrade_group.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "EN/ShareCfg/class_upgrade_group.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "JP/ShareCfg/class_upgrade_group.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "KR/ShareCfg/class_upgrade_group.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "TW/ShareCfg/class_upgrade_group.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
     },
     {
       "relative_path": "CN/ShareCfg/achievement_data_template.json",
@@ -46249,6 +46309,36 @@
       "region": "TW",
       "category": "sharecfgdata",
       "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "CN/ShareCfg/auto_pilot_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "EN/ShareCfg/auto_pilot_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "JP/ShareCfg/auto_pilot_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "KR/ShareCfg/auto_pilot_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "TW/ShareCfg/auto_pilot_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
     }
   ],
   "exact_raw_match_files": [
@@ -64392,190 +64482,102 @@
       "classification": "match_after_reference_id_subset"
     }
   ],
-  "count_mismatch_files": [],
-  "count_mismatch_buckets": {},
-  "schema_mismatch_files": [
-    {
-      "relative_path": "CN/ShareCfg/auto_pilot_template.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 458,
-      "reference_record_count": 458
-    },
-    {
-      "relative_path": "CN/ShareCfg/class_upgrade_group.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
-      "reference_record_count": 7
-    },
+  "match_known_family_transform_files": [
     {
       "relative_path": "CN/ShareCfg/guildset.json",
       "region": "CN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 46,
-      "reference_record_count": 46
-    },
-    {
-      "relative_path": "EN/ShareCfg/auto_pilot_template.json",
-      "region": "EN",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 458,
-      "reference_record_count": 458
-    },
-    {
-      "relative_path": "EN/ShareCfg/class_upgrade_group.json",
-      "region": "EN",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
-      "reference_record_count": 7
+      "classification": "match_after_guildset_empty_key_args_array"
     },
     {
       "relative_path": "EN/ShareCfg/guildset.json",
       "region": "EN",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 46,
-      "reference_record_count": 46
-    },
-    {
-      "relative_path": "JP/ShareCfg/auto_pilot_template.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 458,
-      "reference_record_count": 458
-    },
-    {
-      "relative_path": "JP/ShareCfg/class_upgrade_group.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
-      "reference_record_count": 7
+      "classification": "match_after_guildset_empty_key_args_array"
     },
     {
       "relative_path": "JP/ShareCfg/guildset.json",
       "region": "JP",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 46,
-      "reference_record_count": 46
-    },
-    {
-      "relative_path": "KR/ShareCfg/auto_pilot_template.json",
-      "region": "KR",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 458,
-      "reference_record_count": 458
-    },
-    {
-      "relative_path": "KR/ShareCfg/class_upgrade_group.json",
-      "region": "KR",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
-      "reference_record_count": 7
+      "classification": "match_after_guildset_empty_key_args_array"
     },
     {
       "relative_path": "KR/ShareCfg/guildset.json",
       "region": "KR",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 46,
-      "reference_record_count": 46
-    },
-    {
-      "relative_path": "TW/ShareCfg/auto_pilot_template.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 458,
-      "reference_record_count": 458
-    },
-    {
-      "relative_path": "TW/ShareCfg/class_upgrade_group.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 0,
-      "reference_record_count": 7
+      "classification": "match_after_guildset_empty_key_args_array"
     },
     {
       "relative_path": "TW/ShareCfg/guildset.json",
       "region": "TW",
       "category": "ShareCfg",
-      "classification": "schema_mismatch",
-      "safe_to_promote": false,
-      "source_record_count": 46,
-      "reference_record_count": 46
+      "classification": "match_after_guildset_empty_key_args_array"
+    },
+    {
+      "relative_path": "CN/ShareCfg/class_upgrade_group.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "EN/ShareCfg/class_upgrade_group.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "JP/ShareCfg/class_upgrade_group.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "KR/ShareCfg/class_upgrade_group.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "TW/ShareCfg/class_upgrade_group.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite"
+    },
+    {
+      "relative_path": "CN/ShareCfg/auto_pilot_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "EN/ShareCfg/auto_pilot_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "JP/ShareCfg/auto_pilot_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "KR/ShareCfg/auto_pilot_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
+    },
+    {
+      "relative_path": "TW/ShareCfg/auto_pilot_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite"
     }
   ],
-  "schema_mismatch_buckets": {
-    "field_value_delta": {
-      "name": "field_value_delta",
-      "file_count": 10,
-      "files": [
-        "CN/ShareCfg/auto_pilot_template.json",
-        "CN/ShareCfg/class_upgrade_group.json",
-        "EN/ShareCfg/auto_pilot_template.json",
-        "EN/ShareCfg/class_upgrade_group.json",
-        "JP/ShareCfg/auto_pilot_template.json",
-        "JP/ShareCfg/class_upgrade_group.json",
-        "KR/ShareCfg/auto_pilot_template.json",
-        "KR/ShareCfg/class_upgrade_group.json",
-        "TW/ShareCfg/auto_pilot_template.json",
-        "TW/ShareCfg/class_upgrade_group.json"
-      ],
-      "representative_files": [
-        "CN/ShareCfg/auto_pilot_template.json",
-        "CN/ShareCfg/class_upgrade_group.json",
-        "EN/ShareCfg/auto_pilot_template.json"
-      ],
-      "candidate_rule": "narrow field-level adjustments only",
-      "status": "rejected",
-      "notes": "These files differ by a small number of field values after shape normalization."
-    },
-    "scalar_vs_array": {
-      "name": "scalar_vs_array",
-      "file_count": 5,
-      "files": [
-        "CN/ShareCfg/guildset.json",
-        "EN/ShareCfg/guildset.json",
-        "JP/ShareCfg/guildset.json",
-        "KR/ShareCfg/guildset.json",
-        "TW/ShareCfg/guildset.json"
-      ],
-      "representative_files": [
-        "CN/ShareCfg/guildset.json",
-        "EN/ShareCfg/guildset.json",
-        "JP/ShareCfg/guildset.json"
-      ],
-      "candidate_rule": "wrap scalar fields in singleton arrays",
-      "status": "rejected",
-      "notes": "These files differ by nested scalar-versus-array shape and have no proven exact promotion rule."
-    }
-  },
+  "count_mismatch_files": [],
+  "count_mismatch_buckets": {},
+  "schema_mismatch_files": [],
+  "schema_mismatch_buckets": {},
   "belfast_only_files": [
     "CN/ShareCfg/battle_nodes_cfg.json",
     "CN/ShareCfg/dorm3_d_collect.json",
@@ -64689,6 +64691,24 @@
       "classification": "match_after_both_transformations",
       "status": "confirmed",
       "evidence": "Full match after dict-keyed records -\u003e id-sorted list and empty object {} -\u003e empty array [] normalization."
+    },
+    {
+      "relative_path": "JP/ShareCfg/auto_pilot_template.json",
+      "classification": "match_after_auto_pilot_template_key_id_rewrite",
+      "status": "confirmed",
+      "evidence": "Full match after rewriting each record id from the numeric map key and sorting the keyed table into an id-sorted list."
+    },
+    {
+      "relative_path": "JP/ShareCfg/class_upgrade_group.json",
+      "classification": "match_after_class_upgrade_group_key_id_rewrite",
+      "status": "confirmed",
+      "evidence": "Full match after rewriting each record id from the numeric map key and sorting the keyed table into an id-sorted list."
+    },
+    {
+      "relative_path": "JP/ShareCfg/guildset.json",
+      "classification": "match_after_guildset_empty_key_args_array",
+      "status": "confirmed",
+      "evidence": "Full match after normalizing empty string key_args fields to empty arrays for guildset records only."
     }
   ],
   "probable_transform_rules": [

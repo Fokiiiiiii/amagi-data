@@ -261,14 +261,6 @@ func convertAuditedFile(rel, sourcePath, classification string, allowlist []int)
 		return dictKeyedToSortedList(decoded)
 	case "match_after_both_transformations":
 		return dictKeyedToSortedList(normalizeEmpty(decoded))
-	case "match_after_list_to_map_keyed_by_id":
-		return listToMapKeyedById(decoded)
-	case "match_after_list_to_map_both_transformations":
-		return listToMapKeyedById(normalizeEmpty(decoded))
-	case "match_after_singleton_object_to_one_item_list":
-		return singletonObjectToOneItemList(decoded)
-	case "match_after_singleton_both_transformations":
-		return singletonObjectToOneItemList(normalizeEmpty(decoded))
 	case "match_after_reference_id_subset":
 		// For item_data_statistics.json which is match_after_reference_id_subset,
 		// it requires BOTH transformations first to extract the list, then filter!
@@ -301,6 +293,10 @@ func convertAuditedFile(rel, sourcePath, classification string, allowlist []int)
 			return idA - idB
 		})
 		return filtered, nil
+	case "match_after_auto_pilot_template_key_id_rewrite", "match_after_class_upgrade_group_key_id_rewrite":
+		return keyedRecordListWithIDFromKey(decoded)
+	case "match_after_guildset_empty_key_args_array":
+		return guildsetEmptyKeyArgsToArray(decoded)
 	default:
 		return nil, fmt.Errorf("unsupported audited classification for %s: %s", rel, classification)
 	}
@@ -416,6 +412,77 @@ func singletonObjectToOneItemList(v any) (any, error) {
 		return []any{obj}, nil
 	}
 	return v, nil
+}
+
+func keyedRecordListWithIDFromKey(v any) (any, error) {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return v, nil
+	}
+	type pair struct {
+		key string
+		id  int
+		val map[string]any
+	}
+	pairs := make([]pair, 0, len(obj))
+	for key, raw := range obj {
+		id, err := strconv.Atoi(key)
+		if err != nil {
+			continue
+		}
+		val, ok := raw.(map[string]any)
+		if !ok {
+			return v, fmt.Errorf("non-record value for %s", key)
+		}
+		cloned := make(map[string]any, len(val)+1)
+		for k, value := range val {
+			cloned[k] = value
+		}
+		cloned["id"] = float64(id)
+		pairs = append(pairs, pair{key: key, id: id, val: cloned})
+	}
+	if len(pairs) == 0 {
+		return v, nil
+	}
+	slices.SortFunc(pairs, func(a, b pair) int {
+		if a.id < b.id {
+			return -1
+		}
+		if a.id > b.id {
+			return 1
+		}
+		return strings.Compare(a.key, b.key)
+	})
+	out := make([]any, 0, len(pairs))
+	for _, pair := range pairs {
+		out = append(out, pair.val)
+	}
+	return out, nil
+}
+
+func guildsetEmptyKeyArgsToArray(v any) (any, error) {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return v, nil
+	}
+	out := make(map[string]any, len(obj))
+	for key, raw := range obj {
+		record, ok := raw.(map[string]any)
+		if !ok {
+			out[key] = raw
+			continue
+		}
+		cloned := make(map[string]any, len(record))
+		for field, value := range record {
+			if field == "key_args" && value == "" {
+				cloned[field] = []any{}
+				continue
+			}
+			cloned[field] = value
+		}
+		out[key] = cloned
+	}
+	return out, nil
 }
 
 func recordCount(v any) int {

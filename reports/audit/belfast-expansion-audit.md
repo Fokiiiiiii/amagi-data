@@ -4,7 +4,7 @@
 - source_region_files_total: 3120
 - comparable_source_files_count: 3110
 - excluded_source_files_count: 10
-- safe_to_promote_count: 3022
+- safe_to_promote_count: 3037
 
 ## Excluded Source Files
 - CN/buffCfg.json [buffCfg handled separately]: These files exist in the source region tree, but are excluded from ordinary comparable region-layout counting because they are handled through special Belfast root files or special audit handling.
@@ -30,8 +30,10 @@
 - match_after_empty_normalization: 0
 - match_after_dict_keyed_to_list_by_id: 2721
 - match_after_both_transformations: 1
+- match_after_reference_id_subset: 10
+- match_known_family_transform: 15
 - count_mismatch: 0
-- schema_mismatch: 15
+- schema_mismatch: 0
 - missing_reference: 36
 - unsupported: 0
 - belfast_only: 48
@@ -40,77 +42,34 @@
 - none
 
 ## Schema Mismatch Buckets
-- field_value_delta
-  - file_count: 10
-  - status: rejected
-  - candidate_rule: narrow field-level adjustments only
-  - notes: These files differ by a small number of field values after shape normalization.
-  - files:
-    - CN/ShareCfg/auto_pilot_template.json
-    - CN/ShareCfg/class_upgrade_group.json
-    - EN/ShareCfg/auto_pilot_template.json
-    - EN/ShareCfg/class_upgrade_group.json
-    - JP/ShareCfg/auto_pilot_template.json
-    - JP/ShareCfg/class_upgrade_group.json
-    - KR/ShareCfg/auto_pilot_template.json
-    - KR/ShareCfg/class_upgrade_group.json
-    - TW/ShareCfg/auto_pilot_template.json
-    - TW/ShareCfg/class_upgrade_group.json
-  - representative_files:
-    - CN/ShareCfg/auto_pilot_template.json
-    - CN/ShareCfg/class_upgrade_group.json
-    - EN/ShareCfg/auto_pilot_template.json
-- scalar_vs_array
-  - file_count: 5
-  - status: rejected
-  - candidate_rule: wrap scalar fields in singleton arrays
-  - notes: These files differ by nested scalar-versus-array shape and have no proven exact promotion rule.
-  - files:
-    - CN/ShareCfg/guildset.json
-    - EN/ShareCfg/guildset.json
-    - JP/ShareCfg/guildset.json
-    - KR/ShareCfg/guildset.json
-    - TW/ShareCfg/guildset.json
-  - representative_files:
-    - CN/ShareCfg/guildset.json
-    - EN/ShareCfg/guildset.json
-    - JP/ShareCfg/guildset.json
-
+- none
 
 ## Safe To Promote Summary
-- Total: 3022
+- Total: 3037
 - exact_raw_match: 290
 - match_after_empty_normalization: 0
 - match_after_dict_keyed_to_list_by_id: 2721
 - match_after_both_transformations: 1
 - match_after_reference_id_subset: 10
+- match_known_family_transform: 15
 - Examples:
+  - CN/ShareCfg/guildset.json [CN/match_after_guildset_empty_key_args_array]
+  - EN/ShareCfg/guildset.json [EN/match_after_guildset_empty_key_args_array]
+  - JP/ShareCfg/guildset.json [JP/match_after_guildset_empty_key_args_array]
+  - KR/ShareCfg/guildset.json [KR/match_after_guildset_empty_key_args_array]
+  - TW/ShareCfg/guildset.json [TW/match_after_guildset_empty_key_args_array]
   - CN/GameCfg/buff.json [CN/exact_raw_match]
   - CN/GameCfg/card.json [CN/exact_raw_match]
   - CN/GameCfg/dorm.json [CN/exact_raw_match]
-  - CN/GameCfg/dungeon.json [CN/exact_raw_match]
-  - CN/GameCfg/skill.json [CN/exact_raw_match]
-  - CN/GameCfg/story.json [CN/exact_raw_match]
-  - CN/ShareCfg/activity_coloring_template.json [CN/exact_raw_match]
-  - CN/ShareCfg/activity_const.json [CN/exact_raw_match]
-  - ... 3014 more
+  - ... 3029 more
 
 ## Count Mismatch Summary
 - Count: 0
 - Examples:
 
 ## Schema Mismatch Summary
-- Count: 15
+- Count: 0
 - Examples:
-  - CN/ShareCfg/auto_pilot_template.json [CN/schema_mismatch]
-  - CN/ShareCfg/class_upgrade_group.json [CN/schema_mismatch]
-  - CN/ShareCfg/guildset.json [CN/schema_mismatch]
-  - EN/ShareCfg/auto_pilot_template.json [EN/schema_mismatch]
-  - EN/ShareCfg/class_upgrade_group.json [EN/schema_mismatch]
-  - EN/ShareCfg/guildset.json [EN/schema_mismatch]
-  - JP/ShareCfg/auto_pilot_template.json [JP/schema_mismatch]
-  - JP/ShareCfg/class_upgrade_group.json [JP/schema_mismatch]
-  - ... 7 more
 
 ## Belfast Only Summary
 - Count: 48
@@ -143,6 +102,9 @@
 - confirmed: `JP/sharecfgdata/weapon_property.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
 - confirmed: `JP/sharecfgdata/equip_data_template.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
 - confirmed: `JP/ShareCfg/ship_skin_template.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
+- confirmed: `JP/ShareCfg/auto_pilot_template.json` Full match after rewriting each record id from the numeric map key and sorting the keyed table into an id-sorted list.
+- confirmed: `JP/ShareCfg/class_upgrade_group.json` Full match after rewriting each record id from the numeric map key and sorting the keyed table into an id-sorted list.
+- confirmed: `JP/ShareCfg/guildset.json` Full match after normalizing empty string key_args fields to empty arrays for guildset records only.
 
 ## Helper Data Notes
 - `build_pools.json` [observed]: Currently treated as fallback/generated helper output; exact source fields are not confirmed.
@@ -161,4 +123,4 @@
 ## Recommended Next Steps
 1. Generate only the committed safe audited manifest files from the converter.
 2. Keep helper fallback and helper-generated outputs separate from audited region files.
-3. Leave count-mismatch, schema-mismatch, and item_data_statistics out of promotion until a future audit proves them safe.
+3. Keep count-mismatch and schema-mismatch files visible in the audit until an exact transform proves them safe.
