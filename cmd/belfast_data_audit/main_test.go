@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -11,11 +12,22 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	sourceRoot := externalRoot(t, "AMAGI_DATA_TEST_AZURLANE_ROOT", `C:\Users\yutai\AzurLaneData`)
 	belfastRoot := externalRoot(t, "AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT", `C:\Users\yutai\belfast-data`)
 
+	if _, err := os.Stat(filepath.Join("..", "..", "reports", "audit", "belfast-expansion-audit.json")); err != nil {
+		t.Fatalf("expected reports/audit/belfast-expansion-audit.json to exist: %v", err)
+	}
+
 	report, manifest, err := runAudit(sourceRoot, belfastRoot)
 	if err != nil {
 		t.Fatalf("runAudit: %v", err)
 	}
 
+	sum := 0
+	for _, count := range report.SourceRegionFiles {
+		sum += count
+	}
+	if report.SourceRegionFilesTotal != sum {
+		t.Fatalf("source_region_files_total=%d want sum(source_region_files)=%d", report.SourceRegionFilesTotal, sum)
+	}
 	if report.SourceRegionFilesTotal != 3120 {
 		t.Fatalf("source_region_files_total=%d want 3120", report.SourceRegionFilesTotal)
 	}
@@ -28,8 +40,31 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	if len(report.ExcludedSourceFiles) != 10 {
 		t.Fatalf("len(excluded_source_files)=%d want 10", len(report.ExcludedSourceFiles))
 	}
+	for _, path := range []string{
+		"CN/buffCfg.json",
+		"CN/skillCfg.json",
+		"EN/buffCfg.json",
+		"EN/skillCfg.json",
+		"JP/buffCfg.json",
+		"JP/skillCfg.json",
+		"KR/buffCfg.json",
+		"KR/skillCfg.json",
+		"TW/buffCfg.json",
+		"TW/skillCfg.json",
+	} {
+		if !containsExcludedFile(report.ExcludedSourceFiles, path) {
+			t.Fatalf("expected excluded_source_files to contain %s", path)
+		}
+	}
 	if report.SafeToPromoteCount != 604 || len(report.SafeToPromoteFiles) != 604 {
 		t.Fatalf("safe_to_promote mismatch: count=%d len=%d", report.SafeToPromoteCount, len(report.SafeToPromoteFiles))
+	}
+	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles) {
+		t.Fatalf(
+			"safe_to_promote_count=%d want exact_raw_match+match_empty_norm+match_dict_to_list+match_both=%d",
+			report.SafeToPromoteCount,
+			len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles),
+		)
 	}
 	if len(report.MatchEmptyNormFiles) != 0 {
 		t.Fatalf("expected match_empty_norm_files to stay empty, got %d", len(report.MatchEmptyNormFiles))
@@ -97,6 +132,15 @@ func containsSafeFile(files []SafePromoteFile, target string) bool {
 }
 
 func containsClassifiedFile(files []ClassifiedFile, target string) bool {
+	for _, file := range files {
+		if file.RelativePath == target {
+			return true
+		}
+	}
+	return false
+}
+
+func containsExcludedFile(files []ExcludedSourceFile, target string) bool {
 	for _, file := range files {
 		if file.RelativePath == target {
 			return true
