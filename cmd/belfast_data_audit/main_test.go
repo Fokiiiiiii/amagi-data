@@ -243,8 +243,8 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		}
 	}
 
-	if len(report.SchemaMismatchFiles) != 274 {
-		t.Fatalf("schema_mismatch_files=%d want 274", len(report.SchemaMismatchFiles))
+	if len(report.SchemaMismatchFiles) != 15 {
+		t.Fatalf("schema_mismatch_files=%d want 15", len(report.SchemaMismatchFiles))
 	}
 	if len(report.SchemaMismatchBuckets) == 0 {
 		t.Fatalf("expected schema_mismatch_buckets to be populated")

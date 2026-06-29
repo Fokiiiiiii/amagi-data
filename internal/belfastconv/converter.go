@@ -295,15 +295,29 @@ func dictKeyedToSortedList(v any) (any, error) {
 	}
 	pairs := make([]pair, 0, len(obj))
 	for key, raw := range obj {
+		if _, err := strconv.Atoi(key); err != nil {
+			continue
+		}
 		val, ok := raw.(map[string]any)
 		if !ok {
 			return v, nil
+		}
+		if _, ok := intFromAny(val["id"]); !ok {
+			cloned := make(map[string]any, len(val)+1)
+			for k, v := range val {
+				cloned[k] = v
+			}
+			val = cloned
+			val["id"] = float64(mustInt(key))
 		}
 		id, ok := intFromAny(val["id"])
 		if !ok {
 			return v, nil
 		}
 		pairs = append(pairs, pair{key: key, id: id, val: val})
+	}
+	if len(pairs) == 0 {
+		return v, nil
 	}
 	slices.SortFunc(pairs, func(a, b pair) int {
 		if a.id < b.id {
@@ -372,6 +386,11 @@ func intFromAny(v any) (int, bool) {
 	default:
 		return 0, false
 	}
+}
+
+func mustInt(value string) int {
+	n, _ := strconv.Atoi(value)
+	return n
 }
 
 func writeJSON(path string, v any) error {

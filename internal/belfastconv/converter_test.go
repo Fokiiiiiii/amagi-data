@@ -51,8 +51,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 		t.Fatalf("ConvertMVP: %v", err)
 	}
 
-	if len(report.GeneratedFiles) != 2753 {
-		t.Fatalf("expected 2753 generated audited files, got %d", len(report.GeneratedFiles))
+	if len(report.GeneratedFiles) != 3012 {
+		t.Fatalf("expected 3012 generated audited files, got %d", len(report.GeneratedFiles))
 	}
 	for _, rel := range []string{
 		"CN/sharecfgdata/item_data_statistics.json",

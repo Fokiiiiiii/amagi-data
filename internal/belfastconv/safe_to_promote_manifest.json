@@ -1,6 +1,12 @@
 {
   "safe_to_promote_files": [
     {
+      "relative_path": "JP/ShareCfg/ship_skin_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_both_transformations"
+    },
+    {
       "relative_path": "CN/sharecfgdata/shop_template.json",
       "region": "CN",
       "category": "sharecfgdata",
@@ -1969,6 +1975,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/activity_event_sign.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/activity_event_turning.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -1988,6 +2000,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/activity_giftmake_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/activity_holiday_collection.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -2030,6 +2048,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/activity_ins_redpackage.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/activity_ins_ship_group_template.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -2509,6 +2533,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/chapter_model_multistageboss.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/chapter_pop_template.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -2576,6 +2606,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/child2_minigame.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/child2_node.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -2767,6 +2803,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/class_upgrade_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/collection_template.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -2803,7 +2845,19 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/commander_home.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/commander_home_style.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/commander_level.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -2995,6 +3049,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/dorm3d_ins_ship_group_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/dorm3d_ins_telephone_group.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -3145,6 +3205,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/enemy_data_by_type.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/enemy_data_skill.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -3158,6 +3224,24 @@
     },
     {
       "relative_path": "CN/ShareCfg/energy_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/equip_bullet_type.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/equip_data_by_quality.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/equip_data_by_type.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -3187,6 +3271,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/error_message.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/escort_map_template.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -3211,6 +3301,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/expedition_cloud_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/expedition_constellation_challenge_template.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -3218,6 +3314,24 @@
     },
     {
       "relative_path": "CN/ShareCfg/expedition_daily_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/expedition_data_by_chapter.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/expedition_data_by_map.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/expedition_island_template.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -3349,6 +3463,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/guild_data_level.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/guild_event_node.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -3380,6 +3500,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/honormedal_goods_list.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/illustrator.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -3470,6 +3596,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/island_chara_att.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/island_chara_level.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -3649,6 +3781,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/island_level.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/island_main_btns.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -3709,6 +3847,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/island_order_favor.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/island_order_list.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -3716,6 +3860,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/island_order_position.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/island_order_price.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -3758,6 +3908,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/island_production_slot.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/island_prosperity.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -3824,6 +3980,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/island_storage_filter_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/island_storage_level.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -3955,13 +4117,49 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/lover_badge.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/lover_character_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/lover_letter_content.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/lover_nation.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/lover_reward.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/mail_storeroom.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/map_data.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/map_event_list.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4021,6 +4219,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/music_album.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/music_collect_config.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4039,6 +4243,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/navalacademy_shoppingstreet_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/newserver_shop_template.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4051,13 +4261,31 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/oilfield_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/open_systems_limited.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/painting_filte_world.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/pay_data_display.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/pay_level_award.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4082,6 +4310,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/puzzle_card_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/puzzle_combat_template.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4147,6 +4381,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/roll_attr.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/secretary_special_ship.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4195,6 +4435,18 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/ship_data_by_star.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/ship_data_by_type.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/ship_data_create_exchange.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4202,6 +4454,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/ship_data_create_material.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/ship_data_group.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4219,6 +4477,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/ship_data_trans.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/ship_l2d.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4226,6 +4490,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/ship_l2d_tips.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/ship_level.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4255,6 +4525,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/ship_skin_newmainui_shift.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/ship_skin_reward.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4262,6 +4538,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/ship_skin_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/ship_skin_template_column_time.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4333,6 +4615,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/skill_need_exp.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/skill_world_display.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4358,6 +4646,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/specialunit_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/spweapon_type.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4429,6 +4723,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/tradingport_template.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/transform_data_template.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4442,6 +4742,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/tutorial_handbook_task.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/user_level.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4543,6 +4849,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "CN/ShareCfg/world_expedition_data_by_map.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "CN/ShareCfg/world_goods_data.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -4550,6 +4862,12 @@
     },
     {
       "relative_path": "CN/ShareCfg/world_help_data.json",
+      "region": "CN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "CN/ShareCfg/world_item_data_origin.json",
       "region": "CN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4933,6 +5251,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/activity_event_sign.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/activity_event_turning.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -4952,6 +5276,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/activity_giftmake_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/activity_holiday_collection.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -4994,6 +5324,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/activity_ins_redpackage.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/activity_ins_ship_group_template.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -5461,6 +5797,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/chapter_model_multistageboss.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/chapter_pop_template.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -5528,6 +5870,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/child2_minigame.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/child2_node.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -5719,6 +6067,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/class_upgrade_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/collection_template.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -5755,7 +6109,19 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/commander_home.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/commander_home_style.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/commander_level.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -5947,6 +6313,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/dorm3d_ins_ship_group_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/dorm3d_ins_telephone_group.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6097,6 +6469,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/enemy_data_by_type.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/enemy_data_skill.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6110,6 +6488,24 @@
     },
     {
       "relative_path": "EN/ShareCfg/energy_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/equip_bullet_type.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/equip_data_by_quality.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/equip_data_by_type.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6139,6 +6535,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/error_message.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/escort_map_template.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6163,6 +6565,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/expedition_cloud_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/expedition_constellation_challenge_template.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6170,6 +6578,24 @@
     },
     {
       "relative_path": "EN/ShareCfg/expedition_daily_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/expedition_data_by_chapter.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/expedition_data_by_map.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/expedition_island_template.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6301,6 +6727,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/guild_data_level.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/guild_event_node.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6338,6 +6770,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/honormedal_goods_list.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/illustrator.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6428,6 +6866,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/island_chara_att.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/island_chara_level.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6607,6 +7051,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/island_level.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/island_main_btns.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6667,6 +7117,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/island_order_favor.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/island_order_list.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6674,6 +7130,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/island_order_position.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/island_order_price.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6716,6 +7178,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/island_production_slot.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/island_prosperity.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6782,6 +7250,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/island_storage_filter_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/island_storage_level.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6913,13 +7387,49 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/lover_badge.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/lover_character_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/lover_letter_content.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/lover_nation.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/lover_reward.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/mail_storeroom.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/map_data.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/map_event_list.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -6979,6 +7489,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/music_album.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/music_collect_config.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -6997,6 +7513,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/navalacademy_shoppingstreet_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/newserver_shop_template.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7009,13 +7531,31 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/oilfield_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/open_systems_limited.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/painting_filte_world.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/pay_data_display.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/pay_level_award.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7040,6 +7580,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/puzzle_card_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/puzzle_combat_template.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7105,6 +7651,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/roll_attr.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/secretary_special_ship.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7153,6 +7705,18 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/ship_data_by_star.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/ship_data_by_type.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/ship_data_create_exchange.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7160,6 +7724,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/ship_data_create_material.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/ship_data_group.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7177,6 +7747,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/ship_data_trans.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/ship_l2d.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7184,6 +7760,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/ship_l2d_tips.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/ship_level.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7213,6 +7795,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/ship_skin_newmainui_shift.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/ship_skin_reward.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7220,6 +7808,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/ship_skin_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/ship_skin_template_column_time.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7297,6 +7891,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/skill_need_exp.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/skill_world_display.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7322,6 +7922,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/specialunit_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/spweapon_type.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7393,6 +7999,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/tradingport_template.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/transform_data_template.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7406,6 +8018,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/tutorial_handbook_task.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/user_level.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7507,6 +8125,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "EN/ShareCfg/world_expedition_data_by_map.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "EN/ShareCfg/world_goods_data.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -7514,6 +8138,12 @@
     },
     {
       "relative_path": "EN/ShareCfg/world_help_data.json",
+      "region": "EN",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "EN/ShareCfg/world_item_data_origin.json",
       "region": "EN",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7897,6 +8527,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/activity_event_sign.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/activity_event_turning.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -7916,6 +8552,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/activity_giftmake_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/activity_holiday_collection.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -7958,6 +8600,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/activity_ins_redpackage.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/activity_ins_ship_group_template.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -8437,6 +9085,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/chapter_model_multistageboss.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/chapter_pop_template.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -8504,6 +9158,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/child2_minigame.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/child2_node.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -8695,6 +9355,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/class_upgrade_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/collection_template.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -8731,7 +9397,19 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/commander_home.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/commander_home_style.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/commander_level.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -8923,6 +9601,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/dorm3d_ins_ship_group_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/dorm3d_ins_telephone_group.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9073,6 +9757,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/enemy_data_by_type.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/enemy_data_skill.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9086,6 +9776,24 @@
     },
     {
       "relative_path": "JP/ShareCfg/energy_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/equip_bullet_type.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/equip_data_by_quality.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/equip_data_by_type.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9115,6 +9823,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/error_message.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/escort_map_template.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9139,6 +9853,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/expedition_cloud_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/expedition_constellation_challenge_template.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9146,6 +9866,24 @@
     },
     {
       "relative_path": "JP/ShareCfg/expedition_daily_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/expedition_data_by_chapter.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/expedition_data_by_map.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/expedition_island_template.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9277,6 +10015,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/guild_data_level.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/guild_event_node.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9308,6 +10052,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/honormedal_goods_list.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/illustrator.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9398,6 +10148,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/island_chara_att.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/island_chara_level.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9577,6 +10333,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/island_level.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/island_main_btns.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9637,6 +10399,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/island_order_favor.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/island_order_list.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9644,6 +10412,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/island_order_position.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/island_order_price.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9686,6 +10460,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/island_production_slot.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/island_prosperity.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9752,6 +10532,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/island_storage_filter_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/island_storage_level.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9883,13 +10669,49 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/lover_badge.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/lover_character_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/lover_letter_content.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/lover_nation.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/lover_reward.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/mail_storeroom.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/map_data.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/map_event_list.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -9949,6 +10771,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/music_album.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/music_collect_config.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9967,6 +10795,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/navalacademy_shoppingstreet_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/newserver_shop_template.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -9979,13 +10813,31 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/oilfield_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/open_systems_limited.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/painting_filte_world.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/pay_data_display.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/pay_level_award.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10010,6 +10862,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/puzzle_card_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/puzzle_combat_template.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10075,6 +10933,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/roll_attr.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/secretary_special_ship.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -10123,6 +10987,18 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/ship_data_by_star.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/ship_data_by_type.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/ship_data_create_exchange.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -10130,6 +11006,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/ship_data_create_material.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/ship_data_group.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10147,6 +11029,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/ship_data_trans.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/ship_l2d.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -10154,6 +11042,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/ship_l2d_tips.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/ship_level.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10183,7 +11077,19 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/ship_skin_newmainui_shift.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/ship_skin_reward.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/ship_skin_template_column_time.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10249,6 +11155,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/skill_need_exp.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/skill_world_display.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -10274,6 +11186,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/specialunit_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/spweapon_type.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10345,6 +11263,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/tradingport_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/transform_data_template.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -10358,6 +11282,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/tutorial_handbook_task.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/user_level.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10459,6 +11389,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "JP/ShareCfg/world_expedition_data_by_map.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "JP/ShareCfg/world_goods_data.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -10466,6 +11402,12 @@
     },
     {
       "relative_path": "JP/ShareCfg/world_help_data.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/world_item_data_origin.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10849,6 +11791,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/activity_event_sign.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/activity_event_turning.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -10868,6 +11816,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/activity_giftmake_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/activity_holiday_collection.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -10910,6 +11864,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/activity_ins_redpackage.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/activity_ins_ship_group_template.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -11377,6 +12337,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/chapter_model_multistageboss.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/chapter_pop_template.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -11444,6 +12410,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/child2_minigame.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/child2_node.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -11635,6 +12607,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/class_upgrade_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/collection_template.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -11671,7 +12649,19 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/commander_home.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/commander_home_style.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/commander_level.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -11863,6 +12853,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/dorm3d_ins_ship_group_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/dorm3d_ins_telephone_group.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12007,6 +13003,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/enemy_data_by_type.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/enemy_data_skill.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12020,6 +13022,24 @@
     },
     {
       "relative_path": "KR/ShareCfg/energy_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/equip_bullet_type.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/equip_data_by_quality.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/equip_data_by_type.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12049,6 +13069,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/error_message.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/escort_map_template.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12073,6 +13099,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/expedition_cloud_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/expedition_constellation_challenge_template.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12080,6 +13112,24 @@
     },
     {
       "relative_path": "KR/ShareCfg/expedition_daily_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/expedition_data_by_chapter.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/expedition_data_by_map.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/expedition_island_template.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12211,6 +13261,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/guild_data_level.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/guild_event_node.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12242,6 +13298,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/honormedal_goods_list.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/illustrator.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12332,6 +13394,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/island_chara_att.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/island_chara_level.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12511,6 +13579,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/island_level.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/island_main_btns.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12571,6 +13645,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/island_order_favor.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/island_order_list.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12578,6 +13658,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/island_order_position.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/island_order_price.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12620,6 +13706,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/island_production_slot.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/island_prosperity.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12686,6 +13778,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/island_storage_filter_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/island_storage_level.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12817,13 +13915,49 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/lover_badge.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/lover_character_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/lover_letter_content.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/lover_nation.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/lover_reward.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/mail_storeroom.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/map_data.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/map_event_list.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12883,6 +14017,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/music_album.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/music_collect_config.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12901,6 +14041,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/navalacademy_shoppingstreet_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/newserver_shop_template.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -12913,13 +14059,31 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/oilfield_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/open_systems_limited.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/painting_filte_world.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/pay_data_display.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/pay_level_award.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -12944,6 +14108,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/puzzle_card_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/puzzle_combat_template.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13009,6 +14179,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/roll_attr.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/secretary_special_ship.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -13057,6 +14233,18 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/ship_data_by_star.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/ship_data_by_type.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/ship_data_create_exchange.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -13064,6 +14252,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/ship_data_create_material.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/ship_data_group.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13081,6 +14275,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/ship_data_trans.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/ship_l2d.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -13088,6 +14288,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/ship_l2d_tips.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/ship_level.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13117,6 +14323,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/ship_skin_newmainui_shift.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/ship_skin_reward.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -13124,6 +14336,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/ship_skin_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/ship_skin_template_column_time.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13195,6 +14413,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/skill_need_exp.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/skill_world_display.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -13220,6 +14444,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/specialunit_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/spweapon_type.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13291,6 +14521,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/tradingport_template.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/transform_data_template.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -13304,6 +14540,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/tutorial_handbook_task.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/user_level.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13405,6 +14647,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "KR/ShareCfg/world_expedition_data_by_map.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "KR/ShareCfg/world_goods_data.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -13412,6 +14660,12 @@
     },
     {
       "relative_path": "KR/ShareCfg/world_help_data.json",
+      "region": "KR",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "KR/ShareCfg/world_item_data_origin.json",
       "region": "KR",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13795,6 +15049,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/activity_event_sign.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/activity_event_turning.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -13814,6 +15074,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/activity_giftmake_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/activity_holiday_collection.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -13856,6 +15122,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/activity_ins_redpackage.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/activity_ins_ship_group_template.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -14335,6 +15607,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/chapter_model_multistageboss.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/chapter_pop_template.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -14402,6 +15680,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/child2_minigame.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/child2_node.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -14593,6 +15877,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/class_upgrade_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/collection_template.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -14629,7 +15919,19 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/commander_home.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/commander_home_style.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/commander_level.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -14821,6 +16123,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/dorm3d_ins_ship_group_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/dorm3d_ins_telephone_group.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -14971,6 +16279,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/enemy_data_by_type.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/enemy_data_skill.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -14984,6 +16298,24 @@
     },
     {
       "relative_path": "TW/ShareCfg/energy_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/equip_bullet_type.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/equip_data_by_quality.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/equip_data_by_type.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15013,6 +16345,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/error_message.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/escort_map_template.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -15037,6 +16375,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/expedition_cloud_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/expedition_constellation_challenge_template.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -15044,6 +16388,24 @@
     },
     {
       "relative_path": "TW/ShareCfg/expedition_daily_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/expedition_data_by_chapter.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/expedition_data_by_map.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/expedition_island_template.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15175,6 +16537,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/guild_data_level.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/guild_event_node.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -15206,6 +16574,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/honormedal_goods_list.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/illustrator.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15463,6 +16837,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/island_level.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/island_main_btns.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -15523,6 +16903,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/island_order_favor.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/island_order_list.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -15530,6 +16916,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/island_order_position.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/island_order_price.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15572,6 +16964,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/island_production_slot.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/island_prosperity.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15638,6 +17036,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/island_storage_filter_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/island_storage_level.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15769,13 +17173,49 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/lover_badge.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/lover_character_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/lover_letter_content.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/lover_nation.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/lover_reward.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/mail_storeroom.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/map_data.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/map_event_list.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15835,6 +17275,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/music_album.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/music_collect_config.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -15853,6 +17299,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/navalacademy_shoppingstreet_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/newserver_shop_template.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -15865,13 +17317,31 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/oilfield_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/open_systems_limited.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/painting_filte_world.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/pay_data_display.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/pay_level_award.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15896,6 +17366,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/puzzle_card_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/puzzle_combat_template.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -15961,6 +17437,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/roll_attr.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/secretary_special_ship.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -16009,6 +17491,18 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/ship_data_by_star.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/ship_data_by_type.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/ship_data_create_exchange.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -16016,6 +17510,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/ship_data_create_material.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/ship_data_group.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -16033,6 +17533,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/ship_data_trans.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/ship_l2d.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -16040,6 +17546,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/ship_l2d_tips.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/ship_level.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -16069,6 +17581,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/ship_skin_newmainui_shift.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/ship_skin_reward.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -16076,6 +17594,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/ship_skin_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/ship_skin_template_column_time.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -16141,6 +17665,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/skill_need_exp.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/skill_world_display.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -16166,6 +17696,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/specialunit_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/spweapon_type.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -16237,6 +17773,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/tradingport_template.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/transform_data_template.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -16250,6 +17792,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/tutorial_handbook_task.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/user_level.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -16351,6 +17899,12 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
+      "relative_path": "TW/ShareCfg/world_expedition_data_by_map.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
       "relative_path": "TW/ShareCfg/world_goods_data.json",
       "region": "TW",
       "category": "ShareCfg",
@@ -16358,6 +17912,12 @@
     },
     {
       "relative_path": "TW/ShareCfg/world_help_data.json",
+      "region": "TW",
+      "category": "ShareCfg",
+      "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "TW/ShareCfg/world_item_data_origin.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
@@ -16541,12 +18101,6 @@
       "region": "TW",
       "category": "sharecfgdata",
       "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
-      "relative_path": "JP/ShareCfg/ship_skin_template.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_both_transformations"
     }
   ],
   "count_mismatch_files": [
@@ -16557,280 +18111,21 @@
     "TW/sharecfgdata/item_data_statistics.json"
   ],
   "schema_mismatch_files": [
-    "CN/ShareCfg/activity_event_sign.json",
-    "CN/ShareCfg/activity_holiday_collection.json",
-    "CN/ShareCfg/activity_ins_ship_group_template.json",
     "CN/ShareCfg/auto_pilot_template.json",
-    "CN/ShareCfg/chapter_model_multistageboss.json",
-    "CN/ShareCfg/child2_node.json",
     "CN/ShareCfg/class_upgrade_group.json",
-    "CN/ShareCfg/class_upgrade_template.json",
-    "CN/ShareCfg/commander_home.json",
-    "CN/ShareCfg/commander_level.json",
-    "CN/ShareCfg/dorm3d_ins_ship_group_template.json",
-    "CN/ShareCfg/enemy_data_by_type.json",
-    "CN/ShareCfg/equip_bullet_type.json",
-    "CN/ShareCfg/equip_data_by_quality.json",
-    "CN/ShareCfg/equip_data_by_type.json",
-    "CN/ShareCfg/error_message.json",
-    "CN/ShareCfg/expedition_cloud_template.json",
-    "CN/ShareCfg/expedition_data_by_chapter.json",
-    "CN/ShareCfg/expedition_data_by_map.json",
-    "CN/ShareCfg/expedition_island_template.json",
-    "CN/ShareCfg/guild_data_level.json",
     "CN/ShareCfg/guildset.json",
-    "CN/ShareCfg/illustrator.json",
-    "CN/ShareCfg/island_chara_level.json",
-    "CN/ShareCfg/island_level.json",
-    "CN/ShareCfg/island_order_favor.json",
-    "CN/ShareCfg/island_order_price.json",
-    "CN/ShareCfg/island_prosperity.json",
-    "CN/ShareCfg/island_storage_level.json",
-    "CN/ShareCfg/lover_badge.json",
-    "CN/ShareCfg/lover_character_template.json",
-    "CN/ShareCfg/lover_nation.json",
-    "CN/ShareCfg/mail_storeroom.json",
-    "CN/ShareCfg/map_data.json",
-    "CN/ShareCfg/map_event_list.json",
-    "CN/ShareCfg/music_album.json",
-    "CN/ShareCfg/navalacademy_shoppingstreet_template.json",
-    "CN/ShareCfg/oilfield_template.json",
-    "CN/ShareCfg/painting_filte_world.json",
-    "CN/ShareCfg/pay_level_award.json",
-    "CN/ShareCfg/puzzle_combat_template.json",
-    "CN/ShareCfg/roll_attr.json",
-    "CN/ShareCfg/ship_data_by_star.json",
-    "CN/ShareCfg/ship_data_by_type.json",
-    "CN/ShareCfg/ship_data_group.json",
-    "CN/ShareCfg/ship_data_trans.json",
-    "CN/ShareCfg/ship_level.json",
-    "CN/ShareCfg/ship_skin_newmainui_shift.json",
-    "CN/ShareCfg/ship_skin_template_column_time.json",
-    "CN/ShareCfg/skill_need_exp.json",
-    "CN/ShareCfg/spweapon_type.json",
-    "CN/ShareCfg/tradingport_template.json",
-    "CN/ShareCfg/user_level.json",
-    "CN/ShareCfg/world_expedition_data_by_map.json",
-    "CN/ShareCfg/world_item_data_origin.json",
-    "EN/ShareCfg/activity_event_sign.json",
-    "EN/ShareCfg/activity_holiday_collection.json",
-    "EN/ShareCfg/activity_ins_ship_group_template.json",
     "EN/ShareCfg/auto_pilot_template.json",
-    "EN/ShareCfg/chapter_model_multistageboss.json",
-    "EN/ShareCfg/child2_node.json",
     "EN/ShareCfg/class_upgrade_group.json",
-    "EN/ShareCfg/class_upgrade_template.json",
-    "EN/ShareCfg/commander_home.json",
-    "EN/ShareCfg/commander_level.json",
-    "EN/ShareCfg/dorm3d_ins_ship_group_template.json",
-    "EN/ShareCfg/enemy_data_by_type.json",
-    "EN/ShareCfg/equip_bullet_type.json",
-    "EN/ShareCfg/equip_data_by_quality.json",
-    "EN/ShareCfg/equip_data_by_type.json",
-    "EN/ShareCfg/error_message.json",
-    "EN/ShareCfg/expedition_cloud_template.json",
-    "EN/ShareCfg/expedition_data_by_chapter.json",
-    "EN/ShareCfg/expedition_data_by_map.json",
-    "EN/ShareCfg/expedition_island_template.json",
-    "EN/ShareCfg/guild_data_level.json",
     "EN/ShareCfg/guildset.json",
-    "EN/ShareCfg/illustrator.json",
-    "EN/ShareCfg/island_chara_level.json",
-    "EN/ShareCfg/island_level.json",
-    "EN/ShareCfg/island_order_favor.json",
-    "EN/ShareCfg/island_order_price.json",
-    "EN/ShareCfg/island_prosperity.json",
-    "EN/ShareCfg/island_storage_level.json",
-    "EN/ShareCfg/lover_badge.json",
-    "EN/ShareCfg/lover_character_template.json",
-    "EN/ShareCfg/lover_nation.json",
-    "EN/ShareCfg/mail_storeroom.json",
-    "EN/ShareCfg/map_data.json",
-    "EN/ShareCfg/map_event_list.json",
-    "EN/ShareCfg/music_album.json",
-    "EN/ShareCfg/navalacademy_shoppingstreet_template.json",
-    "EN/ShareCfg/oilfield_template.json",
-    "EN/ShareCfg/painting_filte_world.json",
-    "EN/ShareCfg/pay_level_award.json",
-    "EN/ShareCfg/puzzle_combat_template.json",
-    "EN/ShareCfg/roll_attr.json",
-    "EN/ShareCfg/ship_data_by_star.json",
-    "EN/ShareCfg/ship_data_by_type.json",
-    "EN/ShareCfg/ship_data_group.json",
-    "EN/ShareCfg/ship_data_trans.json",
-    "EN/ShareCfg/ship_level.json",
-    "EN/ShareCfg/ship_skin_newmainui_shift.json",
-    "EN/ShareCfg/ship_skin_template_column_time.json",
-    "EN/ShareCfg/skill_need_exp.json",
-    "EN/ShareCfg/spweapon_type.json",
-    "EN/ShareCfg/tradingport_template.json",
-    "EN/ShareCfg/user_level.json",
-    "EN/ShareCfg/world_expedition_data_by_map.json",
-    "EN/ShareCfg/world_item_data_origin.json",
-    "JP/ShareCfg/activity_event_sign.json",
-    "JP/ShareCfg/activity_holiday_collection.json",
-    "JP/ShareCfg/activity_ins_ship_group_template.json",
     "JP/ShareCfg/auto_pilot_template.json",
-    "JP/ShareCfg/chapter_model_multistageboss.json",
-    "JP/ShareCfg/child2_node.json",
     "JP/ShareCfg/class_upgrade_group.json",
-    "JP/ShareCfg/class_upgrade_template.json",
-    "JP/ShareCfg/commander_home.json",
-    "JP/ShareCfg/commander_level.json",
-    "JP/ShareCfg/dorm3d_ins_ship_group_template.json",
-    "JP/ShareCfg/enemy_data_by_type.json",
-    "JP/ShareCfg/equip_bullet_type.json",
-    "JP/ShareCfg/equip_data_by_quality.json",
-    "JP/ShareCfg/equip_data_by_type.json",
-    "JP/ShareCfg/error_message.json",
-    "JP/ShareCfg/expedition_cloud_template.json",
-    "JP/ShareCfg/expedition_data_by_chapter.json",
-    "JP/ShareCfg/expedition_data_by_map.json",
-    "JP/ShareCfg/expedition_island_template.json",
-    "JP/ShareCfg/guild_data_level.json",
     "JP/ShareCfg/guildset.json",
-    "JP/ShareCfg/illustrator.json",
-    "JP/ShareCfg/island_chara_level.json",
-    "JP/ShareCfg/island_level.json",
-    "JP/ShareCfg/island_order_favor.json",
-    "JP/ShareCfg/island_order_price.json",
-    "JP/ShareCfg/island_prosperity.json",
-    "JP/ShareCfg/island_storage_level.json",
-    "JP/ShareCfg/lover_badge.json",
-    "JP/ShareCfg/lover_character_template.json",
-    "JP/ShareCfg/lover_nation.json",
-    "JP/ShareCfg/mail_storeroom.json",
-    "JP/ShareCfg/map_data.json",
-    "JP/ShareCfg/map_event_list.json",
-    "JP/ShareCfg/music_album.json",
-    "JP/ShareCfg/navalacademy_shoppingstreet_template.json",
-    "JP/ShareCfg/oilfield_template.json",
-    "JP/ShareCfg/painting_filte_world.json",
-    "JP/ShareCfg/pay_level_award.json",
-    "JP/ShareCfg/puzzle_combat_template.json",
-    "JP/ShareCfg/roll_attr.json",
-    "JP/ShareCfg/ship_data_by_star.json",
-    "JP/ShareCfg/ship_data_by_type.json",
-    "JP/ShareCfg/ship_data_group.json",
-    "JP/ShareCfg/ship_data_trans.json",
-    "JP/ShareCfg/ship_level.json",
-    "JP/ShareCfg/ship_skin_newmainui_shift.json",
-    "JP/ShareCfg/ship_skin_template_column_time.json",
-    "JP/ShareCfg/skill_need_exp.json",
-    "JP/ShareCfg/spweapon_type.json",
-    "JP/ShareCfg/tradingport_template.json",
-    "JP/ShareCfg/user_level.json",
-    "JP/ShareCfg/world_expedition_data_by_map.json",
-    "JP/ShareCfg/world_item_data_origin.json",
-    "KR/ShareCfg/activity_event_sign.json",
-    "KR/ShareCfg/activity_holiday_collection.json",
-    "KR/ShareCfg/activity_ins_ship_group_template.json",
     "KR/ShareCfg/auto_pilot_template.json",
-    "KR/ShareCfg/chapter_model_multistageboss.json",
-    "KR/ShareCfg/child2_node.json",
     "KR/ShareCfg/class_upgrade_group.json",
-    "KR/ShareCfg/class_upgrade_template.json",
-    "KR/ShareCfg/commander_home.json",
-    "KR/ShareCfg/commander_level.json",
-    "KR/ShareCfg/dorm3d_ins_ship_group_template.json",
-    "KR/ShareCfg/enemy_data_by_type.json",
-    "KR/ShareCfg/equip_bullet_type.json",
-    "KR/ShareCfg/equip_data_by_quality.json",
-    "KR/ShareCfg/equip_data_by_type.json",
-    "KR/ShareCfg/error_message.json",
-    "KR/ShareCfg/expedition_cloud_template.json",
-    "KR/ShareCfg/expedition_data_by_chapter.json",
-    "KR/ShareCfg/expedition_data_by_map.json",
-    "KR/ShareCfg/expedition_island_template.json",
-    "KR/ShareCfg/guild_data_level.json",
     "KR/ShareCfg/guildset.json",
-    "KR/ShareCfg/illustrator.json",
-    "KR/ShareCfg/island_chara_level.json",
-    "KR/ShareCfg/island_level.json",
-    "KR/ShareCfg/island_order_favor.json",
-    "KR/ShareCfg/island_order_price.json",
-    "KR/ShareCfg/island_prosperity.json",
-    "KR/ShareCfg/island_storage_level.json",
-    "KR/ShareCfg/lover_badge.json",
-    "KR/ShareCfg/lover_character_template.json",
-    "KR/ShareCfg/lover_nation.json",
-    "KR/ShareCfg/mail_storeroom.json",
-    "KR/ShareCfg/map_data.json",
-    "KR/ShareCfg/map_event_list.json",
-    "KR/ShareCfg/music_album.json",
-    "KR/ShareCfg/navalacademy_shoppingstreet_template.json",
-    "KR/ShareCfg/oilfield_template.json",
-    "KR/ShareCfg/painting_filte_world.json",
-    "KR/ShareCfg/pay_level_award.json",
-    "KR/ShareCfg/puzzle_combat_template.json",
-    "KR/ShareCfg/roll_attr.json",
-    "KR/ShareCfg/ship_data_by_star.json",
-    "KR/ShareCfg/ship_data_by_type.json",
-    "KR/ShareCfg/ship_data_group.json",
-    "KR/ShareCfg/ship_data_trans.json",
-    "KR/ShareCfg/ship_level.json",
-    "KR/ShareCfg/ship_skin_newmainui_shift.json",
-    "KR/ShareCfg/ship_skin_template_column_time.json",
-    "KR/ShareCfg/skill_need_exp.json",
-    "KR/ShareCfg/spweapon_type.json",
-    "KR/ShareCfg/tradingport_template.json",
-    "KR/ShareCfg/user_level.json",
-    "KR/ShareCfg/world_expedition_data_by_map.json",
-    "KR/ShareCfg/world_item_data_origin.json",
-    "TW/ShareCfg/activity_event_sign.json",
-    "TW/ShareCfg/activity_holiday_collection.json",
-    "TW/ShareCfg/activity_ins_ship_group_template.json",
     "TW/ShareCfg/auto_pilot_template.json",
-    "TW/ShareCfg/chapter_model_multistageboss.json",
-    "TW/ShareCfg/child2_node.json",
     "TW/ShareCfg/class_upgrade_group.json",
-    "TW/ShareCfg/class_upgrade_template.json",
-    "TW/ShareCfg/commander_home.json",
-    "TW/ShareCfg/commander_level.json",
-    "TW/ShareCfg/dorm3d_ins_ship_group_template.json",
-    "TW/ShareCfg/enemy_data_by_type.json",
-    "TW/ShareCfg/equip_bullet_type.json",
-    "TW/ShareCfg/equip_data_by_quality.json",
-    "TW/ShareCfg/equip_data_by_type.json",
-    "TW/ShareCfg/error_message.json",
-    "TW/ShareCfg/expedition_cloud_template.json",
-    "TW/ShareCfg/expedition_data_by_chapter.json",
-    "TW/ShareCfg/expedition_data_by_map.json",
-    "TW/ShareCfg/expedition_island_template.json",
-    "TW/ShareCfg/guild_data_level.json",
-    "TW/ShareCfg/guildset.json",
-    "TW/ShareCfg/illustrator.json",
-    "TW/ShareCfg/island_level.json",
-    "TW/ShareCfg/island_order_favor.json",
-    "TW/ShareCfg/island_order_price.json",
-    "TW/ShareCfg/island_prosperity.json",
-    "TW/ShareCfg/island_storage_level.json",
-    "TW/ShareCfg/lover_badge.json",
-    "TW/ShareCfg/lover_character_template.json",
-    "TW/ShareCfg/lover_nation.json",
-    "TW/ShareCfg/mail_storeroom.json",
-    "TW/ShareCfg/map_data.json",
-    "TW/ShareCfg/map_event_list.json",
-    "TW/ShareCfg/music_album.json",
-    "TW/ShareCfg/navalacademy_shoppingstreet_template.json",
-    "TW/ShareCfg/oilfield_template.json",
-    "TW/ShareCfg/painting_filte_world.json",
-    "TW/ShareCfg/pay_level_award.json",
-    "TW/ShareCfg/puzzle_combat_template.json",
-    "TW/ShareCfg/roll_attr.json",
-    "TW/ShareCfg/ship_data_by_star.json",
-    "TW/ShareCfg/ship_data_by_type.json",
-    "TW/ShareCfg/ship_data_group.json",
-    "TW/ShareCfg/ship_data_trans.json",
-    "TW/ShareCfg/ship_level.json",
-    "TW/ShareCfg/ship_skin_newmainui_shift.json",
-    "TW/ShareCfg/ship_skin_template_column_time.json",
-    "TW/ShareCfg/skill_need_exp.json",
-    "TW/ShareCfg/spweapon_type.json",
-    "TW/ShareCfg/tradingport_template.json",
-    "TW/ShareCfg/user_level.json",
-    "TW/ShareCfg/world_expedition_data_by_map.json",
-    "TW/ShareCfg/world_item_data_origin.json"
+    "TW/ShareCfg/guildset.json"
   ],
   "missing_reference_files": [
     "CN/ShareCfg/BattleNodesCfg.json",
