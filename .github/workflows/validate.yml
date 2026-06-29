@@ -47,16 +47,6 @@ jobs:
         with:
           repository: ggmolly/belfast-data
           path: _external/belfast-data
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            JP/sharecfgdata/item_data_statistics.json
-            JP/sharecfgdata/ship_data_statistics.json
-            JP/sharecfgdata/weapon_property.json
-            JP/sharecfgdata/equip_data_template.json
-            JP/ShareCfg/ship_skin_template.json
-            build_pools.json
-            build_times.json
-            requisition_ships.json
 
       - uses: actions/setup-go@v5
         with:
