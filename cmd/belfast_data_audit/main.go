@@ -61,6 +61,7 @@ type SafePromoteFile struct {
 type CountMismatchBucket struct {
 	Name                string   `json:"name"`
 	FileCount           int      `json:"file_count"`
+	Files               []string `json:"files"`
 	RepresentativeFiles []string `json:"representative_files"`
 	SourceCount         int      `json:"source_count"`
 	ReferenceCount      int      `json:"reference_count"`
@@ -1070,6 +1071,7 @@ func buildCountMismatchBuckets(files []ClassifiedFile) map[string]CountMismatchB
 			bucket.CandidateRule = countMismatchBucketCandidateRule(name)
 		}
 		bucket.FileCount++
+		bucket.Files = append(bucket.Files, file.RelativePath)
 		bucket.SourceCount += file.SourceRecordCount
 		bucket.ReferenceCount += file.ReferenceRecordCount
 		bucket.Delta += file.SourceRecordCount - file.ReferenceRecordCount
@@ -1079,6 +1081,7 @@ func buildCountMismatchBuckets(files []ClassifiedFile) map[string]CountMismatchB
 		buckets[name] = bucket
 	}
 	for name, bucket := range buckets {
+		sortStrings(bucket.Files)
 		sortStrings(bucket.RepresentativeFiles)
 		bucket.Name = name
 		buckets[name] = bucket

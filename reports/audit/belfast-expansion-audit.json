@@ -61280,6 +61280,13 @@
     "root_special_file_delta": {
       "name": "root_special_file_delta",
       "file_count": 5,
+      "files": [
+        "CN/sharecfgdata/item_data_statistics.json",
+        "EN/sharecfgdata/item_data_statistics.json",
+        "JP/sharecfgdata/item_data_statistics.json",
+        "KR/sharecfgdata/item_data_statistics.json",
+        "TW/sharecfgdata/item_data_statistics.json"
+      ],
       "representative_files": [
         "CN/sharecfgdata/item_data_statistics.json",
         "EN/sharecfgdata/item_data_statistics.json",

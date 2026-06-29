@@ -192,7 +192,7 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		if !ok {
 			t.Fatalf("expected count_mismatch_buckets[%s] to be a JSON object", bucketName)
 		}
-		for _, field := range []string{"name", "file_count", "representative_files", "source_count", "reference_count", "delta", "status"} {
+		for _, field := range []string{"name", "file_count", "files", "representative_files", "source_count", "reference_count", "delta", "status"} {
 			if _, ok := bucket[field]; !ok {
 				t.Fatalf("expected count_mismatch_buckets[%s] to contain %s", bucketName, field)
 			}
@@ -202,6 +202,20 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 			t.Fatalf("expected count_mismatch_buckets[%s].file_count to be numeric", bucketName)
 		}
 		totalBucketFiles += int(rawCount)
+		rawFiles, ok := bucket["files"].([]any)
+		if !ok || len(rawFiles) == 0 {
+			t.Fatalf("expected count_mismatch_buckets[%s].files to be a non-empty array", bucketName)
+		}
+		for _, rawFile := range rawFiles {
+			rel, ok := rawFile.(string)
+			if !ok {
+				t.Fatalf("expected count_mismatch_buckets[%s].files entries to be strings", bucketName)
+			}
+			if _, dup := seen[rel]; dup {
+				t.Fatalf("count_mismatch_buckets contains duplicate file %s", rel)
+			}
+			seen[rel] = struct{}{}
+		}
 		rawRep, ok := bucket["representative_files"].([]any)
 		if !ok || len(rawRep) == 0 {
 			t.Fatalf("expected count_mismatch_buckets[%s].representative_files to be a non-empty array", bucketName)
@@ -211,14 +225,21 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 			if !ok {
 				t.Fatalf("expected count_mismatch_buckets[%s] entries to be strings", bucketName)
 			}
-			if _, dup := seen[rel]; dup {
-				t.Fatalf("count_mismatch_buckets contains duplicate file %s", rel)
+			if _, ok := seen[rel]; !ok {
+				t.Fatalf("count_mismatch_buckets[%s].representative_files contains %s not present in files", bucketName, rel)
 			}
-			seen[rel] = struct{}{}
 		}
 	}
 	if totalBucketFiles != len(report.CountMismatchFiles) {
 		t.Fatalf("count_mismatch_buckets summed to %d, want %d", totalBucketFiles, len(report.CountMismatchFiles))
+	}
+	if len(seen) != len(report.CountMismatchFiles) {
+		t.Fatalf("count_mismatch_buckets covered %d files, want %d", len(seen), len(report.CountMismatchFiles))
+	}
+	for _, file := range report.CountMismatchFiles {
+		if _, ok := seen[file.RelativePath]; !ok {
+			t.Fatalf("count_mismatch_buckets missing file %s", file.RelativePath)
+		}
 	}
 
 	markdownPath := filepath.Join("..", "..", "reports", "audit", "belfast-expansion-audit.md")
