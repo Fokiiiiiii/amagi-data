@@ -16,7 +16,8 @@ func (r Report) MarshalJSON() ([]byte, error) {
 	out.UnsupportedFiles = stringsOrEmpty(out.UnsupportedFiles)
 	out.UnsupportedHelperFiles = stringsOrEmpty(out.UnsupportedHelperFiles)
 	out.MissingSourceFiles = stringsOrEmpty(out.MissingSourceFiles)
-	out.ReferenceMismatches = stringsOrEmpty(out.ReferenceMismatches)
+	out.MissingReferenceFiles = stringsOrEmpty(out.MissingReferenceFiles)
+	out.SkippedUnsafeFiles = stringsOrEmpty(out.SkippedUnsafeFiles)
 	return json.Marshal(out)
 }
 

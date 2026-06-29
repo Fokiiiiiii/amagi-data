@@ -38,7 +38,7 @@ func TestNormalizeEmptyAndDictOrdering(t *testing.T) {
 	}
 }
 
-func TestConvertMVPMatchesBelfastReference(t *testing.T) {
+func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	azurRoot, luaScriptsRoot, belfastRoot := testFixtureRoots(t, true, true, true)
 	out := t.TempDir()
 	report, err := ConvertMVP(Options{
@@ -50,11 +50,33 @@ func TestConvertMVPMatchesBelfastReference(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConvertMVP: %v", err)
 	}
-	if report.ItemUsageDropKept != 51 || report.ItemUsageDropDropped != 356 {
-		t.Fatalf("unexpected item_usage_drop counts: kept=%d dropped=%d", report.ItemUsageDropKept, report.ItemUsageDropDropped)
+
+	if len(report.GeneratedFiles) != 604 {
+		t.Fatalf("expected 604 generated audited files, got %d", len(report.GeneratedFiles))
+	}
+	if containsString(report.GeneratedFiles, "JP/sharecfgdata/item_data_statistics.json") {
+		t.Fatalf("item_data_statistics should not be promoted")
+	}
+	if containsString(report.GeneratedFiles, "CN/ShareCfg/achievement_data_template.json") {
+		t.Fatalf("count_mismatch file should not be generated")
+	}
+	if containsString(report.GeneratedFiles, "CN/ShareCfg/auto_pilot_template.json") {
+		t.Fatalf("schema_mismatch file should not be generated")
+	}
+	if !containsString(report.SkippedUnsafeFiles, "CN/ShareCfg/achievement_data_template.json") {
+		t.Fatalf("expected skipped_unsafe_files to include known count mismatch")
+	}
+	if !containsString(report.SkippedUnsafeFiles, "CN/ShareCfg/auto_pilot_template.json") {
+		t.Fatalf("expected skipped_unsafe_files to include known schema mismatch")
+	}
+	if !containsString(report.GeneratedFiles, "JP/sharecfgdata/ship_data_statistics.json") {
+		t.Fatalf("expected known audited safe file to be generated")
 	}
 	if !containsString(report.GeneratedHelperFiles, "versions.json") {
 		t.Fatalf("expected generated_helper_files to contain versions.json, got %v", report.GeneratedHelperFiles)
+	}
+	if !containsString(report.GeneratedHelperFiles, "buff_cfg.json") || !containsString(report.GeneratedHelperFiles, "skill_cfg.json") {
+		t.Fatalf("expected root helper files to be generated, got %v", report.GeneratedHelperFiles)
 	}
 	if !reflect.DeepEqual(report.FallbackHelperFiles, []string{"build_pools.json", "build_times.json", "requisition_ships.json"}) {
 		t.Fatalf("unexpected fallback_helper_files: %v", report.FallbackHelperFiles)
@@ -62,16 +84,18 @@ func TestConvertMVPMatchesBelfastReference(t *testing.T) {
 	if containsString(report.UnsupportedHelperFiles, "versions.json") {
 		t.Fatalf("versions.json should not be unsupported when generation succeeds: %v", report.UnsupportedHelperFiles)
 	}
-	for _, rel := range MVPFiles() {
+
+	for _, rel := range []string{
+		"JP/sharecfgdata/ship_data_statistics.json",
+		"JP/sharecfgdata/weapon_property.json",
+		"JP/sharecfgdata/equip_data_template.json",
+		"JP/ShareCfg/ship_skin_template.json",
+	} {
 		got := mustLoad(t, filepath.Join(out, filepath.FromSlash(rel)))
 		want := mustLoad(t, filepath.Join(belfastRoot, filepath.FromSlash(rel)))
 		if !reflect.DeepEqual(got, want) {
 			t.Fatalf("%s mismatch", rel)
 		}
-	}
-	item := mustLoadArray(t, filepath.Join(out, "JP/sharecfgdata/item_data_statistics.json"))
-	if len(item) != 2378 {
-		t.Fatalf("expected item_data_statistics count 2378, got %d", len(item))
 	}
 }
 
@@ -92,7 +116,12 @@ func TestVersionsGeneratedFromLuaScriptsMetadata(t *testing.T) {
 func TestFallbackHelpersCopiedOnlyWhenSourceProvided(t *testing.T) {
 	azurRoot, luaScriptsRoot, belfastRoot := testFixtureRoots(t, true, true, true)
 	out := t.TempDir()
-	_, err := ConvertMVP(Options{SourceRoot: azurRoot, OutputRoot: out, FallbackHelperSourceRoot: belfastRoot, LuaScriptsRoot: luaScriptsRoot})
+	_, err := ConvertMVP(Options{
+		SourceRoot:               azurRoot,
+		OutputRoot:               out,
+		FallbackHelperSourceRoot: belfastRoot,
+		LuaScriptsRoot:           luaScriptsRoot,
+	})
 	if err != nil {
 		t.Fatalf("ConvertMVP: %v", err)
 	}
@@ -116,16 +145,6 @@ func mustLoad(t *testing.T, path string) any {
 	return v
 }
 
-func mustLoadArray(t *testing.T, path string) []any {
-	t.Helper()
-	v := mustLoad(t, path)
-	a, ok := v.([]any)
-	if !ok {
-		t.Fatalf("expected array at %s", path)
-	}
-	return a
-}
-
 func containsString(values []string, target string) bool {
 	for _, value := range values {
 		if value == target {
@@ -137,20 +156,23 @@ func containsString(values []string, target string) bool {
 
 func testFixtureRoots(t *testing.T, needAzur, needLua, needBelfast bool) (string, string, string) {
 	t.Helper()
-	azurRoot := testEnvRoot(t, "AMAGI_DATA_TEST_AZURLANE_ROOT", needAzur)
-	luaRoot := testEnvRoot(t, "AMAGI_DATA_TEST_LUASCRIPTS_ROOT", needLua)
-	belfastRoot := testEnvRoot(t, "AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT", needBelfast)
+	azurRoot := testEnvRoot(t, "AMAGI_DATA_TEST_AZURLANE_ROOT", needAzur, `C:\Users\yutai\AzurLaneData`)
+	luaRoot := testEnvRoot(t, "AMAGI_DATA_TEST_LUASCRIPTS_ROOT", needLua, `C:\Users\yutai\AzurLaneLuaScripts`)
+	belfastRoot := testEnvRoot(t, "AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT", needBelfast, `C:\Users\yutai\belfast-data`)
 	return azurRoot, luaRoot, belfastRoot
 }
 
-func testEnvRoot(t *testing.T, name string, required bool) string {
+func testEnvRoot(t *testing.T, name string, required bool, fallback string) string {
 	t.Helper()
 	value := strings.TrimSpace(os.Getenv(name))
-	if value == "" {
-		if required {
-			t.Skipf("skipping external integration test: %s is not set", name)
-		}
-		return ""
+	if value != "" {
+		return value
 	}
-	return value
+	if info, err := os.Stat(fallback); err == nil && info.IsDir() {
+		return fallback
+	}
+	if required {
+		t.Skipf("skipping external integration test: %s is not set and fallback %s is unavailable", name, fallback)
+	}
+	return ""
 }

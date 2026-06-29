@@ -24,7 +24,8 @@ func TestReportMarshalEmitsEmptyArrays(t *testing.T) {
 		"unsupported_files",
 		"unsupported_helper_files",
 		"missing_source_files",
-		"reference_mismatches",
+		"missing_reference_files",
+		"skipped_unsafe_files",
 	} {
 		if !strings.Contains(text, `"`+field+`":[]`) {
 			t.Fatalf("expected %s to marshal as [] in %s", field, text)
