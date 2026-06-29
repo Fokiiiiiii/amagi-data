@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -240,6 +241,14 @@ func convertAuditedFile(rel, sourcePath, classification string) (any, error) {
 		return dictKeyedToSortedList(decoded)
 	case "match_after_both_transformations":
 		return dictKeyedToSortedList(normalizeEmpty(decoded))
+	case "match_after_list_to_map_keyed_by_id":
+		return listToMapKeyedById(decoded)
+	case "match_after_list_to_map_both_transformations":
+		return listToMapKeyedById(normalizeEmpty(decoded))
+	case "match_after_singleton_object_to_one_item_list":
+		return singletonObjectToOneItemList(decoded)
+	case "match_after_singleton_both_transformations":
+		return singletonObjectToOneItemList(normalizeEmpty(decoded))
 	default:
 		return nil, fmt.Errorf("unsupported audited classification for %s: %s", rel, classification)
 	}
@@ -310,6 +319,37 @@ func dictKeyedToSortedList(v any) (any, error) {
 		out = append(out, pair.val)
 	}
 	return out, nil
+}
+
+func listToMapKeyedById(v any) (any, error) {
+	arr, ok := v.([]any)
+	if !ok {
+		return v, nil
+	}
+	out := make(map[string]any, len(arr))
+	for _, raw := range arr {
+		val, ok := raw.(map[string]any)
+		if !ok {
+			return v, nil
+		}
+		id, ok := intFromAny(val["id"])
+		if !ok {
+			return v, nil
+		}
+		out[strconv.Itoa(id)] = val
+	}
+	return out, nil
+}
+
+func singletonObjectToOneItemList(v any) (any, error) {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return v, nil
+	}
+	if _, ok := obj["id"]; ok {
+		return []any{obj}, nil
+	}
+	return v, nil
 }
 
 func recordCount(v any) int {

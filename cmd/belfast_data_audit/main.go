@@ -455,6 +455,26 @@ func compareFile(sourcePath, refPath, rel string) (compareResult, error) {
 		result.classification = "match_after_both_transformations"
 		return result, nil
 	}
+	srcListToMap, _ := listToMapKeyedById(src)
+	if reflect.DeepEqual(srcListToMap, ref) {
+		result.classification = "match_after_list_to_map_keyed_by_id"
+		return result, nil
+	}
+	srcListToMapBoth, _ := listToMapKeyedById(srcNorm)
+	if reflect.DeepEqual(srcListToMapBoth, ref) {
+		result.classification = "match_after_list_to_map_both_transformations"
+		return result, nil
+	}
+	srcSingleton, _ := singletonObjectToOneItemList(src)
+	if reflect.DeepEqual(srcSingleton, ref) {
+		result.classification = "match_after_singleton_object_to_one_item_list"
+		return result, nil
+	}
+	srcSingletonBoth, _ := singletonObjectToOneItemList(srcNorm)
+	if reflect.DeepEqual(srcSingletonBoth, ref) {
+		result.classification = "match_after_singleton_both_transformations"
+		return result, nil
+	}
 	if !strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
 		if srcSubset, refSubset, ok := referenceIDSubsetMatch(srcNorm, refNorm); ok {
 			result.sourceRecords = len(srcSubset)
@@ -480,7 +500,7 @@ func selectSafePromotionFiles(report *AuditReport, candidates map[string][]SafeP
 	for classification := range candidates {
 		sortSafeFiles(candidates[classification])
 		target, ok := safePromotionTargets[classification]
-		if classification == "match_after_reference_id_subset" || classification == "match_after_dict_keyed_to_list_by_id" {
+		if classification == "match_after_reference_id_subset" || classification == "match_after_dict_keyed_to_list_by_id" || classification == "match_after_list_to_map_keyed_by_id" || classification == "match_after_list_to_map_both_transformations" || classification == "match_after_singleton_object_to_one_item_list" || classification == "match_after_singleton_both_transformations" || classification == "match_after_both_transformations" {
 			target = len(candidates[classification])
 			ok = true
 		}
@@ -738,6 +758,37 @@ func dictKeyedToSortedList(v any) (any, error) {
 		out = append(out, pair.val)
 	}
 	return out, nil
+}
+
+func listToMapKeyedById(v any) (any, error) {
+	arr, ok := v.([]any)
+	if !ok {
+		return v, nil
+	}
+	out := make(map[string]any, len(arr))
+	for _, raw := range arr {
+		val, ok := raw.(map[string]any)
+		if !ok {
+			return v, nil
+		}
+		id, ok := intFromAny(val["id"])
+		if !ok {
+			return v, nil
+		}
+		out[strconv.Itoa(id)] = val
+	}
+	return out, nil
+}
+
+func singletonObjectToOneItemList(v any) (any, error) {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return v, nil
+	}
+	if _, ok := obj["id"]; ok {
+		return []any{obj}, nil
+	}
+	return v, nil
 }
 
 func mustInt(value string) int {
@@ -1229,7 +1280,7 @@ func schemaMismatchBucketName(rel string) string {
 func schemaMismatchBucketStatus(name string) string {
 	switch name {
 	case "map_vs_list_shape":
-		return "inconclusive"
+		return "rejected"
 	case "field_value_delta":
 		return "rejected"
 	case "scalar_vs_array":
@@ -1255,7 +1306,7 @@ func schemaMismatchBucketCandidateRule(name string) string {
 func schemaMismatchBucketNotes(name string) string {
 	switch name {
 	case "map_vs_list_shape":
-		return "Bucketed first because it dominates the remaining schema-mismatch set."
+		return "Bucketed first because it dominates the remaining schema-mismatch set. Exact equality cannot be proven through simple canonicalizations (dict-to-list, list-to-map, singleton-to-list)."
 	case "field_value_delta":
 		return "These files differ by a small number of field values after shape normalization."
 	case "scalar_vs_array":

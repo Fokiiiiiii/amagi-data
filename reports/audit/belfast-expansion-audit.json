@@ -28119,6 +28119,36 @@
   ],
   "safe_to_promote_files": [
     {
+      "relative_path": "CN/sharecfgdata/shop_template.json",
+      "region": "CN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "EN/sharecfgdata/shop_template.json",
+      "region": "EN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "JP/sharecfgdata/shop_template.json",
+      "region": "JP",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "KR/sharecfgdata/shop_template.json",
+      "region": "KR",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "TW/sharecfgdata/shop_template.json",
+      "region": "TW",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
       "relative_path": "CN/GameCfg/buff.json",
       "region": "CN",
       "category": "GameCfg",
@@ -44635,36 +44665,6 @@
       "region": "JP",
       "category": "ShareCfg",
       "classification": "match_after_both_transformations"
-    },
-    {
-      "relative_path": "CN/sharecfgdata/shop_template.json",
-      "region": "CN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "EN/sharecfgdata/shop_template.json",
-      "region": "EN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "JP/sharecfgdata/shop_template.json",
-      "region": "JP",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "KR/sharecfgdata/shop_template.json",
-      "region": "KR",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "TW/sharecfgdata/shop_template.json",
-      "region": "TW",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
     }
   ],
   "exact_raw_match_files": [
@@ -64062,8 +64062,8 @@
         "CN/ShareCfg/activity_ins_ship_group_template.json"
       ],
       "candidate_rule": "normalize keyed tables to id-sorted lists",
-      "status": "inconclusive",
-      "notes": "Bucketed first because it dominates the remaining schema-mismatch set."
+      "status": "rejected",
+      "notes": "Bucketed first because it dominates the remaining schema-mismatch set. Exact equality cannot be proven through simple canonicalizations (dict-to-list, list-to-map, singleton-to-list)."
     },
     "scalar_vs_array": {
       "name": "scalar_vs_array",
