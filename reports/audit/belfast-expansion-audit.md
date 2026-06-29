@@ -96,14 +96,14 @@
 - match_after_both_transformations: 1
 - match_after_reference_id_subset: 5
 - Examples:
-  - JP/ShareCfg/ship_skin_template.json [JP/match_after_both_transformations]
-  - CN/sharecfgdata/shop_template.json [CN/match_after_reference_id_subset]
-  - EN/sharecfgdata/shop_template.json [EN/match_after_reference_id_subset]
-  - JP/sharecfgdata/shop_template.json [JP/match_after_reference_id_subset]
-  - KR/sharecfgdata/shop_template.json [KR/match_after_reference_id_subset]
-  - TW/sharecfgdata/shop_template.json [TW/match_after_reference_id_subset]
   - CN/GameCfg/buff.json [CN/exact_raw_match]
   - CN/GameCfg/card.json [CN/exact_raw_match]
+  - CN/GameCfg/dorm.json [CN/exact_raw_match]
+  - CN/GameCfg/dungeon.json [CN/exact_raw_match]
+  - CN/GameCfg/skill.json [CN/exact_raw_match]
+  - CN/GameCfg/story.json [CN/exact_raw_match]
+  - CN/ShareCfg/activity_coloring_template.json [CN/exact_raw_match]
+  - CN/ShareCfg/activity_const.json [CN/exact_raw_match]
   - ... 3009 more
 
 ## Count Mismatch Summary

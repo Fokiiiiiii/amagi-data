@@ -1,42 +1,6 @@
 {
   "safe_to_promote_files": [
     {
-      "relative_path": "JP/ShareCfg/ship_skin_template.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_both_transformations"
-    },
-    {
-      "relative_path": "CN/sharecfgdata/shop_template.json",
-      "region": "CN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "EN/sharecfgdata/shop_template.json",
-      "region": "EN",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "JP/sharecfgdata/shop_template.json",
-      "region": "JP",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "KR/sharecfgdata/shop_template.json",
-      "region": "KR",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
-      "relative_path": "TW/sharecfgdata/shop_template.json",
-      "region": "TW",
-      "category": "sharecfgdata",
-      "classification": "match_after_reference_id_subset"
-    },
-    {
       "relative_path": "CN/GameCfg/buff.json",
       "region": "CN",
       "category": "GameCfg",
@@ -18101,6 +18065,42 @@
       "region": "TW",
       "category": "sharecfgdata",
       "classification": "match_after_dict_keyed_to_list_by_id"
+    },
+    {
+      "relative_path": "JP/ShareCfg/ship_skin_template.json",
+      "region": "JP",
+      "category": "ShareCfg",
+      "classification": "match_after_both_transformations"
+    },
+    {
+      "relative_path": "CN/sharecfgdata/shop_template.json",
+      "region": "CN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "EN/sharecfgdata/shop_template.json",
+      "region": "EN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "JP/sharecfgdata/shop_template.json",
+      "region": "JP",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "KR/sharecfgdata/shop_template.json",
+      "region": "KR",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "TW/sharecfgdata/shop_template.json",
+      "region": "TW",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
     }
   ],
   "count_mismatch_files": [
