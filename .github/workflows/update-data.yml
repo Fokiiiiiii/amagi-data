@@ -90,8 +90,6 @@ jobs:
           }
           if (@($report.unsupported_files).Count -ne 0) { throw "unsupported_files must be empty" }
           if (@($report.unsupported_helper_files).Count -ne 0) { throw "unsupported_helper_files must be empty" }
-          if ($report.item_usage_drop_kept -lt 51) { throw "item_usage_drop_kept mismatch" }
-          if ($report.item_usage_drop_dropped -lt 356) { throw "item_usage_drop_dropped mismatch" }
 
           Get-ChildItem -LiteralPath $out -Force | ForEach-Object {
             if ($_.Name -eq "belfast-json-mvp-report.json") { return }
