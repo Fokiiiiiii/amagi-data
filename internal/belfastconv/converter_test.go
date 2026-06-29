@@ -51,8 +51,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 		t.Fatalf("ConvertMVP: %v", err)
 	}
 
-	if len(report.GeneratedFiles) != 604 {
-		t.Fatalf("expected 604 generated audited files, got %d", len(report.GeneratedFiles))
+	if len(report.GeneratedFiles) != 2753 {
+		t.Fatalf("expected 2753 generated audited files, got %d", len(report.GeneratedFiles))
 	}
 	for _, rel := range []string{
 		"CN/sharecfgdata/item_data_statistics.json",
@@ -65,14 +65,11 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 			t.Fatalf("%s should not be promoted", rel)
 		}
 	}
-	if containsString(report.GeneratedFiles, "CN/ShareCfg/achievement_data_template.json") {
-		t.Fatalf("count_mismatch file should not be generated")
+	if !containsString(report.GeneratedFiles, "CN/ShareCfg/achievement_data_template.json") {
+		t.Fatalf("expected audited safe file to be generated")
 	}
 	if containsString(report.GeneratedFiles, "CN/ShareCfg/auto_pilot_template.json") {
 		t.Fatalf("schema_mismatch file should not be generated")
-	}
-	if !containsString(report.SkippedUnsafeFiles, "CN/ShareCfg/achievement_data_template.json") {
-		t.Fatalf("expected skipped_unsafe_files to include known count mismatch")
 	}
 	if !containsString(report.SkippedUnsafeFiles, "CN/ShareCfg/auto_pilot_template.json") {
 		t.Fatalf("expected skipped_unsafe_files to include known schema mismatch")

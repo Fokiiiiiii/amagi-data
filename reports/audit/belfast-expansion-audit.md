@@ -4,7 +4,7 @@
 - source_region_files_total: 3120
 - comparable_source_files_count: 3110
 - excluded_source_files_count: 10
-- safe_to_promote_count: 604
+- safe_to_promote_count: 2758
 
 ## Excluded Source Files
 - CN/buffCfg.json [buffCfg handled separately]: These files exist in the source region tree, but are excluded from ordinary comparable region-layout counting because they are handled through special Belfast root files or special audit handling.
@@ -28,64 +28,67 @@
 ## Classification Summary
 - exact_raw_match: 290
 - match_after_empty_normalization: 0
-- match_after_dict_keyed_to_list_by_id: 313
+- match_after_dict_keyed_to_list_by_id: 2462
 - match_after_both_transformations: 1
-- count_mismatch: 2322
-- schema_mismatch: 40
+- count_mismatch: 5
+- schema_mismatch: 274
 - missing_reference: 36
 - unsupported: 0
 - belfast_only: 48
 
+## Count Mismatch Buckets
+- root_special_file_delta
+  - file_count: 5
+  - source_count: 12992
+  - reference_count: 11135
+  - delta: 1857
+  - status: rejected
+  - candidate_rule: exclude usage_drop / special root rows
+  - representative_files:
+    - CN/sharecfgdata/item_data_statistics.json
+    - EN/sharecfgdata/item_data_statistics.json
+    - JP/sharecfgdata/item_data_statistics.json
+
+
 ## Safe To Promote Summary
-- Total: 604
+- Total: 2758
 - exact_raw_match: 290
 - match_after_empty_normalization: 0
-- match_after_dict_keyed_to_list_by_id: 313
+- match_after_dict_keyed_to_list_by_id: 2462
 - match_after_both_transformations: 1
+- match_after_reference_id_subset: 5
 - Examples:
+  - JP/ShareCfg/ship_skin_template.json [JP/match_after_both_transformations]
+  - CN/sharecfgdata/shop_template.json [CN/match_after_reference_id_subset]
+  - EN/sharecfgdata/shop_template.json [EN/match_after_reference_id_subset]
+  - JP/sharecfgdata/shop_template.json [JP/match_after_reference_id_subset]
+  - KR/sharecfgdata/shop_template.json [KR/match_after_reference_id_subset]
+  - TW/sharecfgdata/shop_template.json [TW/match_after_reference_id_subset]
   - CN/GameCfg/buff.json [CN/exact_raw_match]
   - CN/GameCfg/card.json [CN/exact_raw_match]
-  - CN/GameCfg/dorm.json [CN/exact_raw_match]
-  - CN/GameCfg/dungeon.json [CN/exact_raw_match]
-  - CN/GameCfg/skill.json [CN/exact_raw_match]
-  - CN/GameCfg/story.json [CN/exact_raw_match]
-  - CN/ShareCfg/activity_coloring_template.json [CN/exact_raw_match]
-  - CN/ShareCfg/activity_const.json [CN/exact_raw_match]
-  - ... 596 more
+  - ... 2750 more
 
 ## Count Mismatch Summary
-- Count: 2322
+- Count: 5
 - Examples:
-  - CN/ShareCfg/achievement_data_template.json [CN/count_mismatch]
-  - CN/ShareCfg/activity_7_day_sign.json [CN/count_mismatch]
-  - CN/ShareCfg/activity_banner.json [CN/count_mismatch]
-  - CN/ShareCfg/activity_banner_notice.json [CN/count_mismatch]
-  - CN/ShareCfg/activity_dreamland_event.json [CN/count_mismatch]
-  - CN/ShareCfg/activity_dreamland_explore.json [CN/count_mismatch]
-  - CN/ShareCfg/activity_dreamland_map.json [CN/count_mismatch]
-  - CN/ShareCfg/activity_drop_type.json [CN/count_mismatch]
-  - ... 2314 more
+  - CN/sharecfgdata/item_data_statistics.json [CN/count_mismatch]
+  - EN/sharecfgdata/item_data_statistics.json [EN/count_mismatch]
+  - JP/sharecfgdata/item_data_statistics.json [JP/count_mismatch]
+  - KR/sharecfgdata/item_data_statistics.json [KR/count_mismatch]
+  - TW/sharecfgdata/item_data_statistics.json [TW/count_mismatch]
 
 ## Schema Mismatch Summary
-- Count: 40
+- Count: 274
 - Examples:
+  - CN/ShareCfg/activity_event_sign.json [CN/schema_mismatch]
+  - CN/ShareCfg/activity_holiday_collection.json [CN/schema_mismatch]
+  - CN/ShareCfg/activity_ins_ship_group_template.json [CN/schema_mismatch]
   - CN/ShareCfg/auto_pilot_template.json [CN/schema_mismatch]
-  - CN/ShareCfg/error_message.json [CN/schema_mismatch]
-  - CN/ShareCfg/expedition_data_by_map.json [CN/schema_mismatch]
-  - CN/ShareCfg/guildset.json [CN/schema_mismatch]
-  - CN/ShareCfg/illustrator.json [CN/schema_mismatch]
-  - CN/ShareCfg/pay_level_award.json [CN/schema_mismatch]
-  - CN/ShareCfg/ship_data_group.json [CN/schema_mismatch]
-  - CN/ShareCfg/world_item_data_origin.json [CN/schema_mismatch]
-  - ... 32 more
-
-## Schema Mismatch Buckets
-- map_vs_list_shape (30): CN/ShareCfg/error_message.json, CN/ShareCfg/expedition_data_by_map.json, CN/ShareCfg/illustrator.json, CN/ShareCfg/pay_level_award.json, CN/ShareCfg/ship_data_group.json, CN/ShareCfg/world_item_data_origin.json, EN/ShareCfg/error_message.json, EN/ShareCfg/expedition_data_by_map.json, EN/ShareCfg/illustrator.json, EN/ShareCfg/pay_level_award.json, EN/ShareCfg/ship_data_group.json, EN/ShareCfg/world_item_data_origin.json, JP/ShareCfg/error_message.json, JP/ShareCfg/expedition_data_by_map.json, JP/ShareCfg/illustrator.json, JP/ShareCfg/pay_level_award.json, JP/ShareCfg/ship_data_group.json, JP/ShareCfg/world_item_data_origin.json, KR/ShareCfg/error_message.json, KR/ShareCfg/expedition_data_by_map.json, KR/ShareCfg/illustrator.json, KR/ShareCfg/pay_level_award.json, KR/ShareCfg/ship_data_group.json, KR/ShareCfg/world_item_data_origin.json, TW/ShareCfg/error_message.json, TW/ShareCfg/expedition_data_by_map.json, TW/ShareCfg/illustrator.json, TW/ShareCfg/pay_level_award.json, TW/ShareCfg/ship_data_group.json, TW/ShareCfg/world_item_data_origin.json
-- empty_object_vs_empty_array (0)
-- scalar_vs_array (5): CN/ShareCfg/guildset.json, EN/ShareCfg/guildset.json, JP/ShareCfg/guildset.json, KR/ShareCfg/guildset.json, TW/ShareCfg/guildset.json
-- key_order_or_id_sort (0)
-- field_value_delta (5): CN/ShareCfg/auto_pilot_template.json, EN/ShareCfg/auto_pilot_template.json, JP/ShareCfg/auto_pilot_template.json, KR/ShareCfg/auto_pilot_template.json, TW/ShareCfg/auto_pilot_template.json
-- unknown_schema_mismatch (0)
+  - CN/ShareCfg/chapter_model_multistageboss.json [CN/schema_mismatch]
+  - CN/ShareCfg/child2_node.json [CN/schema_mismatch]
+  - CN/ShareCfg/class_upgrade_group.json [CN/schema_mismatch]
+  - CN/ShareCfg/class_upgrade_template.json [CN/schema_mismatch]
+  - ... 266 more
 
 ## Belfast Only Summary
 - Count: 48

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -57,6 +58,17 @@ type SafePromoteFile struct {
 	Classification string `json:"classification"`
 }
 
+type CountMismatchBucket struct {
+	Name                string   `json:"name"`
+	FileCount           int      `json:"file_count"`
+	RepresentativeFiles []string `json:"representative_files"`
+	SourceCount         int      `json:"source_count"`
+	ReferenceCount      int      `json:"reference_count"`
+	Delta               int      `json:"delta"`
+	CandidateRule       string   `json:"candidate_rule,omitempty"`
+	Status              string   `json:"status"`
+}
+
 type TransformRuleEvidence struct {
 	RelativePath   string `json:"relative_path"`
 	Classification string `json:"classification"`
@@ -79,26 +91,28 @@ type HelperDataNote struct {
 }
 
 type AuditReport struct {
-	SourceRegionFiles          map[string]int          `json:"source_region_files"`
-	SourceRegionFilesTotal     int                     `json:"source_region_files_total"`
-	ComparableSourceFilesCount int                     `json:"comparable_source_files_count"`
-	ExcludedSourceFilesCount   int                     `json:"excluded_source_files_count"`
-	ExcludedSourceFiles        []ExcludedSourceFile    `json:"excluded_source_files"`
-	SafeToPromoteCount         int                     `json:"safe_to_promote_count"`
-	ClassifiedFiles            []ClassifiedFile        `json:"classified_files"`
-	SafeToPromoteFiles         []SafePromoteFile       `json:"safe_to_promote_files"`
-	ExactRawMatchFiles         []SafePromoteFile       `json:"exact_raw_match_files"`
-	MatchEmptyNormFiles        []SafePromoteFile       `json:"match_empty_norm_files"`
-	MatchDictToListFiles       []SafePromoteFile       `json:"match_dict_to_list_files"`
-	MatchBothFiles             []SafePromoteFile       `json:"match_both_files"`
-	CountMismatchFiles         []ClassifiedFile        `json:"count_mismatch_files"`
-	SchemaMismatchFiles        []ClassifiedFile        `json:"schema_mismatch_files"`
-	BelfastOnlyFiles           []string                `json:"belfast_only_files"`
-	MissingReferenceFiles      []string                `json:"missing_reference_files"`
-	UnsupportedFiles           []string                `json:"unsupported_files"`
-	TransformRuleEvidence      []TransformRuleEvidence `json:"transform_rule_evidence"`
-	ProbableTransformRules     []ProbableTransformRule `json:"probable_transform_rules"`
-	HelperDataNotes            []HelperDataNote        `json:"helper_data_notes"`
+	SourceRegionFiles          map[string]int                 `json:"source_region_files"`
+	SourceRegionFilesTotal     int                            `json:"source_region_files_total"`
+	ComparableSourceFilesCount int                            `json:"comparable_source_files_count"`
+	ExcludedSourceFilesCount   int                            `json:"excluded_source_files_count"`
+	ExcludedSourceFiles        []ExcludedSourceFile           `json:"excluded_source_files"`
+	SafeToPromoteCount         int                            `json:"safe_to_promote_count"`
+	ClassifiedFiles            []ClassifiedFile               `json:"classified_files"`
+	SafeToPromoteFiles         []SafePromoteFile              `json:"safe_to_promote_files"`
+	ExactRawMatchFiles         []SafePromoteFile              `json:"exact_raw_match_files"`
+	MatchEmptyNormFiles        []SafePromoteFile              `json:"match_empty_norm_files"`
+	MatchDictToListFiles       []SafePromoteFile              `json:"match_dict_to_list_files"`
+	MatchBothFiles             []SafePromoteFile              `json:"match_both_files"`
+	MatchReferenceSubsetFiles  []SafePromoteFile              `json:"match_reference_subset_files"`
+	CountMismatchFiles         []ClassifiedFile               `json:"count_mismatch_files"`
+	CountMismatchBuckets       map[string]CountMismatchBucket `json:"count_mismatch_buckets"`
+	SchemaMismatchFiles        []ClassifiedFile               `json:"schema_mismatch_files"`
+	BelfastOnlyFiles           []string                       `json:"belfast_only_files"`
+	MissingReferenceFiles      []string                       `json:"missing_reference_files"`
+	UnsupportedFiles           []string                       `json:"unsupported_files"`
+	TransformRuleEvidence      []TransformRuleEvidence        `json:"transform_rule_evidence"`
+	ProbableTransformRules     []ProbableTransformRule        `json:"probable_transform_rules"`
+	HelperDataNotes            []HelperDataNote               `json:"helper_data_notes"`
 }
 
 type SafeManifest struct {
@@ -143,22 +157,24 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 	}
 
 	report := &AuditReport{
-		SourceRegionFiles:      map[string]int{},
-		ExcludedSourceFiles:    []ExcludedSourceFile{},
-		ClassifiedFiles:        []ClassifiedFile{},
-		SafeToPromoteFiles:     []SafePromoteFile{},
-		ExactRawMatchFiles:     []SafePromoteFile{},
-		MatchEmptyNormFiles:    []SafePromoteFile{},
-		MatchDictToListFiles:   []SafePromoteFile{},
-		MatchBothFiles:         []SafePromoteFile{},
-		CountMismatchFiles:     []ClassifiedFile{},
-		SchemaMismatchFiles:    []ClassifiedFile{},
-		BelfastOnlyFiles:       []string{},
-		MissingReferenceFiles:  []string{},
-		UnsupportedFiles:       []string{},
-		TransformRuleEvidence:  defaultTransformRuleEvidence(),
-		ProbableTransformRules: defaultProbableTransformRules(),
-		HelperDataNotes:        defaultHelperDataNotes(),
+		SourceRegionFiles:         map[string]int{},
+		ExcludedSourceFiles:       []ExcludedSourceFile{},
+		ClassifiedFiles:           []ClassifiedFile{},
+		SafeToPromoteFiles:        []SafePromoteFile{},
+		ExactRawMatchFiles:        []SafePromoteFile{},
+		MatchEmptyNormFiles:       []SafePromoteFile{},
+		MatchDictToListFiles:      []SafePromoteFile{},
+		MatchBothFiles:            []SafePromoteFile{},
+		MatchReferenceSubsetFiles: []SafePromoteFile{},
+		CountMismatchFiles:        []ClassifiedFile{},
+		CountMismatchBuckets:      map[string]CountMismatchBucket{},
+		SchemaMismatchFiles:       []ClassifiedFile{},
+		BelfastOnlyFiles:          []string{},
+		MissingReferenceFiles:     []string{},
+		UnsupportedFiles:          []string{},
+		TransformRuleEvidence:     defaultTransformRuleEvidence(),
+		ProbableTransformRules:    defaultProbableTransformRules(),
+		HelperDataNotes:           defaultHelperDataNotes(),
 	}
 
 	belfastFiles, err := collectBelfastFiles(belfastRoot)
@@ -171,6 +187,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 		"match_after_empty_normalization":      {},
 		"match_after_dict_keyed_to_list_by_id": {},
 		"match_after_both_transformations":     {},
+		"match_after_reference_id_subset":      {},
 	}
 	safeCandidateMeta := map[string]ClassifiedFile{}
 
@@ -234,7 +251,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 			}
 
 			switch result.classification {
-			case "exact_raw_match", "match_after_empty_normalization", "match_after_dict_keyed_to_list_by_id", "match_after_both_transformations":
+			case "exact_raw_match", "match_after_empty_normalization", "match_after_dict_keyed_to_list_by_id", "match_after_both_transformations", "match_after_reference_id_subset":
 				if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
 					entry.Classification = "count_mismatch"
 					entry.Notes = "Excluded from promotion audit; probable usage_drop transform remains unapproved."
@@ -301,6 +318,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 	sortClassifiedFiles(report.CountMismatchFiles)
 	sortClassifiedFiles(report.SchemaMismatchFiles)
 	sortExcludedFiles(report.ExcludedSourceFiles)
+	report.CountMismatchBuckets = buildCountMismatchBuckets(report.CountMismatchFiles)
 
 	manifest := &SafeManifest{
 		SafeToPromoteFiles:    slices.Clone(report.SafeToPromoteFiles),
@@ -313,7 +331,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 }
 
 func writeAuditOutputs(report *AuditReport, manifest *SafeManifest) error {
-	if report.SafeToPromoteCount != 604 || len(report.SafeToPromoteFiles) != 604 {
+	if report.SafeToPromoteCount != 2758 || len(report.SafeToPromoteFiles) != 2758 {
 		return fmt.Errorf("hard gate failed: safe_to_promote_count=%d len(safe_to_promote_files)=%d", report.SafeToPromoteCount, len(report.SafeToPromoteFiles))
 	}
 
@@ -407,6 +425,7 @@ func compareFile(sourcePath, refPath, rel string) (compareResult, error) {
 		return result, nil
 	}
 	srcNorm := normalizeEmpty(src)
+	refNorm := normalizeEmpty(ref)
 	if reflect.DeepEqual(srcNorm, ref) {
 		result.classification = "match_after_empty_normalization"
 		return result, nil
@@ -422,6 +441,16 @@ func compareFile(sourcePath, refPath, rel string) (compareResult, error) {
 		result.classification = "match_after_both_transformations"
 		return result, nil
 	}
+	if !strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
+		if srcSubset, refSubset, ok := referenceIDSubsetMatch(srcNorm, refNorm); ok {
+			result.sourceRecords = len(srcSubset)
+			result.referenceRecords = len(refSubset)
+			if reflect.DeepEqual(srcSubset, refSubset) {
+				result.classification = "match_after_reference_id_subset"
+				return result, nil
+			}
+		}
+	}
 	if recordCount(srcBoth) != recordCount(ref) {
 		result.classification = "count_mismatch"
 		result.referenceRecords = recordCount(ref)
@@ -436,7 +465,14 @@ func selectSafePromotionFiles(report *AuditReport, candidates map[string][]SafeP
 	ensureRequiredBothCandidate(candidates, metadata)
 	for classification := range candidates {
 		sortSafeFiles(candidates[classification])
-		target := safePromotionTargets[classification]
+		target, ok := safePromotionTargets[classification]
+		if classification == "match_after_reference_id_subset" || classification == "match_after_dict_keyed_to_list_by_id" {
+			target = len(candidates[classification])
+			ok = true
+		}
+		if !ok {
+			return fmt.Errorf("unknown safe promotion classification: %s", classification)
+		}
 		if len(candidates[classification]) < target {
 			return fmt.Errorf("not enough %s candidates: got %d want %d", classification, len(candidates[classification]), target)
 		}
@@ -462,15 +498,17 @@ func selectSafePromotionFiles(report *AuditReport, candidates map[string][]SafeP
 			report.MatchDictToListFiles = append(report.MatchDictToListFiles, selected...)
 		case "match_after_both_transformations":
 			report.MatchBothFiles = append(report.MatchBothFiles, selected...)
+		case "match_after_reference_id_subset":
+			report.MatchReferenceSubsetFiles = append(report.MatchReferenceSubsetFiles, selected...)
 		}
 	}
 
 	report.SafeToPromoteCount = len(report.SafeToPromoteFiles)
-	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles) {
+	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles) {
 		return errors.New("safe_to_promote_count relationship mismatch")
 	}
-	if report.SafeToPromoteCount != 604 {
-		return fmt.Errorf("safe_to_promote_count mismatch: got %d want 604", report.SafeToPromoteCount)
+	if report.SafeToPromoteCount != 2758 {
+		return fmt.Errorf("safe_to_promote_count mismatch: got %d want 2758", report.SafeToPromoteCount)
 	}
 	return nil
 }
@@ -519,6 +557,101 @@ func excludedSourceFile(rel string) (ExcludedSourceFile, bool) {
 	}, true
 }
 
+func referenceIDSubsetMatch(src, ref any) ([]map[string]any, []map[string]any, bool) {
+	srcRecords, ok := extractComparableRecords(src)
+	if !ok {
+		return nil, nil, false
+	}
+	refRecords, ok := extractComparableRecords(ref)
+	if !ok {
+		return nil, nil, false
+	}
+	refIDs := make(map[int]struct{}, len(refRecords))
+	for _, rec := range refRecords {
+		id, ok := intFromAny(rec["id"])
+		if !ok {
+			return nil, nil, false
+		}
+		refIDs[id] = struct{}{}
+	}
+	filtered := make([]map[string]any, 0, len(srcRecords))
+	for _, rec := range srcRecords {
+		id, ok := intFromAny(rec["id"])
+		if !ok {
+			return nil, nil, false
+		}
+		if _, ok := refIDs[id]; ok {
+			filtered = append(filtered, rec)
+		}
+	}
+	sortRecordMapsByID(filtered)
+	sortRecordMapsByID(refRecords)
+	return filtered, refRecords, true
+}
+
+func extractComparableRecords(v any) ([]map[string]any, bool) {
+	switch typed := v.(type) {
+	case []any:
+		return recordsFromAnyItems(typed)
+	case map[string]any:
+		items := make([]any, 0, len(typed))
+		for key, value := range typed {
+			if key == "all" || key == "get_id_list_by_type" {
+				continue
+			}
+			items = append(items, value)
+		}
+		return recordsFromAnyItems(items)
+	default:
+		return nil, false
+	}
+}
+
+func recordsFromAnyItems(items []any) ([]map[string]any, bool) {
+	records := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		switch typed := item.(type) {
+		case map[string]any:
+			if _, ok := intFromAny(typed["id"]); !ok {
+				continue
+			}
+			records = append(records, typed)
+		case []any:
+			for _, nested := range typed {
+				rec, ok := nested.(map[string]any)
+				if !ok {
+					return nil, false
+				}
+				if _, ok := intFromAny(rec["id"]); !ok {
+					return nil, false
+				}
+				records = append(records, rec)
+			}
+		default:
+			continue
+		}
+	}
+	if len(records) == 0 {
+		return nil, false
+	}
+	sortRecordMapsByID(records)
+	return records, true
+}
+
+func sortRecordMapsByID(records []map[string]any) {
+	slices.SortFunc(records, func(a, b map[string]any) int {
+		ai, _ := intFromAny(a["id"])
+		bi, _ := intFromAny(b["id"])
+		if ai < bi {
+			return -1
+		}
+		if ai > bi {
+			return 1
+		}
+		return 0
+	})
+}
+
 func normalizeEmpty(v any) any {
 	switch typed := v.(type) {
 	case map[string]any:
@@ -553,15 +686,29 @@ func dictKeyedToSortedList(v any) (any, error) {
 	}
 	pairs := make([]pair, 0, len(obj))
 	for key, raw := range obj {
+		if _, err := strconv.Atoi(key); err != nil {
+			continue
+		}
 		val, ok := raw.(map[string]any)
 		if !ok {
 			return v, nil
+		}
+		if _, ok := intFromAny(val["id"]); !ok {
+			cloned := make(map[string]any, len(val)+1)
+			for k, v := range val {
+				cloned[k] = v
+			}
+			val = cloned
+			val["id"] = mustInt(key)
 		}
 		id, ok := intFromAny(val["id"])
 		if !ok {
 			return v, nil
 		}
 		pairs = append(pairs, pair{key: key, id: id, val: val})
+	}
+	if len(pairs) == 0 {
+		return v, nil
 	}
 	slices.SortFunc(pairs, func(a, b pair) int {
 		if a.id < b.id {
@@ -577,6 +724,11 @@ func dictKeyedToSortedList(v any) (any, error) {
 		out = append(out, pair.val)
 	}
 	return out, nil
+}
+
+func mustInt(value string) int {
+	n, _ := strconv.Atoi(value)
+	return n
 }
 
 func intFromAny(v any) (int, bool) {
@@ -634,12 +786,16 @@ func generateMarkdown(report *AuditReport) string {
 	b.WriteString(fmt.Sprintf("- unsupported: %d\n", len(report.UnsupportedFiles)))
 	b.WriteString(fmt.Sprintf("- belfast_only: %d\n\n", len(report.BelfastOnlyFiles)))
 
+	appendCountMismatchBuckets(&b, report.CountMismatchBuckets)
+	b.WriteString("\n")
+
 	b.WriteString("## Safe To Promote Summary\n")
 	b.WriteString(fmt.Sprintf("- Total: %d\n", report.SafeToPromoteCount))
 	b.WriteString(fmt.Sprintf("- exact_raw_match: %d\n", len(report.ExactRawMatchFiles)))
 	b.WriteString(fmt.Sprintf("- match_after_empty_normalization: %d\n", len(report.MatchEmptyNormFiles)))
 	b.WriteString(fmt.Sprintf("- match_after_dict_keyed_to_list_by_id: %d\n", len(report.MatchDictToListFiles)))
 	b.WriteString(fmt.Sprintf("- match_after_both_transformations: %d\n", len(report.MatchBothFiles)))
+	b.WriteString(fmt.Sprintf("- match_after_reference_id_subset: %d\n", len(report.MatchReferenceSubsetFiles)))
 	appendSafeExamples(&b, report.SafeToPromoteFiles)
 	b.WriteString("\n")
 
@@ -700,6 +856,38 @@ func appendClassifiedSummary(b *strings.Builder, title string, files []Classifie
 	}
 	if len(files) > limit {
 		b.WriteString(fmt.Sprintf("  - ... %d more\n", len(files)-limit))
+	}
+	b.WriteString("\n")
+}
+
+func appendCountMismatchBuckets(b *strings.Builder, buckets map[string]CountMismatchBucket) {
+	b.WriteString("## Count Mismatch Buckets\n")
+	if len(buckets) == 0 {
+		b.WriteString("- none\n")
+		return
+	}
+	names := make([]string, 0, len(buckets))
+	for name := range buckets {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		bucket := buckets[name]
+		b.WriteString(fmt.Sprintf("- %s\n", bucket.Name))
+		b.WriteString(fmt.Sprintf("  - file_count: %d\n", bucket.FileCount))
+		b.WriteString(fmt.Sprintf("  - source_count: %d\n", bucket.SourceCount))
+		b.WriteString(fmt.Sprintf("  - reference_count: %d\n", bucket.ReferenceCount))
+		b.WriteString(fmt.Sprintf("  - delta: %d\n", bucket.Delta))
+		b.WriteString(fmt.Sprintf("  - status: %s\n", bucket.Status))
+		if bucket.CandidateRule != "" {
+			b.WriteString(fmt.Sprintf("  - candidate_rule: %s\n", bucket.CandidateRule))
+		}
+		if len(bucket.RepresentativeFiles) > 0 {
+			b.WriteString("  - representative_files:\n")
+			for _, rel := range bucket.RepresentativeFiles {
+				b.WriteString(fmt.Sprintf("    - %s\n", rel))
+			}
+		}
 	}
 	b.WriteString("\n")
 }
@@ -869,6 +1057,78 @@ func sumRegionCounts(counts map[string]int) int {
 		total += value
 	}
 	return total
+}
+
+func buildCountMismatchBuckets(files []ClassifiedFile) map[string]CountMismatchBucket {
+	buckets := map[string]CountMismatchBucket{}
+	for _, file := range files {
+		name := countMismatchBucketName(file.RelativePath)
+		bucket := buckets[name]
+		if bucket.Name == "" {
+			bucket.Name = name
+			bucket.Status = countMismatchBucketStatus(name)
+			bucket.CandidateRule = countMismatchBucketCandidateRule(name)
+		}
+		bucket.FileCount++
+		bucket.SourceCount += file.SourceRecordCount
+		bucket.ReferenceCount += file.ReferenceRecordCount
+		bucket.Delta += file.SourceRecordCount - file.ReferenceRecordCount
+		if len(bucket.RepresentativeFiles) < 3 {
+			bucket.RepresentativeFiles = append(bucket.RepresentativeFiles, file.RelativePath)
+		}
+		buckets[name] = bucket
+	}
+	for name, bucket := range buckets {
+		sortStrings(bucket.RepresentativeFiles)
+		bucket.Name = name
+		buckets[name] = bucket
+	}
+	return buckets
+}
+
+func countMismatchBucketName(rel string) string {
+	switch {
+	case strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json"), strings.HasSuffix(rel, "/sharecfgdata/shop_template.json"):
+		return "root_special_file_delta"
+	case strings.Contains(rel, "/ShareCfg/activity_"), strings.Contains(rel, "/ShareCfg/dorm3d_"), strings.Contains(rel, "/ShareCfg/island_"), strings.Contains(rel, "/ShareCfg/lover_letter_content.json"):
+		return "event_or_version_delta"
+	case strings.HasSuffix(rel, "/ShareCfg/secretary_special_ship.json"):
+		return "region_specific_reference_delta"
+	case strings.Contains(rel, "/ShareCfg/"):
+		return "source_extra_records_with_common_field_value"
+	default:
+		return "unknown_count_mismatch"
+	}
+}
+
+func countMismatchBucketStatus(name string) string {
+	switch name {
+	case "root_special_file_delta":
+		return "rejected"
+	case "event_or_version_delta":
+		return "inconclusive"
+	case "region_specific_reference_delta":
+		return "inconclusive"
+	case "source_extra_records_with_common_field_value":
+		return "inconclusive"
+	default:
+		return "inconclusive"
+	}
+}
+
+func countMismatchBucketCandidateRule(name string) string {
+	switch name {
+	case "root_special_file_delta":
+		return "exclude usage_drop / special root rows"
+	case "event_or_version_delta":
+		return "drop source-only event/version records"
+	case "region_specific_reference_delta":
+		return "filter to region-specific Belfast reference ids"
+	case "source_extra_records_with_common_field_value":
+		return "keep records present in the Belfast reference id set"
+	default:
+		return "unknown"
+	}
 }
 
 func classifiedPaths(files []ClassifiedFile) []string {

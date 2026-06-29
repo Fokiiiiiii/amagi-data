@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -56,18 +57,26 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 			t.Fatalf("expected excluded_source_files to contain %s", path)
 		}
 	}
-	if report.SafeToPromoteCount != 604 || len(report.SafeToPromoteFiles) != 604 {
-		t.Fatalf("safe_to_promote mismatch: count=%d len=%d", report.SafeToPromoteCount, len(report.SafeToPromoteFiles))
-	}
-	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles) {
+	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles) {
 		t.Fatalf(
-			"safe_to_promote_count=%d want exact_raw_match+match_empty_norm+match_dict_to_list+match_both=%d",
+			"safe_to_promote_count=%d want exact_raw_match+match_empty_norm+match_dict_to_list+match_both+match_reference_subset=%d",
 			report.SafeToPromoteCount,
-			len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles),
+			len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles),
 		)
 	}
 	if len(report.MatchEmptyNormFiles) != 0 {
 		t.Fatalf("expected match_empty_norm_files to stay empty, got %d", len(report.MatchEmptyNormFiles))
+	}
+	if len(report.MatchReferenceSubsetFiles) == 0 {
+		t.Fatalf("expected match_reference_subset_files to contain promoted files")
+	}
+	for _, file := range report.MatchReferenceSubsetFiles {
+		if !containsSafeFile(report.SafeToPromoteFiles, file.RelativePath) {
+			t.Fatalf("expected %s to be promoted", file.RelativePath)
+		}
+		if containsClassifiedFile(report.CountMismatchFiles, file.RelativePath) {
+			t.Fatalf("expected %s to leave count_mismatch_files", file.RelativePath)
+		}
 	}
 	for _, rel := range []string{
 		"CN/sharecfgdata/item_data_statistics.json",
@@ -83,14 +92,24 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 			t.Fatalf("%s should remain a count mismatch", rel)
 		}
 	}
-	if !containsClassifiedFile(report.CountMismatchFiles, "CN/ShareCfg/achievement_data_template.json") {
-		t.Fatalf("expected known count mismatch in count_mismatch_files")
+	if len(report.CountMismatchFiles) != 5 {
+		t.Fatalf("count_mismatch_files=%d want 5", len(report.CountMismatchFiles))
 	}
-	if !containsClassifiedFile(report.SchemaMismatchFiles, "CN/ShareCfg/auto_pilot_template.json") {
-		t.Fatalf("expected known schema mismatch in schema_mismatch_files")
+	if len(report.CountMismatchBuckets) == 0 {
+		t.Fatalf("expected count_mismatch_buckets to be populated")
 	}
-	if len(manifest.SafeToPromoteFiles) != 604 {
-		t.Fatalf("manifest safe_to_promote_files=%d want 604", len(manifest.SafeToPromoteFiles))
+	bucketSum := 0
+	for _, bucket := range report.CountMismatchBuckets {
+		bucketSum += bucket.FileCount
+	}
+	if bucketSum != len(report.CountMismatchFiles) {
+		t.Fatalf("count_mismatch bucket sum=%d want %d", bucketSum, len(report.CountMismatchFiles))
+	}
+	if len(manifest.SafeToPromoteFiles) != report.SafeToPromoteCount {
+		t.Fatalf("manifest safe_to_promote_files=%d want %d", len(manifest.SafeToPromoteFiles), report.SafeToPromoteCount)
+	}
+	if !containsSafeFile(manifest.SafeToPromoteFiles, "CN/sharecfgdata/shop_template.json") {
+		t.Fatalf("expected CN/sharecfgdata/shop_template.json to be in safe_to_promote_manifest")
 	}
 	for _, rel := range []string{
 		"CN/sharecfgdata/item_data_statistics.json",
@@ -134,7 +153,9 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		"match_empty_norm_files",
 		"match_dict_to_list_files",
 		"match_both_files",
+		"match_reference_subset_files",
 		"count_mismatch_files",
+		"count_mismatch_buckets",
 		"schema_mismatch_files",
 		"belfast_only_files",
 		"missing_reference_files",
@@ -157,53 +178,47 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	if err := json.Unmarshal(reportJSON, &reportDoc); err != nil {
 		t.Fatalf("unmarshal report json: %v", err)
 	}
-	buckets, ok := reportDoc["schema_mismatch_buckets"].(map[string]any)
+	buckets, ok := reportDoc["count_mismatch_buckets"].(map[string]any)
 	if !ok {
-		t.Fatalf("expected schema_mismatch_buckets to be present in report json")
+		t.Fatalf("expected count_mismatch_buckets to be present in report json")
 	}
-	wantBucketCounts := map[string]int{
-		"map_vs_list_shape":          30,
-		"empty_object_vs_empty_array": 0,
-		"scalar_vs_array":             5,
-		"key_order_or_id_sort":        0,
-		"field_value_delta":           5,
-		"unknown_schema_mismatch":     0,
+	if len(buckets) == 0 {
+		t.Fatalf("expected count_mismatch_buckets to contain entries")
 	}
-	reportFiles := make(map[string]struct{}, len(report.SchemaMismatchFiles))
-	for _, file := range report.SchemaMismatchFiles {
-		reportFiles[file.RelativePath] = struct{}{}
-	}
-	seen := make(map[string]struct{}, len(reportFiles))
-	for bucketName, wantCount := range wantBucketCounts {
-		rawFiles, ok := buckets[bucketName]
+	seen := make(map[string]struct{})
+	totalBucketFiles := 0
+	for bucketName, rawBucket := range buckets {
+		bucket, ok := rawBucket.(map[string]any)
 		if !ok {
-			t.Fatalf("expected schema_mismatch_buckets to include %s", bucketName)
+			t.Fatalf("expected count_mismatch_buckets[%s] to be a JSON object", bucketName)
 		}
-		files, ok := rawFiles.([]any)
+		for _, field := range []string{"name", "file_count", "representative_files", "source_count", "reference_count", "delta", "status"} {
+			if _, ok := bucket[field]; !ok {
+				t.Fatalf("expected count_mismatch_buckets[%s] to contain %s", bucketName, field)
+			}
+		}
+		rawCount, ok := bucket["file_count"].(float64)
 		if !ok {
-			t.Fatalf("expected schema_mismatch_buckets[%s] to be a JSON array", bucketName)
+			t.Fatalf("expected count_mismatch_buckets[%s].file_count to be numeric", bucketName)
 		}
-		if len(files) != wantCount {
-			t.Fatalf("schema_mismatch_buckets[%s]=%d want %d", bucketName, len(files), wantCount)
+		totalBucketFiles += int(rawCount)
+		rawRep, ok := bucket["representative_files"].([]any)
+		if !ok || len(rawRep) == 0 {
+			t.Fatalf("expected count_mismatch_buckets[%s].representative_files to be a non-empty array", bucketName)
 		}
-		for _, rawFile := range files {
+		for _, rawFile := range rawRep {
 			rel, ok := rawFile.(string)
 			if !ok {
-				t.Fatalf("expected schema_mismatch_buckets[%s] entries to be strings", bucketName)
+				t.Fatalf("expected count_mismatch_buckets[%s] entries to be strings", bucketName)
 			}
 			if _, dup := seen[rel]; dup {
-				t.Fatalf("schema_mismatch_buckets contains duplicate file %s", rel)
+				t.Fatalf("count_mismatch_buckets contains duplicate file %s", rel)
 			}
 			seen[rel] = struct{}{}
 		}
 	}
-	if len(seen) != len(reportFiles) {
-		t.Fatalf("schema_mismatch_buckets covered %d files, want %d", len(seen), len(reportFiles))
-	}
-	for rel := range reportFiles {
-		if _, ok := seen[rel]; !ok {
-			t.Fatalf("schema_mismatch_buckets missing %s", rel)
-		}
+	if totalBucketFiles != len(report.CountMismatchFiles) {
+		t.Fatalf("count_mismatch_buckets summed to %d, want %d", totalBucketFiles, len(report.CountMismatchFiles))
 	}
 
 	markdownPath := filepath.Join("..", "..", "reports", "audit", "belfast-expansion-audit.md")
@@ -212,15 +227,78 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		t.Fatalf("read report markdown: %v", err)
 	}
 	for _, needle := range []string{
-		"## Schema Mismatch Buckets",
-		"map_vs_list_shape (30)",
-		"scalar_vs_array (5)",
-		"field_value_delta (5)",
+		"## Count Mismatch Buckets",
 	} {
 		if !strings.Contains(string(markdown), needle) {
 			t.Fatalf("expected markdown to contain %q", needle)
 		}
 	}
+
+	var exactPromoted, subsetPromoted string
+	for _, file := range report.SafeToPromoteFiles {
+		switch file.Classification {
+		case "exact_raw_match":
+			if exactPromoted == "" {
+				exactPromoted = file.RelativePath
+			}
+		case "match_after_reference_id_subset":
+			if subsetPromoted == "" {
+				subsetPromoted = file.RelativePath
+			}
+		}
+	}
+	if exactPromoted == "" || subsetPromoted == "" {
+		t.Fatalf("expected promoted exact raw and reference subset files to be populated")
+	}
+	assertKeyedExactMatch(
+		t,
+		filepath.Join(sourceRoot, filepath.FromSlash(exactPromoted)),
+		filepath.Join(belfastRoot, filepath.FromSlash(exactPromoted)),
+	)
+	assertReferenceSubsetMatch(
+		t,
+		filepath.Join(sourceRoot, filepath.FromSlash(subsetPromoted)),
+		filepath.Join(belfastRoot, filepath.FromSlash(subsetPromoted)),
+	)
+}
+
+func assertKeyedExactMatch(t *testing.T, sourcePath, refPath string) {
+	t.Helper()
+	src := readJSONAny(t, sourcePath)
+	ref := readJSONAny(t, refPath)
+	got, err := dictKeyedToSortedList(src)
+	if err != nil {
+		t.Fatalf("dictKeyedToSortedList: %v", err)
+	}
+	if !reflect.DeepEqual(got, ref) {
+		t.Fatalf("expected transformed source to equal Belfast reference for %s", sourcePath)
+	}
+}
+
+func assertReferenceSubsetMatch(t *testing.T, sourcePath, refPath string) {
+	t.Helper()
+	src := readJSONAny(t, sourcePath)
+	ref := readJSONAny(t, refPath)
+	got, want, ok := referenceIDSubsetMatch(src, ref)
+	if !ok {
+		t.Fatalf("referenceIDSubsetMatch rejected %s", sourcePath)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("expected reference subset transform to equal Belfast reference for %s", sourcePath)
+	}
+}
+
+func readJSONAny(t *testing.T, path string) any {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	var value any
+	if err := json.Unmarshal(data, &value); err != nil {
+		t.Fatalf("unmarshal %s: %v", path, err)
+	}
+	return value
 }
 
 func externalRoot(t *testing.T, envName, fallback string) string {
