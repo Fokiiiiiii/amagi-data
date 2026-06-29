@@ -4,7 +4,7 @@
 - source_region_files_total: 3120
 - comparable_source_files_count: 3110
 - excluded_source_files_count: 10
-- safe_to_promote_count: 3017
+- safe_to_promote_count: 3022
 
 ## Excluded Source Files
 - CN/buffCfg.json [buffCfg handled separately]: These files exist in the source region tree, but are excluded from ordinary comparable region-layout counting because they are handled through special Belfast root files or special audit handling.
@@ -30,25 +30,14 @@
 - match_after_empty_normalization: 0
 - match_after_dict_keyed_to_list_by_id: 2721
 - match_after_both_transformations: 1
-- count_mismatch: 5
+- count_mismatch: 0
 - schema_mismatch: 15
 - missing_reference: 36
 - unsupported: 0
 - belfast_only: 48
 
 ## Count Mismatch Buckets
-- root_special_file_delta
-  - file_count: 5
-  - source_count: 12992
-  - reference_count: 11135
-  - delta: 1857
-  - status: rejected
-  - candidate_rule: exclude usage_drop / special root rows
-  - representative_files:
-    - CN/sharecfgdata/item_data_statistics.json
-    - EN/sharecfgdata/item_data_statistics.json
-    - JP/sharecfgdata/item_data_statistics.json
-
+- none
 
 ## Schema Mismatch Buckets
 - field_value_delta
@@ -89,12 +78,12 @@
 
 
 ## Safe To Promote Summary
-- Total: 3017
+- Total: 3022
 - exact_raw_match: 290
 - match_after_empty_normalization: 0
 - match_after_dict_keyed_to_list_by_id: 2721
 - match_after_both_transformations: 1
-- match_after_reference_id_subset: 5
+- match_after_reference_id_subset: 10
 - Examples:
   - CN/GameCfg/buff.json [CN/exact_raw_match]
   - CN/GameCfg/card.json [CN/exact_raw_match]
@@ -104,16 +93,11 @@
   - CN/GameCfg/story.json [CN/exact_raw_match]
   - CN/ShareCfg/activity_coloring_template.json [CN/exact_raw_match]
   - CN/ShareCfg/activity_const.json [CN/exact_raw_match]
-  - ... 3009 more
+  - ... 3014 more
 
 ## Count Mismatch Summary
-- Count: 5
+- Count: 0
 - Examples:
-  - CN/sharecfgdata/item_data_statistics.json [CN/count_mismatch]
-  - EN/sharecfgdata/item_data_statistics.json [EN/count_mismatch]
-  - JP/sharecfgdata/item_data_statistics.json [JP/count_mismatch]
-  - KR/sharecfgdata/item_data_statistics.json [KR/count_mismatch]
-  - TW/sharecfgdata/item_data_statistics.json [TW/count_mismatch]
 
 ## Schema Mismatch Summary
 - Count: 15
@@ -159,11 +143,6 @@
 - confirmed: `JP/sharecfgdata/weapon_property.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
 - confirmed: `JP/sharecfgdata/equip_data_template.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
 - confirmed: `JP/ShareCfg/ship_skin_template.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
-- rejected: `CN/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 3030 records; Belfast: 2568 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2517; exact match still fails and remains 51 records short.
-- rejected: `EN/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2628 records; Belfast: 2250 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2155; exact match still fails and remains 95 records short.
-- rejected: `JP/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2734 records; Belfast: 2378 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2327; exact match still fails and remains 51 records short.
-- rejected: `KR/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2549 records; Belfast: 2209 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2158; exact match still fails and remains 51 records short.
-- rejected: `TW/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2051 records; Belfast: 1730 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 1677; exact match still fails and remains 53 records short.
 
 ## Helper Data Notes
 - `build_pools.json` [observed]: Currently treated as fallback/generated helper output; exact source fields are not confirmed.

@@ -126,8 +126,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	out := sc.outDir
 	belfastRoot := sc.belfastRoot
 
-	if len(report.GeneratedFiles) != 3012 {
-		t.Fatalf("expected 3012 generated audited files, got %d", len(report.GeneratedFiles))
+	if len(report.GeneratedFiles) != 3022 {
+		t.Fatalf("expected 3022 generated audited files, got %d", len(report.GeneratedFiles))
 	}
 	for _, rel := range []string{
 		"CN/sharecfgdata/item_data_statistics.json",
@@ -136,8 +136,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 		"KR/sharecfgdata/item_data_statistics.json",
 		"TW/sharecfgdata/item_data_statistics.json",
 	} {
-		if containsString(report.GeneratedFiles, rel) {
-			t.Fatalf("%s should not be promoted", rel)
+		if !containsString(report.GeneratedFiles, rel) {
+			t.Fatalf("%s should be promoted", rel)
 		}
 	}
 	if !containsString(report.GeneratedFiles, "CN/ShareCfg/achievement_data_template.json") {

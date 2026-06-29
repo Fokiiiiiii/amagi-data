@@ -18073,8 +18073,20 @@
       "classification": "match_after_both_transformations"
     },
     {
+      "relative_path": "CN/sharecfgdata/item_data_statistics.json",
+      "region": "CN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
       "relative_path": "CN/sharecfgdata/shop_template.json",
       "region": "CN",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "EN/sharecfgdata/item_data_statistics.json",
+      "region": "EN",
       "category": "sharecfgdata",
       "classification": "match_after_reference_id_subset"
     },
@@ -18085,8 +18097,20 @@
       "classification": "match_after_reference_id_subset"
     },
     {
+      "relative_path": "JP/sharecfgdata/item_data_statistics.json",
+      "region": "JP",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
       "relative_path": "JP/sharecfgdata/shop_template.json",
       "region": "JP",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
+      "relative_path": "KR/sharecfgdata/item_data_statistics.json",
+      "region": "KR",
       "category": "sharecfgdata",
       "classification": "match_after_reference_id_subset"
     },
@@ -18097,19 +18121,19 @@
       "classification": "match_after_reference_id_subset"
     },
     {
+      "relative_path": "TW/sharecfgdata/item_data_statistics.json",
+      "region": "TW",
+      "category": "sharecfgdata",
+      "classification": "match_after_reference_id_subset"
+    },
+    {
       "relative_path": "TW/sharecfgdata/shop_template.json",
       "region": "TW",
       "category": "sharecfgdata",
       "classification": "match_after_reference_id_subset"
     }
   ],
-  "count_mismatch_files": [
-    "CN/sharecfgdata/item_data_statistics.json",
-    "EN/sharecfgdata/item_data_statistics.json",
-    "JP/sharecfgdata/item_data_statistics.json",
-    "KR/sharecfgdata/item_data_statistics.json",
-    "TW/sharecfgdata/item_data_statistics.json"
-  ],
+  "count_mismatch_files": [],
   "schema_mismatch_files": [
     "CN/ShareCfg/auto_pilot_template.json",
     "CN/ShareCfg/class_upgrade_group.json",

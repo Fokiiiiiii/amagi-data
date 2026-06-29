@@ -17,7 +17,7 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		t.Fatalf("expected reports/audit/belfast-expansion-audit.json to exist: %v", err)
 	}
 
-	report, manifest, err := runAudit(sourceRoot, belfastRoot)
+	report, manifest, _, err := runAudit(sourceRoot, belfastRoot)
 	if err != nil {
 		t.Fatalf("runAudit: %v", err)
 	}
@@ -85,18 +85,18 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		"KR/sharecfgdata/item_data_statistics.json",
 		"TW/sharecfgdata/item_data_statistics.json",
 	} {
-		if containsSafeFile(report.SafeToPromoteFiles, rel) {
-			t.Fatalf("%s should not be promoted", rel)
+		if !containsSafeFile(report.SafeToPromoteFiles, rel) {
+			t.Fatalf("%s should be promoted", rel)
 		}
-		if !containsClassifiedFile(report.CountMismatchFiles, rel) {
-			t.Fatalf("%s should remain a count mismatch", rel)
+		if containsClassifiedFile(report.CountMismatchFiles, rel) {
+			t.Fatalf("%s should not remain a count mismatch", rel)
 		}
 	}
-	if len(report.CountMismatchFiles) != 5 {
-		t.Fatalf("count_mismatch_files=%d want 5", len(report.CountMismatchFiles))
+	if len(report.CountMismatchFiles) != 0 {
+		t.Fatalf("count_mismatch_files=%d want 0", len(report.CountMismatchFiles))
 	}
-	if len(report.CountMismatchBuckets) == 0 {
-		t.Fatalf("expected count_mismatch_buckets to be populated")
+	if len(report.CountMismatchBuckets) != 0 {
+		t.Fatalf("expected count_mismatch_buckets to be empty")
 	}
 	bucketSum := 0
 	for _, bucket := range report.CountMismatchBuckets {
@@ -118,26 +118,12 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		"KR/sharecfgdata/item_data_statistics.json",
 		"TW/sharecfgdata/item_data_statistics.json",
 	} {
-		if containsSafeFile(manifest.SafeToPromoteFiles, rel) {
-			t.Fatalf("%s should not be in safe_to_promote_manifest", rel)
+		if !containsSafeFile(manifest.SafeToPromoteFiles, rel) {
+			t.Fatalf("%s should be in safe_to_promote_manifest", rel)
 		}
 	}
-	if len(report.TransformRuleEvidence) != 9 {
-		t.Fatalf("transform_rule_evidence=%d want 9", len(report.TransformRuleEvidence))
-	}
-	for _, rel := range []string{
-		"CN/sharecfgdata/item_data_statistics.json",
-		"EN/sharecfgdata/item_data_statistics.json",
-		"JP/sharecfgdata/item_data_statistics.json",
-		"KR/sharecfgdata/item_data_statistics.json",
-		"TW/sharecfgdata/item_data_statistics.json",
-	} {
-		if !containsTransformRuleEvidence(report.TransformRuleEvidence, rel, "rejected", "usage_drop_rule_validation") {
-			t.Fatalf("expected rejected usage_drop validation evidence for %s", rel)
-		}
-		if !containsProbableTransformRule(report.ProbableTransformRules, rel, "rejected") {
-			t.Fatalf("expected rejected probable transform rule for %s", rel)
-		}
+	if len(report.TransformRuleEvidence) != 4 {
+		t.Fatalf("transform_rule_evidence=%d want 4", len(report.TransformRuleEvidence))
 	}
 
 	data, err := json.Marshal(report)
@@ -183,64 +169,8 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected count_mismatch_buckets to be present in report json")
 	}
-	if len(buckets) == 0 {
-		t.Fatalf("expected count_mismatch_buckets to contain entries")
-	}
-	seen := make(map[string]struct{})
-	totalBucketFiles := 0
-	for bucketName, rawBucket := range buckets {
-		bucket, ok := rawBucket.(map[string]any)
-		if !ok {
-			t.Fatalf("expected count_mismatch_buckets[%s] to be a JSON object", bucketName)
-		}
-		for _, field := range []string{"name", "file_count", "files", "representative_files", "source_count", "reference_count", "delta", "status"} {
-			if _, ok := bucket[field]; !ok {
-				t.Fatalf("expected count_mismatch_buckets[%s] to contain %s", bucketName, field)
-			}
-		}
-		rawCount, ok := bucket["file_count"].(float64)
-		if !ok {
-			t.Fatalf("expected count_mismatch_buckets[%s].file_count to be numeric", bucketName)
-		}
-		totalBucketFiles += int(rawCount)
-		rawFiles, ok := bucket["files"].([]any)
-		if !ok || len(rawFiles) == 0 {
-			t.Fatalf("expected count_mismatch_buckets[%s].files to be a non-empty array", bucketName)
-		}
-		for _, rawFile := range rawFiles {
-			rel, ok := rawFile.(string)
-			if !ok {
-				t.Fatalf("expected count_mismatch_buckets[%s].files entries to be strings", bucketName)
-			}
-			if _, dup := seen[rel]; dup {
-				t.Fatalf("count_mismatch_buckets contains duplicate file %s", rel)
-			}
-			seen[rel] = struct{}{}
-		}
-		rawRep, ok := bucket["representative_files"].([]any)
-		if !ok || len(rawRep) == 0 {
-			t.Fatalf("expected count_mismatch_buckets[%s].representative_files to be a non-empty array", bucketName)
-		}
-		for _, rawFile := range rawRep {
-			rel, ok := rawFile.(string)
-			if !ok {
-				t.Fatalf("expected count_mismatch_buckets[%s] entries to be strings", bucketName)
-			}
-			if _, ok := seen[rel]; !ok {
-				t.Fatalf("count_mismatch_buckets[%s].representative_files contains %s not present in files", bucketName, rel)
-			}
-		}
-	}
-	if totalBucketFiles != len(report.CountMismatchFiles) {
-		t.Fatalf("count_mismatch_buckets summed to %d, want %d", totalBucketFiles, len(report.CountMismatchFiles))
-	}
-	if len(seen) != len(report.CountMismatchFiles) {
-		t.Fatalf("count_mismatch_buckets covered %d files, want %d", len(seen), len(report.CountMismatchFiles))
-	}
-	for _, file := range report.CountMismatchFiles {
-		if _, ok := seen[file.RelativePath]; !ok {
-			t.Fatalf("count_mismatch_buckets missing file %s", file.RelativePath)
-		}
+	if len(buckets) != 0 {
+		t.Fatalf("expected count_mismatch_buckets to be empty")
 	}
 
 	if len(report.SchemaMismatchFiles) != 15 {
@@ -342,7 +272,7 @@ func assertReferenceSubsetMatch(t *testing.T, sourcePath, refPath string) {
 	t.Helper()
 	src := readJSONAny(t, sourcePath)
 	ref := readJSONAny(t, refPath)
-	got, want, ok := referenceIDSubsetMatch(src, ref)
+	got, want, _, ok := referenceIDSubsetMatch(src, ref)
 	if !ok {
 		t.Fatalf("referenceIDSubsetMatch rejected %s", sourcePath)
 	}

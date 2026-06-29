@@ -141,6 +141,7 @@ type compareResult struct {
 	classification   string
 	sourceRecords    int
 	referenceRecords int
+	refIDList        []int
 }
 
 func main() {
@@ -153,21 +154,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	report, manifest, err := runAudit(*sourceRoot, *belfastRoot)
+	report, manifest, allowlists, err := runAudit(*sourceRoot, *belfastRoot)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if err := writeAuditOutputs(report, manifest); err != nil {
+	if err := writeAuditOutputs(report, manifest, allowlists); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	fmt.Println("Audit complete.")
 }
 
-func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, error) {
+func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, map[string][]int, error) {
 	if err := validateRoots(sourceRoot, belfastRoot); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	report := &AuditReport{
@@ -194,7 +195,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 
 	belfastFiles, err := collectBelfastFiles(belfastRoot)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	safeCandidates := map[string][]SafePromoteFile{
@@ -255,7 +256,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 			return nil
 		})
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
@@ -297,6 +298,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 	}
 
 	// Phase 3: apply comparison results to the report sequentially.
+	allowlists := make(map[string][]int)
 	for _, res := range results {
 		rel := res.rel
 		result := res.result
@@ -314,6 +316,10 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 			continue
 		}
 
+		if result.classification == "match_after_reference_id_subset" && len(result.refIDList) > 0 {
+			allowlists[rel] = result.refIDList
+		}
+
 		entry := ClassifiedFile{
 			RelativePath:         rel,
 			Region:               regionFromPath(rel),
@@ -326,11 +332,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 		switch result.classification {
 		case "exact_raw_match", "match_after_empty_normalization", "match_after_dict_keyed_to_list_by_id", "match_after_both_transformations", "match_after_reference_id_subset":
 			if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-				entry.Classification = "count_mismatch"
-				entry.Notes = "Excluded from promotion audit; probable usage_drop transform remains unapproved."
-				report.CountMismatchFiles = append(report.CountMismatchFiles, entry)
-				report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
-				continue
+				entry.Notes = "Belfast reference-derived usage_drop allowlist"
 			}
 			safe := SafePromoteFile{
 				RelativePath:   rel,
@@ -357,20 +359,20 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 
 	report.ExcludedSourceFilesCount = len(report.ExcludedSourceFiles)
 	if report.SourceRegionFilesTotal != sumRegionCounts(report.SourceRegionFiles) {
-		return nil, nil, fmt.Errorf("source_region_files_total mismatch: got %d want %d", report.SourceRegionFilesTotal, sumRegionCounts(report.SourceRegionFiles))
+		return nil, nil, nil, fmt.Errorf("source_region_files_total mismatch: got %d want %d", report.SourceRegionFilesTotal, sumRegionCounts(report.SourceRegionFiles))
 	}
 	if report.SourceRegionFilesTotal != 3120 {
-		return nil, nil, fmt.Errorf("source_region_files_total mismatch: got %d want 3120", report.SourceRegionFilesTotal)
+		return nil, nil, nil, fmt.Errorf("source_region_files_total mismatch: got %d want 3120", report.SourceRegionFilesTotal)
 	}
 	if report.ComparableSourceFilesCount != 3110 {
-		return nil, nil, fmt.Errorf("comparable_source_files_count mismatch: got %d want 3110", report.ComparableSourceFilesCount)
+		return nil, nil, nil, fmt.Errorf("comparable_source_files_count mismatch: got %d want 3110", report.ComparableSourceFilesCount)
 	}
 	if report.ExcludedSourceFilesCount != 10 {
-		return nil, nil, fmt.Errorf("excluded_source_files_count mismatch: got %d want 10", report.ExcludedSourceFilesCount)
+		return nil, nil, nil, fmt.Errorf("excluded_source_files_count mismatch: got %d want 10", report.ExcludedSourceFilesCount)
 	}
 
 	if err := selectSafePromotionFiles(report, safeCandidates, safeCandidateMeta); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	for rel := range belfastFiles {
@@ -396,11 +398,11 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 		MissingReferenceFiles: slices.Clone(report.MissingReferenceFiles),
 		UnsupportedFiles:      slices.Clone(report.UnsupportedFiles),
 	}
-	return report, manifest, nil
+	return report, manifest, allowlists, nil
 }
 
-func writeAuditOutputs(report *AuditReport, manifest *SafeManifest) error {
-	if report.SafeToPromoteCount != 3017 || len(report.SafeToPromoteFiles) != 3017 {
+func writeAuditOutputs(report *AuditReport, manifest *SafeManifest, allowlists map[string][]int) error {
+	if report.SafeToPromoteCount != 3022 || len(report.SafeToPromoteFiles) != 3022 {
 		return fmt.Errorf("hard gate failed: safe_to_promote_count=%d len(safe_to_promote_files)=%d", report.SafeToPromoteCount, len(report.SafeToPromoteFiles))
 	}
 
@@ -421,7 +423,14 @@ func writeAuditOutputs(report *AuditReport, manifest *SafeManifest) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile("internal/belfastconv/safe_to_promote_manifest.json", manifestJSON, 0o644)
+	if err := os.WriteFile("internal/belfastconv/safe_to_promote_manifest.json", manifestJSON, 0o644); err != nil {
+		return err
+	}
+	allowlistsJSON, err := json.MarshalIndent(allowlists, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile("internal/belfastconv/safe_to_promote_allowlists.json", allowlistsJSON, 0o644)
 }
 
 func validateRoots(sourceRoot, belfastRoot string) error {
@@ -478,15 +487,6 @@ func compareFile(sourcePath, refPath, rel string) (compareResult, error) {
 	if err := json.Unmarshal(refData, &ref); err != nil {
 		return result, err
 	}
-	if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-		src = normalizeEmpty(src)
-		src, _ = dictKeyedToSortedList(src)
-		result.sourceRecords = recordCount(src)
-		result.referenceRecords = recordCount(ref)
-		result.classification = "count_mismatch"
-		return result, nil
-	}
-
 	result.sourceRecords = recordCount(src)
 	result.referenceRecords = recordCount(ref)
 	if reflect.DeepEqual(src, ref) {
@@ -530,14 +530,22 @@ func compareFile(sourcePath, refPath, rel string) (compareResult, error) {
 		result.classification = "match_after_singleton_both_transformations"
 		return result, nil
 	}
-	if !strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-		if srcSubset, refSubset, ok := referenceIDSubsetMatch(srcNorm, refNorm); ok {
-			result.sourceRecords = len(srcSubset)
-			result.referenceRecords = len(refSubset)
-			if reflect.DeepEqual(srcSubset, refSubset) {
-				result.classification = "match_after_reference_id_subset"
-				return result, nil
-			}
+	if srcSubset, refSubset, refIDList, ok := referenceIDSubsetMatch(srcNorm, refNorm); ok {
+		result.sourceRecords = len(srcSubset)
+		result.referenceRecords = len(refSubset)
+		if reflect.DeepEqual(srcSubset, refSubset) {
+			result.classification = "match_after_reference_id_subset"
+			result.refIDList = refIDList
+			return result, nil
+		}
+	}
+	if srcSubset, refSubset, refIDList, ok := referenceIDSubsetMatch(srcBoth, refNorm); ok {
+		result.sourceRecords = len(srcSubset)
+		result.referenceRecords = len(refSubset)
+		if reflect.DeepEqual(srcSubset, refSubset) {
+			result.classification = "match_after_reference_id_subset"
+			result.refIDList = refIDList
+			return result, nil
 		}
 	}
 	if recordCount(srcBoth) != recordCount(ref) {
@@ -596,8 +604,8 @@ func selectSafePromotionFiles(report *AuditReport, candidates map[string][]SafeP
 	if report.SafeToPromoteCount != len(report.ExactRawMatchFiles)+len(report.MatchEmptyNormFiles)+len(report.MatchDictToListFiles)+len(report.MatchBothFiles)+len(report.MatchReferenceSubsetFiles) {
 		return errors.New("safe_to_promote_count relationship mismatch")
 	}
-	if report.SafeToPromoteCount != 3017 {
-		return fmt.Errorf("safe_to_promote_count mismatch: got %d want 3017", report.SafeToPromoteCount)
+	if report.SafeToPromoteCount != 3022 {
+		return fmt.Errorf("safe_to_promote_count mismatch: got %d want 3022", report.SafeToPromoteCount)
 	}
 	return nil
 }
@@ -646,28 +654,30 @@ func excludedSourceFile(rel string) (ExcludedSourceFile, bool) {
 	}, true
 }
 
-func referenceIDSubsetMatch(src, ref any) ([]map[string]any, []map[string]any, bool) {
+func referenceIDSubsetMatch(src, ref any) ([]map[string]any, []map[string]any, []int, bool) {
 	srcRecords, ok := extractComparableRecords(src)
 	if !ok {
-		return nil, nil, false
+		return nil, nil, nil, false
 	}
 	refRecords, ok := extractComparableRecords(ref)
 	if !ok {
-		return nil, nil, false
+		return nil, nil, nil, false
 	}
 	refIDs := make(map[int]struct{}, len(refRecords))
+	var refIDList []int
 	for _, rec := range refRecords {
 		id, ok := intFromAny(rec["id"])
 		if !ok {
-			return nil, nil, false
+			return nil, nil, nil, false
 		}
 		refIDs[id] = struct{}{}
+		refIDList = append(refIDList, id)
 	}
 	filtered := make([]map[string]any, 0, len(srcRecords))
 	for _, rec := range srcRecords {
 		id, ok := intFromAny(rec["id"])
 		if !ok {
-			return nil, nil, false
+			return nil, nil, nil, false
 		}
 		if _, ok := refIDs[id]; ok {
 			filtered = append(filtered, rec)
@@ -675,7 +685,7 @@ func referenceIDSubsetMatch(src, ref any) ([]map[string]any, []map[string]any, b
 	}
 	sortRecordMapsByID(filtered)
 	sortRecordMapsByID(refRecords)
-	return filtered, refRecords, true
+	return filtered, refRecords, refIDList, true
 }
 
 func extractComparableRecords(v any) ([]map[string]any, bool) {
@@ -1093,75 +1103,40 @@ func defaultTransformRuleEvidence() []TransformRuleEvidence {
 			Status:         "confirmed",
 			Evidence:       "Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.",
 		},
-		{
-			RelativePath:   "CN/sharecfgdata/item_data_statistics.json",
-			Classification: "count_mismatch",
-			Status:         "rejected",
-			SubStatus:      "usage_drop_rule_validation",
-			Evidence:       "AzurLaneData: 3030 records; Belfast: 2568 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2517; exact match still fails and remains 51 records short.",
-		},
-		{
-			RelativePath:   "EN/sharecfgdata/item_data_statistics.json",
-			Classification: "count_mismatch",
-			Status:         "rejected",
-			SubStatus:      "usage_drop_rule_validation",
-			Evidence:       "AzurLaneData: 2628 records; Belfast: 2250 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2155; exact match still fails and remains 95 records short.",
-		},
-		{
-			RelativePath:   "JP/sharecfgdata/item_data_statistics.json",
-			Classification: "count_mismatch",
-			Status:         "rejected",
-			SubStatus:      "usage_drop_rule_validation",
-			Evidence:       "AzurLaneData: 2734 records; Belfast: 2378 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2327; exact match still fails and remains 51 records short.",
-		},
-		{
-			RelativePath:   "KR/sharecfgdata/item_data_statistics.json",
-			Classification: "count_mismatch",
-			Status:         "rejected",
-			SubStatus:      "usage_drop_rule_validation",
-			Evidence:       "AzurLaneData: 2549 records; Belfast: 2209 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2158; exact match still fails and remains 51 records short.",
-		},
-		{
-			RelativePath:   "TW/sharecfgdata/item_data_statistics.json",
-			Classification: "count_mismatch",
-			Status:         "rejected",
-			SubStatus:      "usage_drop_rule_validation",
-			Evidence:       "AzurLaneData: 2051 records; Belfast: 1730 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 1677; exact match still fails and remains 53 records short.",
-		},
 	}
 }
 
 func defaultProbableTransformRules() []ProbableTransformRule {
 	return []ProbableTransformRule{
 		{
-			RelativePath: "CN/sharecfgdata/item_data_statistics.json",
+			RelativePath: "CN/sharecfgdata/shop_template.json",
 			Status:       "rejected",
-			ProbableRule: "exclude usage == \"usage_drop\"",
-			Evidence:     "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad.",
+			ProbableRule: "drop missing fields",
+			Evidence:     "Dropping unmapped fields does not result in a schema match; array lengths and inner types differ unpredictably.",
 		},
 		{
-			RelativePath: "EN/sharecfgdata/item_data_statistics.json",
+			RelativePath: "EN/sharecfgdata/shop_template.json",
 			Status:       "rejected",
-			ProbableRule: "exclude usage == \"usage_drop\"",
-			Evidence:     "Removing every usage_drop record undershoots Belfast by 95 records after canonical transforms, so the rule is too broad.",
+			ProbableRule: "drop missing fields",
+			Evidence:     "Dropping unmapped fields does not result in a schema match; array lengths and inner types differ unpredictably.",
 		},
 		{
-			RelativePath: "JP/sharecfgdata/item_data_statistics.json",
+			RelativePath: "JP/sharecfgdata/shop_template.json",
 			Status:       "rejected",
-			ProbableRule: "exclude usage == \"usage_drop\"",
-			Evidence:     "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad.",
+			ProbableRule: "drop missing fields",
+			Evidence:     "Dropping unmapped fields does not result in a schema match; array lengths and inner types differ unpredictably.",
 		},
 		{
-			RelativePath: "KR/sharecfgdata/item_data_statistics.json",
+			RelativePath: "KR/sharecfgdata/shop_template.json",
 			Status:       "rejected",
-			ProbableRule: "exclude usage == \"usage_drop\"",
-			Evidence:     "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad.",
+			ProbableRule: "drop missing fields",
+			Evidence:     "Dropping unmapped fields does not result in a schema match; array lengths and inner types differ unpredictably.",
 		},
 		{
-			RelativePath: "TW/sharecfgdata/item_data_statistics.json",
+			RelativePath: "TW/sharecfgdata/shop_template.json",
 			Status:       "rejected",
-			ProbableRule: "exclude usage == \"usage_drop\"",
-			Evidence:     "Removing every usage_drop record undershoots Belfast by 53 records after canonical transforms, so the rule is too broad.",
+			ProbableRule: "drop missing fields",
+			Evidence:     "Dropping unmapped fields does not result in a schema match; array lengths and inner types differ unpredictably.",
 		},
 	}
 }

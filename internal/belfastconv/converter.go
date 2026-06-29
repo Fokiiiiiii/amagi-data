@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//go:embed safe_to_promote_manifest.json
+//go:embed safe_to_promote_manifest.json safe_to_promote_allowlists.json
 var safeManifestFS embed.FS
 
 var fallbackHelperFiles = []string{
@@ -107,6 +107,10 @@ func ConvertMVP(opts Options) (*Report, error) {
 	if err != nil {
 		return nil, err
 	}
+	allowlists, err := loadSafeAllowlists()
+	if err != nil {
+		return nil, err
+	}
 
 	report := &Report{
 		SourceRoot:             opts.SourceRoot,
@@ -125,7 +129,7 @@ func ConvertMVP(opts Options) (*Report, error) {
 		SkippedUnsafeFiles:     skippedUnsafeFiles(manifest),
 	}
 
-	if err := generateAuditedFiles(opts.SourceRoot, opts.OutputRoot, manifest.SafeToPromoteFiles, report); err != nil {
+	if err := generateAuditedFiles(opts.SourceRoot, opts.OutputRoot, manifest.SafeToPromoteFiles, allowlists, report); err != nil {
 		return nil, err
 	}
 	if err := generateRootHelpers(opts.SourceRoot, opts.OutputRoot, report); err != nil {
@@ -170,14 +174,30 @@ func loadSafeManifest() (*SafeManifest, error) {
 	return &manifest, nil
 }
 
-func generateAuditedFiles(sourceRoot, outputRoot string, files []SafePromoteFile, report *Report) error {
+func loadSafeAllowlists() (map[string][]int, error) {
+	data, err := safeManifestFS.ReadFile("safe_to_promote_allowlists.json")
+	if err != nil {
+		return nil, fmt.Errorf("read safe allowlists: %w", err)
+	}
+	var allowlists map[string][]int
+	if err := json.Unmarshal(data, &allowlists); err != nil {
+		return nil, fmt.Errorf("decode safe allowlists: %w", err)
+	}
+	return allowlists, nil
+}
+
+func generateAuditedFiles(sourceRoot, outputRoot string, files []SafePromoteFile, allowlists map[string][]int, report *Report) error {
 	for _, file := range files {
 		sourcePath := filepath.Join(sourceRoot, filepath.FromSlash(file.RelativePath))
 		if _, err := os.Stat(sourcePath); err != nil {
 			report.MissingSourceFiles = append(report.MissingSourceFiles, file.RelativePath)
 			continue
 		}
-		converted, err := convertAuditedFile(file.RelativePath, sourcePath, file.Classification)
+		var allowlist []int
+		if list, ok := allowlists[file.RelativePath]; ok {
+			allowlist = list
+		}
+		converted, err := convertAuditedFile(file.RelativePath, sourcePath, file.Classification, allowlist)
 		if err != nil {
 			report.UnsupportedFiles = append(report.UnsupportedFiles, file.RelativePath)
 			report.TotalUnsupportedCount++
@@ -208,7 +228,7 @@ func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
 		{sourceRel: "JP/GameCfg/skill.json", targetRel: "skill_cfg.json"},
 	}
 	for _, helper := range helpers {
-		converted, err := convertAuditedFile(helper.sourceRel, filepath.Join(sourceRoot, filepath.FromSlash(helper.sourceRel)), "match_after_empty_normalization")
+		converted, err := convertAuditedFile(helper.sourceRel, filepath.Join(sourceRoot, filepath.FromSlash(helper.sourceRel)), "match_after_empty_normalization", nil)
 		if err != nil {
 			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, helper.targetRel)
 			report.TotalUnsupportedCount++
@@ -223,7 +243,7 @@ func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
 	return nil
 }
 
-func convertAuditedFile(rel, sourcePath, classification string) (any, error) {
+func convertAuditedFile(rel, sourcePath, classification string, allowlist []int) (any, error) {
 	data, err := os.ReadFile(sourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", rel, err)
@@ -249,6 +269,38 @@ func convertAuditedFile(rel, sourcePath, classification string) (any, error) {
 		return singletonObjectToOneItemList(decoded)
 	case "match_after_singleton_both_transformations":
 		return singletonObjectToOneItemList(normalizeEmpty(decoded))
+	case "match_after_reference_id_subset":
+		// For item_data_statistics.json which is match_after_reference_id_subset,
+		// it requires BOTH transformations first to extract the list, then filter!
+		var src any
+		if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
+			src, err = dictKeyedToSortedList(normalizeEmpty(decoded))
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			src = normalizeEmpty(decoded)
+		}
+
+		srcRecords, _ := extractComparableRecords(src)
+		allowedIDs := make(map[int]struct{}, len(allowlist))
+		for _, id := range allowlist {
+			allowedIDs[id] = struct{}{}
+		}
+		filtered := make([]map[string]any, 0, len(srcRecords))
+		for _, rec := range srcRecords {
+			if id, ok := intFromAny(rec["id"]); ok {
+				if _, ok := allowedIDs[id]; ok {
+					filtered = append(filtered, rec)
+				}
+			}
+		}
+		slices.SortFunc(filtered, func(a, b map[string]any) int {
+			idA, _ := intFromAny(a["id"])
+			idB, _ := intFromAny(b["id"])
+			return idA - idB
+		})
+		return filtered, nil
 	default:
 		return nil, fmt.Errorf("unsupported audited classification for %s: %s", rel, classification)
 	}
@@ -420,4 +472,52 @@ func sortFileReports(values []FileReport) {
 	slices.SortFunc(values, func(a, b FileReport) int {
 		return strings.Compare(a.RelativePath, b.RelativePath)
 	})
+}
+
+func extractComparableRecords(v any) ([]map[string]any, bool) {
+	switch typed := v.(type) {
+	case []any:
+		return recordsFromAnyItems(typed)
+	case map[string]any:
+		items := make([]any, 0, len(typed))
+		for key, value := range typed {
+			if key == "all" || key == "get_id_list_by_type" {
+				continue
+			}
+			items = append(items, value)
+		}
+		return recordsFromAnyItems(items)
+	default:
+		return nil, false
+	}
+}
+
+func recordsFromAnyItems(items []any) ([]map[string]any, bool) {
+	records := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		switch typed := item.(type) {
+		case map[string]any:
+			if _, ok := intFromAny(typed["id"]); !ok {
+				continue
+			}
+			records = append(records, typed)
+		case []any:
+			for _, nested := range typed {
+				rec, ok := nested.(map[string]any)
+				if !ok {
+					return nil, false
+				}
+				if _, ok := intFromAny(rec["id"]); !ok {
+					return nil, false
+				}
+				records = append(records, rec)
+			}
+		default:
+			continue
+		}
+	}
+	if len(records) == 0 {
+		return nil, false
+	}
+	return records, true
 }
