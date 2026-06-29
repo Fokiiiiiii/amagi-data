@@ -8,7 +8,7 @@ import (
 
 func copyFallbackHelpers(sourceRoot, outputRoot string, report *Report) error {
 	for _, rel := range fallbackHelperFiles {
-		src := filepath.Join(sourceRoot, filepath.FromSlash(rel))
+		src := filepath.Join(sourceRoot, filepath.Base(filepath.FromSlash(rel)))
 		dst := filepath.Join(outputRoot, filepath.FromSlash(rel))
 		data, err := os.ReadFile(src)
 		if err != nil {
