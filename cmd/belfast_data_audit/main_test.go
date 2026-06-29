@@ -69,8 +69,19 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	if len(report.MatchEmptyNormFiles) != 0 {
 		t.Fatalf("expected match_empty_norm_files to stay empty, got %d", len(report.MatchEmptyNormFiles))
 	}
-	if containsSafeFile(report.SafeToPromoteFiles, "JP/sharecfgdata/item_data_statistics.json") {
-		t.Fatalf("item_data_statistics should not be promoted")
+	for _, rel := range []string{
+		"CN/sharecfgdata/item_data_statistics.json",
+		"EN/sharecfgdata/item_data_statistics.json",
+		"JP/sharecfgdata/item_data_statistics.json",
+		"KR/sharecfgdata/item_data_statistics.json",
+		"TW/sharecfgdata/item_data_statistics.json",
+	} {
+		if containsSafeFile(report.SafeToPromoteFiles, rel) {
+			t.Fatalf("%s should not be promoted", rel)
+		}
+		if !containsClassifiedFile(report.CountMismatchFiles, rel) {
+			t.Fatalf("%s should remain a count mismatch", rel)
+		}
 	}
 	if !containsClassifiedFile(report.CountMismatchFiles, "CN/ShareCfg/achievement_data_template.json") {
 		t.Fatalf("expected known count mismatch in count_mismatch_files")
@@ -80,6 +91,34 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	}
 	if len(manifest.SafeToPromoteFiles) != 604 {
 		t.Fatalf("manifest safe_to_promote_files=%d want 604", len(manifest.SafeToPromoteFiles))
+	}
+	for _, rel := range []string{
+		"CN/sharecfgdata/item_data_statistics.json",
+		"EN/sharecfgdata/item_data_statistics.json",
+		"JP/sharecfgdata/item_data_statistics.json",
+		"KR/sharecfgdata/item_data_statistics.json",
+		"TW/sharecfgdata/item_data_statistics.json",
+	} {
+		if containsSafeFile(manifest.SafeToPromoteFiles, rel) {
+			t.Fatalf("%s should not be in safe_to_promote_manifest", rel)
+		}
+	}
+	if len(report.TransformRuleEvidence) != 9 {
+		t.Fatalf("transform_rule_evidence=%d want 9", len(report.TransformRuleEvidence))
+	}
+	for _, rel := range []string{
+		"CN/sharecfgdata/item_data_statistics.json",
+		"EN/sharecfgdata/item_data_statistics.json",
+		"JP/sharecfgdata/item_data_statistics.json",
+		"KR/sharecfgdata/item_data_statistics.json",
+		"TW/sharecfgdata/item_data_statistics.json",
+	} {
+		if !containsTransformRuleEvidence(report.TransformRuleEvidence, rel, "rejected", "usage_drop_rule_validation") {
+			t.Fatalf("expected rejected usage_drop validation evidence for %s", rel)
+		}
+		if !containsProbableTransformRule(report.ProbableTransformRules, rel, "rejected") {
+			t.Fatalf("expected rejected probable transform rule for %s", rel)
+		}
 	}
 
 	data, err := json.Marshal(report)
@@ -143,6 +182,24 @@ func containsClassifiedFile(files []ClassifiedFile, target string) bool {
 func containsExcludedFile(files []ExcludedSourceFile, target string) bool {
 	for _, file := range files {
 		if file.RelativePath == target {
+			return true
+		}
+	}
+	return false
+}
+
+func containsTransformRuleEvidence(files []TransformRuleEvidence, target, status, subStatus string) bool {
+	for _, file := range files {
+		if file.RelativePath == target && file.Status == status && file.SubStatus == subStatus {
+			return true
+		}
+	}
+	return false
+}
+
+func containsProbableTransformRule(files []ProbableTransformRule, target, status string) bool {
+	for _, file := range files {
+		if file.RelativePath == target && file.Status == status {
 			return true
 		}
 	}

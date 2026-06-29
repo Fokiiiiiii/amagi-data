@@ -54,8 +54,16 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	if len(report.GeneratedFiles) != 604 {
 		t.Fatalf("expected 604 generated audited files, got %d", len(report.GeneratedFiles))
 	}
-	if containsString(report.GeneratedFiles, "JP/sharecfgdata/item_data_statistics.json") {
-		t.Fatalf("item_data_statistics should not be promoted")
+	for _, rel := range []string{
+		"CN/sharecfgdata/item_data_statistics.json",
+		"EN/sharecfgdata/item_data_statistics.json",
+		"JP/sharecfgdata/item_data_statistics.json",
+		"KR/sharecfgdata/item_data_statistics.json",
+		"TW/sharecfgdata/item_data_statistics.json",
+	} {
+		if containsString(report.GeneratedFiles, rel) {
+			t.Fatalf("%s should not be promoted", rel)
+		}
 	}
 	if containsString(report.GeneratedFiles, "CN/ShareCfg/achievement_data_template.json") {
 		t.Fatalf("count_mismatch file should not be generated")

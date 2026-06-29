@@ -110,7 +110,11 @@
 - confirmed: `JP/sharecfgdata/weapon_property.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
 - confirmed: `JP/sharecfgdata/equip_data_template.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
 - confirmed: `JP/ShareCfg/ship_skin_template.json` Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.
-- observed: `JP/sharecfgdata/item_data_statistics.json` [probable_transform_rule] Belfast: 2378 records; AzurLaneData: 2734 records; delta: 356; missing records are strongly correlated with usage == "usage_drop".
+- rejected: `CN/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 3030 records; Belfast: 2568 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2517; exact match still fails and remains 51 records short.
+- rejected: `EN/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2628 records; Belfast: 2250 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2155; exact match still fails and remains 95 records short.
+- rejected: `JP/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2734 records; Belfast: 2378 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2327; exact match still fails and remains 51 records short.
+- rejected: `KR/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2549 records; Belfast: 2209 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 2158; exact match still fails and remains 51 records short.
+- rejected: `TW/sharecfgdata/item_data_statistics.json` [usage_drop_rule_validation] AzurLaneData: 2051 records; Belfast: 1730 records; filtered source after excluding usage == "usage_drop" and applying canonical transforms: 1677; exact match still fails and remains 53 records short.
 
 ## Helper Data Notes
 - `build_pools.json` [observed]: Currently treated as fallback/generated helper output; exact source fields are not confirmed.

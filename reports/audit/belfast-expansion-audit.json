@@ -5562,7 +5562,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 3030,
-      "reference_record_count": 2568
+      "reference_record_count": 2568,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "CN/sharecfgdata/item_virtual_data_statistics.json",
@@ -11142,7 +11143,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2628,
-      "reference_record_count": 2250
+      "reference_record_count": 2250,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "EN/sharecfgdata/item_virtual_data_statistics.json",
@@ -16732,7 +16734,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2734,
-      "reference_record_count": 2378
+      "reference_record_count": 2378,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "JP/sharecfgdata/item_virtual_data_statistics.json",
@@ -22375,7 +22378,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2549,
-      "reference_record_count": 2209
+      "reference_record_count": 2209,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "KR/sharecfgdata/item_virtual_data_statistics.json",
@@ -28051,7 +28055,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2051,
-      "reference_record_count": 1730
+      "reference_record_count": 1730,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "TW/sharecfgdata/item_virtual_data_statistics.json",
@@ -39624,7 +39629,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 3030,
-      "reference_record_count": 2568
+      "reference_record_count": 2568,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "CN/sharecfgdata/shop_template.json",
@@ -43818,7 +43824,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2628,
-      "reference_record_count": 2250
+      "reference_record_count": 2250,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "EN/sharecfgdata/shop_template.json",
@@ -48003,7 +48010,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2734,
-      "reference_record_count": 2378
+      "reference_record_count": 2378,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "JP/sharecfgdata/shop_template.json",
@@ -52170,7 +52178,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2549,
-      "reference_record_count": 2209
+      "reference_record_count": 2209,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "KR/sharecfgdata/shop_template.json",
@@ -56328,7 +56337,8 @@
       "classification": "count_mismatch",
       "safe_to_promote": false,
       "source_record_count": 2051,
-      "reference_record_count": 1730
+      "reference_record_count": 1730,
+      "notes": "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
     },
     {
       "relative_path": "TW/sharecfgdata/shop_template.json",
@@ -56817,19 +56827,71 @@
       "evidence": "Full match after dict-keyed records -\u003e id-sorted list and empty object {} -\u003e empty array [] normalization."
     },
     {
+      "relative_path": "CN/sharecfgdata/item_data_statistics.json",
+      "classification": "count_mismatch",
+      "status": "rejected",
+      "sub_status": "usage_drop_rule_validation",
+      "evidence": "AzurLaneData: 3030 records; Belfast: 2568 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2517; exact match still fails and remains 51 records short."
+    },
+    {
+      "relative_path": "EN/sharecfgdata/item_data_statistics.json",
+      "classification": "count_mismatch",
+      "status": "rejected",
+      "sub_status": "usage_drop_rule_validation",
+      "evidence": "AzurLaneData: 2628 records; Belfast: 2250 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2155; exact match still fails and remains 95 records short."
+    },
+    {
       "relative_path": "JP/sharecfgdata/item_data_statistics.json",
       "classification": "count_mismatch",
-      "status": "observed",
-      "sub_status": "probable_transform_rule",
-      "evidence": "Belfast: 2378 records; AzurLaneData: 2734 records; delta: 356; missing records are strongly correlated with usage == \"usage_drop\"."
+      "status": "rejected",
+      "sub_status": "usage_drop_rule_validation",
+      "evidence": "AzurLaneData: 2734 records; Belfast: 2378 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2327; exact match still fails and remains 51 records short."
+    },
+    {
+      "relative_path": "KR/sharecfgdata/item_data_statistics.json",
+      "classification": "count_mismatch",
+      "status": "rejected",
+      "sub_status": "usage_drop_rule_validation",
+      "evidence": "AzurLaneData: 2549 records; Belfast: 2209 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2158; exact match still fails and remains 51 records short."
+    },
+    {
+      "relative_path": "TW/sharecfgdata/item_data_statistics.json",
+      "classification": "count_mismatch",
+      "status": "rejected",
+      "sub_status": "usage_drop_rule_validation",
+      "evidence": "AzurLaneData: 2051 records; Belfast: 1730 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 1677; exact match still fails and remains 53 records short."
     }
   ],
   "probable_transform_rules": [
     {
-      "relative_path": "JP/sharecfgdata/item_data_statistics.json",
-      "status": "hypothesis",
+      "relative_path": "CN/sharecfgdata/item_data_statistics.json",
+      "status": "rejected",
       "probable_rule": "exclude usage == \"usage_drop\"",
-      "evidence": "Dropping every usage_drop record is too broad, but the missing records cluster strongly around usage_drop and Belfast keeps a small allowlist."
+      "evidence": "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad."
+    },
+    {
+      "relative_path": "EN/sharecfgdata/item_data_statistics.json",
+      "status": "rejected",
+      "probable_rule": "exclude usage == \"usage_drop\"",
+      "evidence": "Removing every usage_drop record undershoots Belfast by 95 records after canonical transforms, so the rule is too broad."
+    },
+    {
+      "relative_path": "JP/sharecfgdata/item_data_statistics.json",
+      "status": "rejected",
+      "probable_rule": "exclude usage == \"usage_drop\"",
+      "evidence": "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad."
+    },
+    {
+      "relative_path": "KR/sharecfgdata/item_data_statistics.json",
+      "status": "rejected",
+      "probable_rule": "exclude usage == \"usage_drop\"",
+      "evidence": "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad."
+    },
+    {
+      "relative_path": "TW/sharecfgdata/item_data_statistics.json",
+      "status": "rejected",
+      "probable_rule": "exclude usage == \"usage_drop\"",
+      "evidence": "Removing every usage_drop record undershoots Belfast by 53 records after canonical transforms, so the rule is too broad."
     }
   ],
   "helper_data_notes": [

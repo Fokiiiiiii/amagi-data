@@ -251,6 +251,9 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 				safeCandidates[result.classification] = append(safeCandidates[result.classification], safe)
 				safeCandidateMeta[rel] = entry
 			case "count_mismatch":
+				if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
+					entry.Notes = "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
+				}
 				report.CountMismatchFiles = append(report.CountMismatchFiles, entry)
 				report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
 			case "schema_mismatch":
@@ -742,11 +745,39 @@ func defaultTransformRuleEvidence() []TransformRuleEvidence {
 			Evidence:       "Full match after dict-keyed records -> id-sorted list and empty object {} -> empty array [] normalization.",
 		},
 		{
+			RelativePath:   "CN/sharecfgdata/item_data_statistics.json",
+			Classification: "count_mismatch",
+			Status:         "rejected",
+			SubStatus:      "usage_drop_rule_validation",
+			Evidence:       "AzurLaneData: 3030 records; Belfast: 2568 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2517; exact match still fails and remains 51 records short.",
+		},
+		{
+			RelativePath:   "EN/sharecfgdata/item_data_statistics.json",
+			Classification: "count_mismatch",
+			Status:         "rejected",
+			SubStatus:      "usage_drop_rule_validation",
+			Evidence:       "AzurLaneData: 2628 records; Belfast: 2250 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2155; exact match still fails and remains 95 records short.",
+		},
+		{
 			RelativePath:   "JP/sharecfgdata/item_data_statistics.json",
 			Classification: "count_mismatch",
-			Status:         "observed",
-			SubStatus:      "probable_transform_rule",
-			Evidence:       "Belfast: 2378 records; AzurLaneData: 2734 records; delta: 356; missing records are strongly correlated with usage == \"usage_drop\".",
+			Status:         "rejected",
+			SubStatus:      "usage_drop_rule_validation",
+			Evidence:       "AzurLaneData: 2734 records; Belfast: 2378 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2327; exact match still fails and remains 51 records short.",
+		},
+		{
+			RelativePath:   "KR/sharecfgdata/item_data_statistics.json",
+			Classification: "count_mismatch",
+			Status:         "rejected",
+			SubStatus:      "usage_drop_rule_validation",
+			Evidence:       "AzurLaneData: 2549 records; Belfast: 2209 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 2158; exact match still fails and remains 51 records short.",
+		},
+		{
+			RelativePath:   "TW/sharecfgdata/item_data_statistics.json",
+			Classification: "count_mismatch",
+			Status:         "rejected",
+			SubStatus:      "usage_drop_rule_validation",
+			Evidence:       "AzurLaneData: 2051 records; Belfast: 1730 records; filtered source after excluding usage == \"usage_drop\" and applying canonical transforms: 1677; exact match still fails and remains 53 records short.",
 		},
 	}
 }
@@ -754,10 +785,34 @@ func defaultTransformRuleEvidence() []TransformRuleEvidence {
 func defaultProbableTransformRules() []ProbableTransformRule {
 	return []ProbableTransformRule{
 		{
-			RelativePath: "JP/sharecfgdata/item_data_statistics.json",
-			Status:       "hypothesis",
+			RelativePath: "CN/sharecfgdata/item_data_statistics.json",
+			Status:       "rejected",
 			ProbableRule: "exclude usage == \"usage_drop\"",
-			Evidence:     "Dropping every usage_drop record is too broad, but the missing records cluster strongly around usage_drop and Belfast keeps a small allowlist.",
+			Evidence:     "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad.",
+		},
+		{
+			RelativePath: "EN/sharecfgdata/item_data_statistics.json",
+			Status:       "rejected",
+			ProbableRule: "exclude usage == \"usage_drop\"",
+			Evidence:     "Removing every usage_drop record undershoots Belfast by 95 records after canonical transforms, so the rule is too broad.",
+		},
+		{
+			RelativePath: "JP/sharecfgdata/item_data_statistics.json",
+			Status:       "rejected",
+			ProbableRule: "exclude usage == \"usage_drop\"",
+			Evidence:     "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad.",
+		},
+		{
+			RelativePath: "KR/sharecfgdata/item_data_statistics.json",
+			Status:       "rejected",
+			ProbableRule: "exclude usage == \"usage_drop\"",
+			Evidence:     "Removing every usage_drop record undershoots Belfast by 51 records after canonical transforms, so the rule is too broad.",
+		},
+		{
+			RelativePath: "TW/sharecfgdata/item_data_statistics.json",
+			Status:       "rejected",
+			ProbableRule: "exclude usage == \"usage_drop\"",
+			Evidence:     "Removing every usage_drop record undershoots Belfast by 53 records after canonical transforms, so the rule is too broad.",
 		},
 	}
 }
