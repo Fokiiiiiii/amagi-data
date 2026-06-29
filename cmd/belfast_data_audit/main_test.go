@@ -157,6 +157,7 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		"count_mismatch_files",
 		"count_mismatch_buckets",
 		"schema_mismatch_files",
+		"schema_mismatch_buckets",
 		"belfast_only_files",
 		"missing_reference_files",
 		"unsupported_files",
@@ -242,6 +243,46 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 		}
 	}
 
+	if len(report.SchemaMismatchFiles) != 274 {
+		t.Fatalf("schema_mismatch_files=%d want 274", len(report.SchemaMismatchFiles))
+	}
+	if len(report.SchemaMismatchBuckets) == 0 {
+		t.Fatalf("expected schema_mismatch_buckets to be populated")
+	}
+	schemaSeen := make(map[string]struct{})
+	schemaBucketSum := 0
+	for bucketName, bucket := range report.SchemaMismatchBuckets {
+		if bucket.FileCount == 0 {
+			t.Fatalf("expected schema_mismatch_buckets[%s].file_count to be positive", bucketName)
+		}
+		if len(bucket.Files) == 0 {
+			t.Fatalf("expected schema_mismatch_buckets[%s].files to be populated", bucketName)
+		}
+		schemaBucketSum += bucket.FileCount
+		for _, rel := range bucket.Files {
+			if _, dup := schemaSeen[rel]; dup {
+				t.Fatalf("schema_mismatch_buckets contains duplicate file %s", rel)
+			}
+			schemaSeen[rel] = struct{}{}
+		}
+		for _, rel := range bucket.RepresentativeFiles {
+			if _, ok := schemaSeen[rel]; !ok {
+				t.Fatalf("schema_mismatch_buckets[%s].representative_files contains %s not present in files", bucketName, rel)
+			}
+		}
+	}
+	if schemaBucketSum != len(report.SchemaMismatchFiles) {
+		t.Fatalf("schema_mismatch_buckets summed to %d, want %d", schemaBucketSum, len(report.SchemaMismatchFiles))
+	}
+	if len(schemaSeen) != len(report.SchemaMismatchFiles) {
+		t.Fatalf("schema_mismatch_buckets covered %d files, want %d", len(schemaSeen), len(report.SchemaMismatchFiles))
+	}
+	for _, file := range report.SchemaMismatchFiles {
+		if _, ok := schemaSeen[file.RelativePath]; !ok {
+			t.Fatalf("schema_mismatch_buckets missing file %s", file.RelativePath)
+		}
+	}
+
 	markdownPath := filepath.Join("..", "..", "reports", "audit", "belfast-expansion-audit.md")
 	markdown, err := os.ReadFile(markdownPath)
 	if err != nil {
@@ -249,6 +290,7 @@ func TestRunAuditCountsAndEmptyArrays(t *testing.T) {
 	}
 	for _, needle := range []string{
 		"## Count Mismatch Buckets",
+		"## Schema Mismatch Buckets",
 	} {
 		if !strings.Contains(string(markdown), needle) {
 			t.Fatalf("expected markdown to contain %q", needle)

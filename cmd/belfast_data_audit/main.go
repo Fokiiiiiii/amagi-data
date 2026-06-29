@@ -70,6 +70,16 @@ type CountMismatchBucket struct {
 	Status              string   `json:"status"`
 }
 
+type SchemaMismatchBucket struct {
+	Name                string   `json:"name"`
+	FileCount           int      `json:"file_count"`
+	Files               []string `json:"files"`
+	RepresentativeFiles []string `json:"representative_files"`
+	CandidateRule       string   `json:"candidate_rule,omitempty"`
+	Status              string   `json:"status"`
+	Notes               string   `json:"notes,omitempty"`
+}
+
 type TransformRuleEvidence struct {
 	RelativePath   string `json:"relative_path"`
 	Classification string `json:"classification"`
@@ -92,28 +102,29 @@ type HelperDataNote struct {
 }
 
 type AuditReport struct {
-	SourceRegionFiles          map[string]int                 `json:"source_region_files"`
-	SourceRegionFilesTotal     int                            `json:"source_region_files_total"`
-	ComparableSourceFilesCount int                            `json:"comparable_source_files_count"`
-	ExcludedSourceFilesCount   int                            `json:"excluded_source_files_count"`
-	ExcludedSourceFiles        []ExcludedSourceFile           `json:"excluded_source_files"`
-	SafeToPromoteCount         int                            `json:"safe_to_promote_count"`
-	ClassifiedFiles            []ClassifiedFile               `json:"classified_files"`
-	SafeToPromoteFiles         []SafePromoteFile              `json:"safe_to_promote_files"`
-	ExactRawMatchFiles         []SafePromoteFile              `json:"exact_raw_match_files"`
-	MatchEmptyNormFiles        []SafePromoteFile              `json:"match_empty_norm_files"`
-	MatchDictToListFiles       []SafePromoteFile              `json:"match_dict_to_list_files"`
-	MatchBothFiles             []SafePromoteFile              `json:"match_both_files"`
-	MatchReferenceSubsetFiles  []SafePromoteFile              `json:"match_reference_subset_files"`
-	CountMismatchFiles         []ClassifiedFile               `json:"count_mismatch_files"`
-	CountMismatchBuckets       map[string]CountMismatchBucket `json:"count_mismatch_buckets"`
-	SchemaMismatchFiles        []ClassifiedFile               `json:"schema_mismatch_files"`
-	BelfastOnlyFiles           []string                       `json:"belfast_only_files"`
-	MissingReferenceFiles      []string                       `json:"missing_reference_files"`
-	UnsupportedFiles           []string                       `json:"unsupported_files"`
-	TransformRuleEvidence      []TransformRuleEvidence        `json:"transform_rule_evidence"`
-	ProbableTransformRules     []ProbableTransformRule        `json:"probable_transform_rules"`
-	HelperDataNotes            []HelperDataNote               `json:"helper_data_notes"`
+	SourceRegionFiles          map[string]int                  `json:"source_region_files"`
+	SourceRegionFilesTotal     int                             `json:"source_region_files_total"`
+	ComparableSourceFilesCount int                             `json:"comparable_source_files_count"`
+	ExcludedSourceFilesCount   int                             `json:"excluded_source_files_count"`
+	ExcludedSourceFiles        []ExcludedSourceFile            `json:"excluded_source_files"`
+	SafeToPromoteCount         int                             `json:"safe_to_promote_count"`
+	ClassifiedFiles            []ClassifiedFile                `json:"classified_files"`
+	SafeToPromoteFiles         []SafePromoteFile               `json:"safe_to_promote_files"`
+	ExactRawMatchFiles         []SafePromoteFile               `json:"exact_raw_match_files"`
+	MatchEmptyNormFiles        []SafePromoteFile               `json:"match_empty_norm_files"`
+	MatchDictToListFiles       []SafePromoteFile               `json:"match_dict_to_list_files"`
+	MatchBothFiles             []SafePromoteFile               `json:"match_both_files"`
+	MatchReferenceSubsetFiles  []SafePromoteFile               `json:"match_reference_subset_files"`
+	CountMismatchFiles         []ClassifiedFile                `json:"count_mismatch_files"`
+	CountMismatchBuckets       map[string]CountMismatchBucket  `json:"count_mismatch_buckets"`
+	SchemaMismatchFiles        []ClassifiedFile                `json:"schema_mismatch_files"`
+	SchemaMismatchBuckets      map[string]SchemaMismatchBucket `json:"schema_mismatch_buckets"`
+	BelfastOnlyFiles           []string                        `json:"belfast_only_files"`
+	MissingReferenceFiles      []string                        `json:"missing_reference_files"`
+	UnsupportedFiles           []string                        `json:"unsupported_files"`
+	TransformRuleEvidence      []TransformRuleEvidence         `json:"transform_rule_evidence"`
+	ProbableTransformRules     []ProbableTransformRule         `json:"probable_transform_rules"`
+	HelperDataNotes            []HelperDataNote                `json:"helper_data_notes"`
 }
 
 type SafeManifest struct {
@@ -170,6 +181,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 		CountMismatchFiles:        []ClassifiedFile{},
 		CountMismatchBuckets:      map[string]CountMismatchBucket{},
 		SchemaMismatchFiles:       []ClassifiedFile{},
+		SchemaMismatchBuckets:     map[string]SchemaMismatchBucket{},
 		BelfastOnlyFiles:          []string{},
 		MissingReferenceFiles:     []string{},
 		UnsupportedFiles:          []string{},
@@ -320,6 +332,7 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 	sortClassifiedFiles(report.SchemaMismatchFiles)
 	sortExcludedFiles(report.ExcludedSourceFiles)
 	report.CountMismatchBuckets = buildCountMismatchBuckets(report.CountMismatchFiles)
+	report.SchemaMismatchBuckets = buildSchemaMismatchBuckets(report.SchemaMismatchFiles)
 
 	manifest := &SafeManifest{
 		SafeToPromoteFiles:    slices.Clone(report.SafeToPromoteFiles),
@@ -790,6 +803,9 @@ func generateMarkdown(report *AuditReport) string {
 	appendCountMismatchBuckets(&b, report.CountMismatchBuckets)
 	b.WriteString("\n")
 
+	appendSchemaMismatchBuckets(&b, report.SchemaMismatchBuckets)
+	b.WriteString("\n")
+
 	b.WriteString("## Safe To Promote Summary\n")
 	b.WriteString(fmt.Sprintf("- Total: %d\n", report.SafeToPromoteCount))
 	b.WriteString(fmt.Sprintf("- exact_raw_match: %d\n", len(report.ExactRawMatchFiles)))
@@ -882,6 +898,44 @@ func appendCountMismatchBuckets(b *strings.Builder, buckets map[string]CountMism
 		b.WriteString(fmt.Sprintf("  - status: %s\n", bucket.Status))
 		if bucket.CandidateRule != "" {
 			b.WriteString(fmt.Sprintf("  - candidate_rule: %s\n", bucket.CandidateRule))
+		}
+		if len(bucket.RepresentativeFiles) > 0 {
+			b.WriteString("  - representative_files:\n")
+			for _, rel := range bucket.RepresentativeFiles {
+				b.WriteString(fmt.Sprintf("    - %s\n", rel))
+			}
+		}
+	}
+	b.WriteString("\n")
+}
+
+func appendSchemaMismatchBuckets(b *strings.Builder, buckets map[string]SchemaMismatchBucket) {
+	b.WriteString("## Schema Mismatch Buckets\n")
+	if len(buckets) == 0 {
+		b.WriteString("- none\n")
+		return
+	}
+	names := make([]string, 0, len(buckets))
+	for name := range buckets {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		bucket := buckets[name]
+		b.WriteString(fmt.Sprintf("- %s\n", bucket.Name))
+		b.WriteString(fmt.Sprintf("  - file_count: %d\n", bucket.FileCount))
+		b.WriteString(fmt.Sprintf("  - status: %s\n", bucket.Status))
+		if bucket.CandidateRule != "" {
+			b.WriteString(fmt.Sprintf("  - candidate_rule: %s\n", bucket.CandidateRule))
+		}
+		if bucket.Notes != "" {
+			b.WriteString(fmt.Sprintf("  - notes: %s\n", bucket.Notes))
+		}
+		if len(bucket.Files) > 0 {
+			b.WriteString("  - files:\n")
+			for _, rel := range bucket.Files {
+				b.WriteString(fmt.Sprintf("    - %s\n", rel))
+			}
 		}
 		if len(bucket.RepresentativeFiles) > 0 {
 			b.WriteString("  - representative_files:\n")
@@ -1089,6 +1143,33 @@ func buildCountMismatchBuckets(files []ClassifiedFile) map[string]CountMismatchB
 	return buckets
 }
 
+func buildSchemaMismatchBuckets(files []ClassifiedFile) map[string]SchemaMismatchBucket {
+	buckets := map[string]SchemaMismatchBucket{}
+	for _, file := range files {
+		name := schemaMismatchBucketName(file.RelativePath)
+		bucket := buckets[name]
+		if bucket.Name == "" {
+			bucket.Name = name
+			bucket.Status = schemaMismatchBucketStatus(name)
+			bucket.CandidateRule = schemaMismatchBucketCandidateRule(name)
+			bucket.Notes = schemaMismatchBucketNotes(name)
+		}
+		bucket.FileCount++
+		bucket.Files = append(bucket.Files, file.RelativePath)
+		if len(bucket.RepresentativeFiles) < 3 {
+			bucket.RepresentativeFiles = append(bucket.RepresentativeFiles, file.RelativePath)
+		}
+		buckets[name] = bucket
+	}
+	for name, bucket := range buckets {
+		sortStrings(bucket.Files)
+		sortStrings(bucket.RepresentativeFiles)
+		bucket.Name = name
+		buckets[name] = bucket
+	}
+	return buckets
+}
+
 func countMismatchBucketName(rel string) string {
 	switch {
 	case strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json"), strings.HasSuffix(rel, "/sharecfgdata/shop_template.json"):
@@ -1131,6 +1212,56 @@ func countMismatchBucketCandidateRule(name string) string {
 		return "keep records present in the Belfast reference id set"
 	default:
 		return "unknown"
+	}
+}
+
+func schemaMismatchBucketName(rel string) string {
+	switch {
+	case strings.HasSuffix(rel, "guildset.json"):
+		return "scalar_vs_array"
+	case strings.HasSuffix(rel, "auto_pilot_template.json"), strings.HasSuffix(rel, "class_upgrade_group.json"):
+		return "field_value_delta"
+	default:
+		return "map_vs_list_shape"
+	}
+}
+
+func schemaMismatchBucketStatus(name string) string {
+	switch name {
+	case "map_vs_list_shape":
+		return "inconclusive"
+	case "field_value_delta":
+		return "rejected"
+	case "scalar_vs_array":
+		return "rejected"
+	default:
+		return "inconclusive"
+	}
+}
+
+func schemaMismatchBucketCandidateRule(name string) string {
+	switch name {
+	case "map_vs_list_shape":
+		return "normalize keyed tables to id-sorted lists"
+	case "field_value_delta":
+		return "narrow field-level adjustments only"
+	case "scalar_vs_array":
+		return "wrap scalar fields in singleton arrays"
+	default:
+		return "unknown"
+	}
+}
+
+func schemaMismatchBucketNotes(name string) string {
+	switch name {
+	case "map_vs_list_shape":
+		return "Bucketed first because it dominates the remaining schema-mismatch set."
+	case "field_value_delta":
+		return "These files differ by a small number of field values after shape normalization."
+	case "scalar_vs_array":
+		return "These files differ by nested scalar-versus-array shape and have no proven exact promotion rule."
+	default:
+		return ""
 	}
 }
 
