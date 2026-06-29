@@ -8,9 +8,11 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var supportedRegions = []string{"CN", "EN", "JP", "KR", "TW"}
@@ -204,6 +206,16 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 	}
 	safeCandidateMeta := map[string]ClassifiedFile{}
 
+	// Phase 1: walk all regions sequentially. Exclusions and missing-reference
+	// entries are handled here (they require no Belfast I/O). Comparable pairs
+	// are collected as tasks for the parallel compare phase below.
+	type compareTask struct {
+		rel        string
+		sourcePath string
+		refPath    string
+	}
+	var tasks []compareTask
+
 	for _, region := range supportedRegions {
 		regionRoot := filepath.Join(sourceRoot, region)
 		err := filepath.WalkDir(regionRoot, func(path string, d os.DirEntry, walkErr error) error {
@@ -239,64 +251,107 @@ func runAudit(sourceRoot, belfastRoot string) (*AuditReport, *SafeManifest, erro
 				return nil
 			}
 			delete(belfastFiles, rel)
-
-			result, err := compareFile(path, refPath, rel)
-			if err != nil {
-				report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
-				report.ClassifiedFiles = append(report.ClassifiedFiles, ClassifiedFile{
-					RelativePath:         rel,
-					Region:               regionFromPath(rel),
-					Category:             categoryFromPath(rel),
-					Classification:       "unsupported",
-					SourceRecordCount:    result.sourceRecords,
-					ReferenceRecordCount: result.referenceRecords,
-				})
-				return nil
-			}
-
-			entry := ClassifiedFile{
-				RelativePath:         rel,
-				Region:               regionFromPath(rel),
-				Category:             categoryFromPath(rel),
-				Classification:       result.classification,
-				SourceRecordCount:    result.sourceRecords,
-				ReferenceRecordCount: result.referenceRecords,
-			}
-
-			switch result.classification {
-			case "exact_raw_match", "match_after_empty_normalization", "match_after_dict_keyed_to_list_by_id", "match_after_both_transformations", "match_after_reference_id_subset":
-				if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-					entry.Classification = "count_mismatch"
-					entry.Notes = "Excluded from promotion audit; probable usage_drop transform remains unapproved."
-					report.CountMismatchFiles = append(report.CountMismatchFiles, entry)
-					report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
-					return nil
-				}
-				safe := SafePromoteFile{
-					RelativePath:   rel,
-					Region:         entry.Region,
-					Category:       entry.Category,
-					Classification: result.classification,
-				}
-				safeCandidates[result.classification] = append(safeCandidates[result.classification], safe)
-				safeCandidateMeta[rel] = entry
-			case "count_mismatch":
-				if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-					entry.Notes = "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
-				}
-				report.CountMismatchFiles = append(report.CountMismatchFiles, entry)
-				report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
-			case "schema_mismatch":
-				report.SchemaMismatchFiles = append(report.SchemaMismatchFiles, entry)
-				report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
-			default:
-				report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
-				report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
-			}
+			tasks = append(tasks, compareTask{rel: rel, sourcePath: path, refPath: refPath})
 			return nil
 		})
 		if err != nil {
 			return nil, nil, err
+		}
+	}
+
+	// Phase 2: compare source/reference pairs in parallel with a bounded worker
+	// pool. compareFile is pure (reads from disk only, no shared-state writes).
+	type taskResult struct {
+		rel    string
+		result compareResult
+		err    error
+	}
+	results := make([]taskResult, len(tasks))
+	if len(tasks) > 0 {
+		numWorkers := runtime.NumCPU() * 2
+		if numWorkers > 16 {
+			numWorkers = 16
+		}
+		taskCh := make(chan int, len(tasks))
+		for i := range tasks {
+			taskCh <- i
+		}
+		close(taskCh)
+		var wg sync.WaitGroup
+		for w := 0; w < numWorkers; w++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := range taskCh {
+					task := tasks[i]
+					res, err := compareFile(task.sourcePath, task.refPath, task.rel)
+					results[i] = taskResult{rel: task.rel, result: res, err: err}
+				}
+			}()
+		}
+		wg.Wait()
+		// Sort for deterministic report ordering.
+		slices.SortFunc(results, func(a, b taskResult) int {
+			return strings.Compare(a.rel, b.rel)
+		})
+	}
+
+	// Phase 3: apply comparison results to the report sequentially.
+	for _, res := range results {
+		rel := res.rel
+		result := res.result
+
+		if res.err != nil {
+			report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
+			report.ClassifiedFiles = append(report.ClassifiedFiles, ClassifiedFile{
+				RelativePath:         rel,
+				Region:               regionFromPath(rel),
+				Category:             categoryFromPath(rel),
+				Classification:       "unsupported",
+				SourceRecordCount:    result.sourceRecords,
+				ReferenceRecordCount: result.referenceRecords,
+			})
+			continue
+		}
+
+		entry := ClassifiedFile{
+			RelativePath:         rel,
+			Region:               regionFromPath(rel),
+			Category:             categoryFromPath(rel),
+			Classification:       result.classification,
+			SourceRecordCount:    result.sourceRecords,
+			ReferenceRecordCount: result.referenceRecords,
+		}
+
+		switch result.classification {
+		case "exact_raw_match", "match_after_empty_normalization", "match_after_dict_keyed_to_list_by_id", "match_after_both_transformations", "match_after_reference_id_subset":
+			if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
+				entry.Classification = "count_mismatch"
+				entry.Notes = "Excluded from promotion audit; probable usage_drop transform remains unapproved."
+				report.CountMismatchFiles = append(report.CountMismatchFiles, entry)
+				report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
+				continue
+			}
+			safe := SafePromoteFile{
+				RelativePath:   rel,
+				Region:         entry.Region,
+				Category:       entry.Category,
+				Classification: result.classification,
+			}
+			safeCandidates[result.classification] = append(safeCandidates[result.classification], safe)
+			safeCandidateMeta[rel] = entry
+		case "count_mismatch":
+			if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
+				entry.Notes = "Rejected usage_drop-only rule; excluding every usage_drop record still does not exactly match Belfast after canonical transforms."
+			}
+			report.CountMismatchFiles = append(report.CountMismatchFiles, entry)
+			report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
+		case "schema_mismatch":
+			report.SchemaMismatchFiles = append(report.SchemaMismatchFiles, entry)
+			report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
+		default:
+			report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
+			report.ClassifiedFiles = append(report.ClassifiedFiles, entry)
 		}
 	}
 
