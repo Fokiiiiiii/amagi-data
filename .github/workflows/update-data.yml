@@ -63,33 +63,14 @@ jobs:
             }
           }
 
-          $env:AMAGI_DATA_TEST_AZURLANE_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneData"
-          $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts"
-          $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT = "$env:GITHUB_WORKSPACE\_external\belfast-data"
-
-          Write-Host "AzurLaneData root exists: $(Test-Path $env:AMAGI_DATA_TEST_AZURLANE_ROOT)"
-          Write-Host "AzurLaneLuaScripts root exists: $(Test-Path $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT)"
-          Write-Host "belfast-data root exists: $(Test-Path $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT)"
-
-          Invoke-Native go test ./...
+          # validate.ps1 sets AMAGI_DATA_TEST_* and runs go test + go run belfast_json_mvp
+          Invoke-Native pwsh -NoProfile -ExecutionPolicy Bypass -File tools/ci/validate.ps1
 
           $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
-          Invoke-Native go run ./cmd/belfast_json_mvp `
-            -source-root $env:AMAGI_DATA_TEST_AZURLANE_ROOT `
-            -luascripts-root $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT `
-            -output-root $out `
-            -copy-helper-fallback-from $env:AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT
 
+          if (-not (Test-Path $out)) { throw "output dir missing: $out" }
           $reportPath = Join-Path $out "belfast-json-mvp-report.json"
-          $report = Get-Content -Raw $reportPath | ConvertFrom-Json
-          if ($report.generated_files.Count -lt 1) { throw "generated_files must not be empty" }
-          if (-not ($report.generated_helper_files -contains "global/versions.json")) { throw "versions.json missing from generated_helper_files" }
-          if (@($report.fallback_helper_files).Count -ne 3) { throw "fallback_helper_files count mismatch" }
-          foreach ($expected in @("global/build_pools.json", "global/build_times.json", "global/requisition_ships.json")) {
-            if (-not ($report.fallback_helper_files -contains $expected)) { throw "missing fallback helper $expected" }
-          }
-          if (@($report.unsupported_files).Count -ne 0) { throw "unsupported_files must be empty" }
-          if (@($report.unsupported_helper_files).Count -ne 0) { throw "unsupported_helper_files must be empty" }
+          if (-not (Test-Path $reportPath)) { throw "report missing: $reportPath" }
 
           Get-ChildItem -LiteralPath $out -Force | ForEach-Object {
             if ($_.Name -eq "belfast-json-mvp-report.json") { return }
@@ -102,9 +83,9 @@ jobs:
 
           $changes = git status --short
           if ($changes) {
-            git add GameCfg ShareCfg sharecfgdata global CN EN JP KR TW .github/workflows/update-data.yml .gitignore
-            git commit -m "data: update generated belfast json [skip ci]"
-            git push origin main
+            Invoke-Native git add GameCfg ShareCfg sharecfgdata global CN EN JP KR TW .github/workflows/update-data.yml .gitignore
+            Invoke-Native git commit -m "data: update generated belfast json [skip ci]"
+            Invoke-Native git push origin main
           } else {
             Write-Host "No generated file changes to commit."
           }

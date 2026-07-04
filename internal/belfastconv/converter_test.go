@@ -227,12 +227,28 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 // TestVersionsGeneratedFromLuaScriptsMetadata verifies versions.json content
 // using the shared ConvertMVP output, which already includes lua-script version
 // generation, eliminating a redundant full conversion run.
+//
+// We check structural invariants rather than exact version strings because the
+// upstream AzurLaneLuaScripts versions change with every game patch.
 func TestVersionsGeneratedFromLuaScriptsMetadata(t *testing.T) {
 	sc := requireSharedConv(t)
 	got := mustLoad(t, filepath.Join(sc.outDir, "global", "versions.json"))
-	want := map[string]any{"CN": "9.7.243", "EN": "9.3.222", "JP": "9.3.256", "KR": "8.5.33", "TW": "8.5.83"}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("versions.json mismatch: %#v", got)
+	versions, ok := got.(map[string]any)
+	if !ok {
+		t.Fatalf("versions.json expected object, got %T: %#v", got, got)
+	}
+	for _, region := range []string{"CN", "EN", "JP", "KR", "TW"} {
+		v, exists := versions[region]
+		if !exists {
+			t.Fatalf("versions.json missing region %s: %#v", region, got)
+		}
+		s, isStr := v.(string)
+		if !isStr || s == "" {
+			t.Fatalf("versions.json[%s] expected non-empty string, got %#v", region, v)
+		}
+	}
+	if len(versions) != 5 {
+		t.Fatalf("versions.json expected exactly 5 regions, got %d: %#v", len(versions), got)
 	}
 }
 
