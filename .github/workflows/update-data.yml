@@ -83,9 +83,11 @@ jobs:
 
           $changes = git status --short
           if ($changes) {
-            # Use -A so we don't need to enumerate every output directory by name.
-            # _external/ is gitignored so it won't be staged accidentally.
-            Invoke-Native git add -A
+            # Stage all workspace changes. _external/ is gitignored so it is safe.
+            # Call git directly: Invoke-Native mis-binds flag-like args (-A, --all)
+            # against its own -Args parameter before ValueFromRemainingArguments fires.
+            git add --all
+            if ($LASTEXITCODE -ne 0) { throw "git add --all failed with exit code $LASTEXITCODE" }
             Invoke-Native git commit -m "data: update generated belfast json [skip ci]"
             Invoke-Native git push origin main
           } else {
