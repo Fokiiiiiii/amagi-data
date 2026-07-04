@@ -83,6 +83,10 @@ jobs:
 
           $changes = git status --short
           if ($changes) {
+            # Set committer identity required by git commit (actions/checkout sets auth
+            # credentials for push but does NOT configure user.name or user.email).
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
             # Stage all workspace changes. _external/ is gitignored so it is safe.
             # Call git directly: Invoke-Native mis-binds flag-like args (-A, --all)
             # against its own -Args parameter before ValueFromRemainingArguments fires.
