@@ -83,7 +83,9 @@ jobs:
 
           $changes = git status --short
           if ($changes) {
-            Invoke-Native git add GameCfg ShareCfg sharecfgdata global CN EN JP KR TW .github/workflows/update-data.yml .gitignore
+            # Use -A so we don't need to enumerate every output directory by name.
+            # _external/ is gitignored so it won't be staged accidentally.
+            Invoke-Native git add -A
             Invoke-Native git commit -m "data: update generated belfast json [skip ci]"
             Invoke-Native git push origin main
           } else {
