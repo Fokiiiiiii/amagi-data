@@ -12,16 +12,20 @@ jobs:
   update:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      # ========== Phase 1: Main setup ==========
+      - name: Checkout main repository
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - uses: actions/checkout@v4
+      # ========== Phase 2: Fetch data by region (CN/EN/JP/KR/TW) ==========
+      - name: Fetch AzurLane game data (CN/EN/JP/KR/TW)
+        uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneData
           ref: main
           path: _external/AzurLaneData
-          sparse-checkout-cone-mode: false
+          sparse-checkout-cone-mode: true
           sparse-checkout: |
             CN/**
             EN/**
@@ -30,12 +34,13 @@ jobs:
             TW/**
             versions/**
 
-      - uses: actions/checkout@v4
+      - name: Fetch AzurLane version info (CN/EN/JP/KR/TW)
+        uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneLuaScripts
           ref: main
           path: _external/AzurLaneLuaScripts
-          sparse-checkout-cone-mode: false
+          sparse-checkout-cone-mode: true
           sparse-checkout: |
             versions/CN.txt
             versions/EN.txt
@@ -43,16 +48,22 @@ jobs:
             versions/KR.txt
             versions/TW.txt
 
-      - uses: actions/checkout@v4
+      - name: Fetch belfast-data
+        uses: actions/checkout@v4
         with:
           repository: ggmolly/belfast-data
           path: _external/belfast-data
 
-      - uses: actions/setup-go@v5
+      # ========== Phase 3: Setup tools ==========
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: true
 
-      - shell: pwsh
+      # ========== Phase 4: Process data (CN/EN/JP/KR/TW → Belfast JSON) ==========
+      - name: Generate Belfast JSON (CN/EN/JP/KR/TW regions)
+        shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           function Invoke-Native {
