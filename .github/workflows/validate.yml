@@ -29,12 +29,12 @@ jobs:
           path: _external/AzurLaneData
           sparse-checkout-cone-mode: true
           sparse-checkout: |
-            CN/**
-            EN/**
-            JP/**
-            KR/**
-            TW/**
-            versions/**
+            CN
+            EN
+            JP
+            KR
+            TW
+            versions
 
       - name: Fetch AzurLane version info (CN/EN/JP/KR/TW)
         uses: actions/checkout@v4
