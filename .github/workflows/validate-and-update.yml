@@ -1,9 +1,10 @@
-name: Update data
+name: Validate and Update Data
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 19 * * *"
+    - cron: "0 15 * * *"
+    - cron: "0 3 * * *"
 
 permissions:
   contents: write
@@ -71,8 +72,46 @@ jobs:
           path: _external
           retention-days: 1
 
-  build:
+  validate:
     needs: setup
+    strategy:
+      matrix:
+        region: [CN, EN, JP, KR, TW]
+    runs-on: windows-latest
+    steps:
+      # ========== Phase 1: Setup ==========
+      - name: "Checkout: Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: "Download: Setup artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.setup.outputs.artifact-name }}
+          path: _external
+
+      - name: "Setup: Go toolchain"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # ========== Phase 2: Validate (CN/EN/JP/KR/TW → Belfast JSON) ==========
+      - name: "Validate: Belfast JSON (${{ matrix.region }})"
+        shell: pwsh
+        run: tools/ci/validate.ps1
+
+      # ========== Phase 3: Upload results ==========
+      - name: "Upload: Validation results (${{ matrix.region }})"
+        uses: actions/upload-artifact@v4
+        with:
+          name: amagi-belfast-json-mvp-${{ matrix.region }}
+          path: ${{ runner.temp }}/amagi_belfast_json_mvp
+          retention-days: 30
+
+  build:
+    needs: [setup, validate]
     strategy:
       matrix:
         region: [CN, EN, JP, KR, TW]
