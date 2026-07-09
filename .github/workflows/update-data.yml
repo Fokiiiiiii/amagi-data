@@ -67,7 +67,7 @@ jobs:
       - name: "Upload: Setup artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ outputs.artifact-name }}
+          name: setup-data-${{ github.run_id }}
           path: _external
           retention-days: 1
 
