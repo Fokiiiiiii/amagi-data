@@ -17,13 +17,13 @@ jobs:
       artifact-name: setup-data-${{ github.run_id }}
     steps:
       # ========== Phase 1: Main setup ==========
-      - name: "📦 Checkout: Main repository"
+      - name: "Checkout: Main repository"
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       # ========== Phase 2: Fetch data by region (CN/EN/JP/KR/TW) ==========
-      - name: "📥 Data: AzurLane game (CN/EN/JP/KR/TW)"
+      - name: "Data: AzurLane game (CN/EN/JP/KR/TW)"
         uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneData
@@ -38,7 +38,7 @@ jobs:
             TW
             versions
 
-      - name: "📥 Data: AzurLane version info (CN/EN/JP/KR/TW)"
+      - name: "Data: AzurLane version info (CN/EN/JP/KR/TW)"
         uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneLuaScripts
@@ -52,21 +52,21 @@ jobs:
             versions/KR.txt
             versions/TW.txt
 
-      - name: "📥 Data: Belfast fallback"
+      - name: "Data: Belfast fallback"
         uses: actions/checkout@v4
         with:
           repository: ggmolly/belfast-data
           path: _external/belfast-data
 
       # ========== Phase 3: Setup tools ==========
-      - name: "⚙️ Setup: Go toolchain"
+      - name: "Setup: Go toolchain"
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
 
       # ========== Phase 4: Upload setup artifacts ==========
-      - name: "⬆️ Upload: Setup artifacts"
+      - name: "Upload: Setup artifacts"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ outputs.artifact-name }}
@@ -81,30 +81,30 @@ jobs:
     runs-on: windows-latest
     steps:
       # ========== Phase 1: Setup ==========
-      - name: "📦 Checkout: Repository"
+      - name: "Checkout: Repository"
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: "⬇️ Download: Setup artifacts"
+      - name: "Download: Setup artifacts"
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.setup.outputs.artifact-name }}
           path: _external
 
-      - name: "⚙️ Setup: Go toolchain"
+      - name: "Setup: Go toolchain"
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
 
       # ========== Phase 2: Validate (CN/EN/JP/KR/TW → Belfast JSON) ==========
-      - name: "✅ Validate: Belfast JSON (${{ matrix.region }})"
+      - name: "Validate: Belfast JSON (${{ matrix.region }})"
         shell: pwsh
         run: tools/ci/validate.ps1
 
       # ========== Phase 3: Upload results ==========
-      - name: "⬆️ Upload: Validation results (${{ matrix.region }})"
+      - name: "Upload: Validation results (${{ matrix.region }})"
         uses: actions/upload-artifact@v4
         with:
           name: amagi-belfast-json-mvp-${{ matrix.region }}

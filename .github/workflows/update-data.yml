@@ -15,13 +15,13 @@ jobs:
       artifact-name: setup-data-${{ github.run_id }}
     steps:
       # ========== Phase 1: Main setup ==========
-      - name: "📦 Checkout: Main repository"
+      - name: "Checkout: Main repository"
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       # ========== Phase 2: Fetch data by region (CN/EN/JP/KR/TW) ==========
-      - name: "📥 Data: AzurLane game (CN/EN/JP/KR/TW)"
+      - name: "Data: AzurLane game (CN/EN/JP/KR/TW)"
         uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneData
@@ -36,7 +36,7 @@ jobs:
             TW
             versions
 
-      - name: "📥 Data: AzurLane version info (CN/EN/JP/KR/TW)"
+      - name: "Data: AzurLane version info (CN/EN/JP/KR/TW)"
         uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneLuaScripts
@@ -50,21 +50,21 @@ jobs:
             versions/KR.txt
             versions/TW.txt
 
-      - name: "📥 Data: Belfast fallback"
+      - name: "Data: Belfast fallback"
         uses: actions/checkout@v4
         with:
           repository: ggmolly/belfast-data
           path: _external/belfast-data
 
       # ========== Phase 3: Setup tools ==========
-      - name: "⚙️ Setup: Go toolchain"
+      - name: "Setup: Go toolchain"
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
 
       # ========== Phase 4: Upload setup artifacts ==========
-      - name: "⬆️ Upload: Setup artifacts"
+      - name: "Upload: Setup artifacts"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ outputs.artifact-name }}
@@ -78,25 +78,25 @@ jobs:
         region: [CN, EN, JP, KR, TW]
     runs-on: windows-latest
     steps:
-      - name: "📦 Checkout: Repository"
+      - name: "Checkout: Repository"
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: "⬇️ Download: Setup artifacts"
+      - name: "Download: Setup artifacts"
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.setup.outputs.artifact-name }}
           path: _external
 
-      - name: "⚙️ Setup: Go toolchain"
+      - name: "Setup: Go toolchain"
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
 
       # ========== Phase 5: Process data (CN/EN/JP/KR/TW → Belfast JSON) ==========
-      - name: "🔨 Build: Belfast JSON (${{ matrix.region }})"
+      - name: "Build: Belfast JSON (${{ matrix.region }})"
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -122,7 +122,7 @@ jobs:
             Write-Host "  - $($_.Name)"
           }
 
-      - name: "💾 Save: Output for ${{ matrix.region }}"
+      - name: "Save: Output for ${{ matrix.region }}"
         uses: actions/upload-artifact@v4
         with:
           name: build-output-${{ matrix.region }}
@@ -133,18 +133,18 @@ jobs:
     needs: build
     runs-on: windows-latest
     steps:
-      - name: "📦 Checkout: Repository"
+      - name: "Checkout: Repository"
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       # ========== Phase 6: Collect all region outputs ==========
-      - name: "⬇️ Download: All build outputs"
+      - name: "Download: All build outputs"
         uses: actions/download-artifact@v4
         with:
           path: build-outputs
 
-      - name: "🔄 Merge: All region outputs"
+      - name: "Merge: All region outputs"
         shell: pwsh
         run: |
           $outputDirs = @("CN", "EN", "JP", "KR", "TW")
@@ -174,7 +174,7 @@ jobs:
           }
 
       # ========== Phase 7: Commit & Push ==========
-      - name: "📤 Commit: Generated data"
+      - name: "Commit: Generated data"
         shell: pwsh
         run: |
           $changes = git status --short
@@ -188,5 +188,5 @@ jobs:
             git push origin main
             if ($LASTEXITCODE -ne 0) { throw "git push failed with exit code $LASTEXITCODE" }
           } else {
-            Write-Host "✓ No generated file changes to commit"
+            Write-Host "No generated file changes to commit"
           }
