@@ -222,14 +222,15 @@ func generateAuditedFiles(sourceRoot, outputRoot string, files []SafePromoteFile
 }
 
 func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
-	helpers := []struct {
+	// Standard root helpers generated from JP/GameCfg with empty normalization
+	standardHelpers := []struct {
 		sourceRel string
 		targetRel string
 	}{
 		{sourceRel: "JP/GameCfg/buff.json", targetRel: "global/buff_cfg.json"},
 		{sourceRel: "JP/GameCfg/skill.json", targetRel: "global/skill_cfg.json"},
 	}
-	for _, helper := range helpers {
+	for _, helper := range standardHelpers {
 		converted, err := convertAuditedFile(helper.sourceRel, filepath.Join(sourceRoot, filepath.FromSlash(helper.sourceRel)), "match_after_empty_normalization", nil)
 		if err != nil {
 			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, helper.targetRel)
@@ -241,6 +242,40 @@ func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
 		}
 		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, helper.targetRel)
 	}
+
+	// Attempt to source additional helper files from source root if available
+	// These files may exist in source data or will fall back to belfast-data copy
+	optionalHelpers := []struct {
+		sourceRel string
+		targetRel string
+	}{
+		{sourceRel: "global/build_pools.json", targetRel: "global/build_pools.json"},
+		{sourceRel: "global/build_times.json", targetRel: "global/build_times.json"},
+		{sourceRel: "global/requisition_ships.json", targetRel: "global/requisition_ships.json"},
+	}
+	for _, helper := range optionalHelpers {
+		sourcePath := filepath.Join(sourceRoot, filepath.FromSlash(helper.sourceRel))
+		// Only process if file exists in source; otherwise will be handled by fallback
+		if _, err := os.Stat(sourcePath); err == nil {
+			data, err := os.ReadFile(sourcePath)
+			if err != nil {
+				report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, helper.targetRel)
+				report.TotalUnsupportedCount++
+				continue
+			}
+			var decoded any
+			if err := json.Unmarshal(data, &decoded); err != nil {
+				report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, helper.targetRel)
+				report.TotalUnsupportedCount++
+				continue
+			}
+			if err := writeJSON(filepath.Join(outputRoot, helper.targetRel), decoded); err != nil {
+				return err
+			}
+			report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, helper.targetRel)
+		}
+	}
+
 	sortStrings(report.GeneratedHelperFiles)
 	return nil
 }
