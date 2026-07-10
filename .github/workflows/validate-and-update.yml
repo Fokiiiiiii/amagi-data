@@ -73,12 +73,24 @@ jobs:
         shell: pwsh
         run: tools/ci/test.ps1
 
-      # ========== Phase 5: Upload setup artifacts ==========
-      - name: "Upload: Setup artifacts"
+      # ========== Phase 5: Pre-build binary (cache for build jobs) ==========
+      - name: "Build: Belfast JSON MVP binary"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          go build -o "belfast_json_mvp.exe" ./cmd/belfast_json_mvp
+          if ($LASTEXITCODE -ne 0) { throw "go build failed with exit code $LASTEXITCODE" }
+          Write-Host "✓ Binary built: belfast_json_mvp.exe"
+          Get-Item "belfast_json_mvp.exe" | Format-List Length, Name
+
+      # ========== Phase 6: Upload setup artifacts ==========
+      - name: "Upload: Setup artifacts + binary"
         uses: actions/upload-artifact@v4
         with:
           name: setup-data-${{ github.run_id }}
-          path: _external
+          path: |
+            _external
+            belfast_json_mvp.exe
           retention-days: 1
 
   build:
@@ -93,17 +105,11 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: "Download: Setup artifacts"
+      - name: "Download: Setup artifacts + binary"
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.setup.outputs.artifact-name }}
-          path: _external
-
-      - name: "Setup: Go toolchain"
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
+          path: .
 
       # ========== Phase 5: Generate data (CN/EN/JP/KR/TW → Belfast JSON) ==========
       - name: "Build: Belfast JSON (${{ matrix.region }})"
@@ -111,10 +117,18 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          # generate.ps1 only runs go run belfast_json_mvp (skip tests done in validate job)
-          & pwsh -NoProfile -ExecutionPolicy Bypass -File tools/ci/generate.ps1
-
+          # Set up environment variables
+          $env:AMAGI_DATA_TEST_AZURLANE_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneData"
+          $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts"
           $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
+
+          # Run pre-built binary directly (no recompilation!)
+          & ".\belfast_json_mvp.exe" `
+            -source-root $env:AMAGI_DATA_TEST_AZURLANE_ROOT `
+            -luascripts-root $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT `
+            -output-root $out
+
+          if ($LASTEXITCODE -ne 0) { throw "belfast_json_mvp.exe failed with exit code $LASTEXITCODE" }
 
           if (-not (Test-Path $out)) { throw "output dir missing: $out" }
           $reportPath = Join-Path $out "belfast-json-mvp-report.json"
