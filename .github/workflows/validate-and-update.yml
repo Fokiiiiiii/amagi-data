@@ -101,18 +101,12 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # ========== Phase 2: Validate (CN/EN/JP/KR/TW → Belfast JSON) ==========
-      - name: "Validate: Belfast JSON (${{ matrix.region }})"
+      # ========== Phase 2: Test (verify code compiles and tests pass) ==========
+      - name: "Test: Code validation (${{ matrix.region }})"
         shell: pwsh
-        run: tools/ci/validate.ps1
+        run: tools/ci/test.ps1
 
-      # ========== Phase 3: Upload results ==========
-      - name: "Upload: Validation results (${{ matrix.region }})"
-        uses: actions/upload-artifact@v4
-        with:
-          name: amagi-belfast-json-mvp-${{ matrix.region }}
-          path: ${{ runner.temp }}/amagi_belfast_json_mvp
-          retention-days: 30
+      # ========== Phase 3: No upload needed (test-only phase) ==========
 
   build:
     needs: [setup, validate]
@@ -138,21 +132,14 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # ========== Phase 5: Process data (CN/EN/JP/KR/TW → Belfast JSON) ==========
+      # ========== Phase 5: Generate data (CN/EN/JP/KR/TW → Belfast JSON) ==========
       - name: "Build: Belfast JSON (${{ matrix.region }})"
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          function Invoke-Native {
-            param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
-            & $Args[0] $Args[1..($Args.Count - 1)]
-            if ($LASTEXITCODE -ne 0) {
-              throw "$($Args -join ' ') failed with exit code $LASTEXITCODE"
-            }
-          }
 
-          # validate.ps1 sets AMAGI_DATA_TEST_* and runs go test + go run belfast_json_mvp
-          Invoke-Native pwsh -NoProfile -ExecutionPolicy Bypass -File tools/ci/validate.ps1
+          # generate.ps1 only runs go run belfast_json_mvp (skip tests done in validate job)
+          & pwsh -NoProfile -ExecutionPolicy Bypass -File tools/ci/generate.ps1
 
           $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
 
