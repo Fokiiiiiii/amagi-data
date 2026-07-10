@@ -10,10 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  setup:
-    runs-on: windows-latest
-    outputs:
-      artifact-name: setup-data-${{ github.run_id }}
+  build:
+    runs-on: ubuntu-latest
     steps:
       # ========== Phase 1: Main setup ==========
       - name: "Checkout: Main repository"
@@ -21,7 +19,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      # ========== Phase 2: Fetch data by region (CN/EN/JP/KR/TW) ==========
+      # ========== Phase 2: Fetch data (CN/EN/JP/KR/TW) ==========
       - name: "Cache: External data"
         uses: actions/cache@v4
         id: cache-external
@@ -68,142 +66,27 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # ========== Phase 4: Test code (run once, not per-region) ==========
+      # ========== Phase 4: Test code ==========
       - name: "Test: Code validation"
-        shell: pwsh
-        run: tools/ci/test.ps1
+        shell: bash
+        run: tools/ci/test.sh
 
-      # ========== Phase 5: Pre-build binary (cache for build jobs) ==========
-      - name: "Build: Belfast JSON MVP binary"
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          go build -o "belfast_json_mvp.exe" ./cmd/belfast_json_mvp
-          if ($LASTEXITCODE -ne 0) { throw "go build failed with exit code $LASTEXITCODE" }
-          Write-Host "✓ Binary built: belfast_json_mvp.exe"
-          Get-Item "belfast_json_mvp.exe" | Format-List Length, Name
+      # ========== Phase 5: Generate Belfast JSON (all regions, single pass) ==========
+      - name: "Generate: Belfast JSON"
+        shell: bash
+        run: tools/ci/generate.sh
 
-      # ========== Phase 6: Upload setup artifacts ==========
-      - name: "Upload: Setup artifacts + binary"
-        uses: actions/upload-artifact@v4
-        with:
-          name: setup-data-${{ github.run_id }}
-          path: |
-            _external
-            belfast_json_mvp.exe
-          retention-days: 1
-
-  build:
-    needs: setup
-    strategy:
-      matrix:
-        region: [CN, EN, JP, KR, TW]
-    runs-on: windows-latest
-    steps:
-      - name: "Checkout: Repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: "Download: Setup artifacts + binary"
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.setup.outputs.artifact-name }}
-          path: .
-
-      # ========== Phase 5: Generate data (CN/EN/JP/KR/TW → Belfast JSON) ==========
-      - name: "Build: Belfast JSON (${{ matrix.region }})"
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-
-          # Set up environment variables
-          $env:AMAGI_DATA_TEST_AZURLANE_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneData"
-          $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT = "$env:GITHUB_WORKSPACE\_external\AzurLaneLuaScripts"
-          $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
-
-          # Run pre-built binary directly (no recompilation!)
-          & ".\belfast_json_mvp.exe" `
-            -source-root $env:AMAGI_DATA_TEST_AZURLANE_ROOT `
-            -luascripts-root $env:AMAGI_DATA_TEST_LUASCRIPTS_ROOT `
-            -output-root $out
-
-          if ($LASTEXITCODE -ne 0) { throw "belfast_json_mvp.exe failed with exit code $LASTEXITCODE" }
-
-          if (-not (Test-Path $out)) { throw "output dir missing: $out" }
-          $reportPath = Join-Path $out "belfast-json-mvp-report.json"
-          if (-not (Test-Path $reportPath)) { throw "report missing: $reportPath" }
-
-          Write-Host "Generated files for region: ${{ matrix.region }}"
-          Get-ChildItem -LiteralPath $out -Force | ForEach-Object {
-            Write-Host "  - $($_.Name)"
-          }
-
-      - name: "Save: Output for ${{ matrix.region }}"
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output-${{ matrix.region }}
-          path: ${{ runner.temp }}/amagi_belfast_json_mvp
-          retention-days: 1
-
-  finalize:
-    needs: build
-    runs-on: windows-latest
-    steps:
-      - name: "Checkout: Repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      # ========== Phase 6: Collect all region outputs ==========
-      - name: "Download: All build outputs"
-        uses: actions/download-artifact@v4
-        with:
-          path: build-outputs
-
-      - name: "Merge: All region outputs"
-        shell: pwsh
-        run: |
-          $outputDirs = @("CN", "EN", "JP", "KR", "TW")
-          $merged = @{}
-
-          foreach ($region in $outputDirs) {
-            $path = Join-Path "build-outputs" "build-output-$region"
-            if (Test-Path $path) {
-              Get-ChildItem -LiteralPath $path -Force | ForEach-Object {
-                if ($_.Name -eq "belfast-json-mvp-report.json") { return }
-                $merged[$_.Name] = $_.FullName
-              }
-            }
-          }
-
-          Write-Host "Merged output files: $($merged.Count)"
-          foreach ($file in $merged.Keys) {
-            Write-Host "  - $file"
-          }
-
-          foreach ($file in $merged.Keys) {
-            $dst = $file
-            if (Test-Path $dst) {
-              Remove-Item -LiteralPath $dst -Recurse -Force
-            }
-            Copy-Item -LiteralPath $merged[$file] -Destination $dst -Recurse -Force
-          }
-
-      # ========== Phase 7: Commit & Push ==========
+      # ========== Phase 6: Commit & Push ==========
       - name: "Commit: Generated data"
-        shell: pwsh
+        shell: bash
         run: |
-          $changes = git status --short
-          if ($changes) {
+          set -euo pipefail
+          if [ -n "$(git status --short)" ]; then
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git config user.name "github-actions[bot]"
             git add --all
-            if ($LASTEXITCODE -ne 0) { throw "git add --all failed with exit code $LASTEXITCODE" }
             git commit -m "data: update generated belfast json [skip ci]"
-            if ($LASTEXITCODE -ne 0) { throw "git commit failed with exit code $LASTEXITCODE" }
             git push origin main
-            if ($LASTEXITCODE -ne 0) { throw "git push failed with exit code $LASTEXITCODE" }
-          } else {
-            Write-Host "No generated file changes to commit"
-          }
+          else
+            echo "No generated file changes to commit"
+          fi
