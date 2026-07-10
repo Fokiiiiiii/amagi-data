@@ -25,11 +25,10 @@ var fallbackHelperFiles = []string{
 var supportedRegions = []string{"CN", "EN", "JP", "KR", "TW"}
 
 type Options struct {
-	SourceRoot               string
-	OutputRoot               string
-	ReportPath               string
-	LuaScriptsRoot           string
-	FallbackHelperSourceRoot string
+	SourceRoot     string
+	OutputRoot     string
+	ReportPath     string
+	LuaScriptsRoot string
 }
 
 type FileReport struct {
@@ -151,13 +150,6 @@ func ConvertMVP(opts Options) (*Report, error) {
 		report.LuaScriptsVersionsRoot = source
 		report.LuaScriptsVersionSource = versions
 	}
-	if opts.FallbackHelperSourceRoot != "" {
-		if err := copyFallbackHelpers(opts.FallbackHelperSourceRoot, opts.OutputRoot, report); err != nil {
-			return nil, err
-		}
-		report.TotalFallbackCount = len(report.FallbackHelperFiles)
-		report.FallbackFiles = append(report.FallbackFiles, report.FallbackHelperFiles...)
-	}
 	if err := writeReport(opts, report); err != nil {
 		return nil, err
 	}
@@ -241,6 +233,34 @@ func generateRootHelpers(sourceRoot, outputRoot string, report *Report) error {
 		}
 		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, helper.targetRel)
 	}
+
+	// Copy static helper files from data/global directory
+	staticHelpers := []string{
+		"global/build_pools.json",
+		"global/build_times.json",
+		"global/requisition_ships.json",
+	}
+	for _, relPath := range staticHelpers {
+		dataSourcePath := filepath.Join(sourceRoot, "..", "..", "data", filepath.FromSlash(relPath))
+		if _, err := os.Stat(dataSourcePath); err != nil {
+			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, relPath)
+			continue
+		}
+		data, err := os.ReadFile(dataSourcePath)
+		if err != nil {
+			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, relPath)
+			continue
+		}
+		outPath := filepath.Join(outputRoot, filepath.FromSlash(relPath))
+		if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(outPath, data, 0o644); err != nil {
+			return err
+		}
+		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, relPath)
+	}
+
 	sortStrings(report.GeneratedHelperFiles)
 	return nil
 }

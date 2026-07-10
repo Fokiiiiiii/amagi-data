@@ -51,12 +51,6 @@ jobs:
             versions/KR.txt
             versions/TW.txt
 
-      - name: "Data: Belfast fallback"
-        uses: actions/checkout@v4
-        with:
-          repository: ggmolly/belfast-data
-          path: _external/belfast-data
-
       # ========== Phase 3: Setup tools ==========
       - name: "Setup: Go toolchain"
         uses: actions/setup-go@v5
