@@ -68,7 +68,12 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # ========== Phase 4: Upload setup artifacts ==========
+      # ========== Phase 4: Test code (run once, not per-region) ==========
+      - name: "Test: Code validation"
+        shell: pwsh
+        run: tools/ci/test.ps1
+
+      # ========== Phase 5: Upload setup artifacts ==========
       - name: "Upload: Setup artifacts"
         uses: actions/upload-artifact@v4
         with:
@@ -76,40 +81,8 @@ jobs:
           path: _external
           retention-days: 1
 
-  validate:
-    needs: setup
-    strategy:
-      matrix:
-        region: [CN, EN, JP, KR, TW]
-    runs-on: windows-latest
-    steps:
-      # ========== Phase 1: Setup ==========
-      - name: "Checkout: Repository"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: "Download: Setup artifacts"
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.setup.outputs.artifact-name }}
-          path: _external
-
-      - name: "Setup: Go toolchain"
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      # ========== Phase 2: Test (verify code compiles and tests pass) ==========
-      - name: "Test: Code validation (${{ matrix.region }})"
-        shell: pwsh
-        run: tools/ci/test.ps1
-
-      # ========== Phase 3: No upload needed (test-only phase) ==========
-
   build:
-    needs: [setup, validate]
+    needs: setup
     strategy:
       matrix:
         region: [CN, EN, JP, KR, TW]
