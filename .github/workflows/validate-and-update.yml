@@ -86,7 +86,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git add --all
             git commit -m "data: update generated belfast json [skip ci]"
-            git push origin main
+            git push origin HEAD:${{ github.ref_name }}
           else
             echo "No generated file changes to commit"
           fi
