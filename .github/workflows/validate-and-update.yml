@@ -1,0 +1,231 @@
+name: Validate and Update Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 15 * * *"
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: windows-latest
+    outputs:
+      artifact-name: setup-data-${{ github.run_id }}
+    steps:
+      # ========== Phase 1: Main setup ==========
+      - name: "Checkout: Main repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ========== Phase 2: Fetch data by region (CN/EN/JP/KR/TW) ==========
+      - name: "Data: AzurLane game (CN/EN/JP/KR/TW)"
+        uses: actions/checkout@v4
+        with:
+          repository: AzurLaneTools/AzurLaneData
+          ref: main
+          path: _external/AzurLaneData
+          sparse-checkout-cone-mode: true
+          sparse-checkout: |
+            CN
+            EN
+            JP
+            KR
+            TW
+            versions
+
+      - name: "Data: AzurLane version info (CN/EN/JP/KR/TW)"
+        uses: actions/checkout@v4
+        with:
+          repository: AzurLaneTools/AzurLaneLuaScripts
+          ref: main
+          path: _external/AzurLaneLuaScripts
+          sparse-checkout-cone-mode: true
+          sparse-checkout: |
+            versions/CN.txt
+            versions/EN.txt
+            versions/JP.txt
+            versions/KR.txt
+            versions/TW.txt
+
+      - name: "Data: Belfast fallback"
+        uses: actions/checkout@v4
+        with:
+          repository: ggmolly/belfast-data
+          path: _external/belfast-data
+
+      # ========== Phase 3: Setup tools ==========
+      - name: "Setup: Go toolchain"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # ========== Phase 4: Upload setup artifacts ==========
+      - name: "Upload: Setup artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-data-${{ github.run_id }}
+          path: _external
+          retention-days: 1
+
+  validate:
+    needs: setup
+    strategy:
+      matrix:
+        region: [CN, EN, JP, KR, TW]
+    runs-on: windows-latest
+    steps:
+      # ========== Phase 1: Setup ==========
+      - name: "Checkout: Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: "Download: Setup artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.setup.outputs.artifact-name }}
+          path: _external
+
+      - name: "Setup: Go toolchain"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # ========== Phase 2: Validate (CN/EN/JP/KR/TW → Belfast JSON) ==========
+      - name: "Validate: Belfast JSON (${{ matrix.region }})"
+        shell: pwsh
+        run: tools/ci/validate.ps1
+
+      # ========== Phase 3: Upload results ==========
+      - name: "Upload: Validation results (${{ matrix.region }})"
+        uses: actions/upload-artifact@v4
+        with:
+          name: amagi-belfast-json-mvp-${{ matrix.region }}
+          path: ${{ runner.temp }}/amagi_belfast_json_mvp
+          retention-days: 30
+
+  build:
+    needs: [setup, validate]
+    strategy:
+      matrix:
+        region: [CN, EN, JP, KR, TW]
+    runs-on: windows-latest
+    steps:
+      - name: "Checkout: Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: "Download: Setup artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.setup.outputs.artifact-name }}
+          path: _external
+
+      - name: "Setup: Go toolchain"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # ========== Phase 5: Process data (CN/EN/JP/KR/TW → Belfast JSON) ==========
+      - name: "Build: Belfast JSON (${{ matrix.region }})"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          function Invoke-Native {
+            param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
+            & $Args[0] $Args[1..($Args.Count - 1)]
+            if ($LASTEXITCODE -ne 0) {
+              throw "$($Args -join ' ') failed with exit code $LASTEXITCODE"
+            }
+          }
+
+          # validate.ps1 sets AMAGI_DATA_TEST_* and runs go test + go run belfast_json_mvp
+          Invoke-Native pwsh -NoProfile -ExecutionPolicy Bypass -File tools/ci/validate.ps1
+
+          $out = Join-Path $env:RUNNER_TEMP "amagi_belfast_json_mvp"
+
+          if (-not (Test-Path $out)) { throw "output dir missing: $out" }
+          $reportPath = Join-Path $out "belfast-json-mvp-report.json"
+          if (-not (Test-Path $reportPath)) { throw "report missing: $reportPath" }
+
+          Write-Host "Generated files for region: ${{ matrix.region }}"
+          Get-ChildItem -LiteralPath $out -Force | ForEach-Object {
+            Write-Host "  - $($_.Name)"
+          }
+
+      - name: "Save: Output for ${{ matrix.region }}"
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output-${{ matrix.region }}
+          path: ${{ runner.temp }}/amagi_belfast_json_mvp
+          retention-days: 1
+
+  finalize:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: "Checkout: Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ========== Phase 6: Collect all region outputs ==========
+      - name: "Download: All build outputs"
+        uses: actions/download-artifact@v4
+        with:
+          path: build-outputs
+
+      - name: "Merge: All region outputs"
+        shell: pwsh
+        run: |
+          $outputDirs = @("CN", "EN", "JP", "KR", "TW")
+          $merged = @{}
+
+          foreach ($region in $outputDirs) {
+            $path = Join-Path "build-outputs" "build-output-$region"
+            if (Test-Path $path) {
+              Get-ChildItem -LiteralPath $path -Force | ForEach-Object {
+                if ($_.Name -eq "belfast-json-mvp-report.json") { return }
+                $merged[$_.Name] = $_.FullName
+              }
+            }
+          }
+
+          Write-Host "Merged output files: $($merged.Count)"
+          foreach ($file in $merged.Keys) {
+            Write-Host "  - $file"
+          }
+
+          foreach ($file in $merged.Keys) {
+            $dst = $file
+            if (Test-Path $dst) {
+              Remove-Item -LiteralPath $dst -Recurse -Force
+            }
+            Copy-Item -LiteralPath $merged[$file] -Destination $dst -Recurse -Force
+          }
+
+      # ========== Phase 7: Commit & Push ==========
+      - name: "Commit: Generated data"
+        shell: pwsh
+        run: |
+          $changes = git status --short
+          if ($changes) {
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git add --all
+            if ($LASTEXITCODE -ne 0) { throw "git add --all failed with exit code $LASTEXITCODE" }
+            git commit -m "data: update generated belfast json [skip ci]"
+            if ($LASTEXITCODE -ne 0) { throw "git commit failed with exit code $LASTEXITCODE" }
+            git push origin main
+            if ($LASTEXITCODE -ne 0) { throw "git push failed with exit code $LASTEXITCODE" }
+          } else {
+            Write-Host "No generated file changes to commit"
+          }

@@ -4,3 +4,5 @@ work/
 _artifact_*/
 *.log
 *.tmp
+belfast_json_mvp
+belfast_data_audit
