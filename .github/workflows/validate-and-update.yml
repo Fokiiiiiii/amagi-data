@@ -22,7 +22,16 @@ jobs:
           fetch-depth: 1
 
       # ========== Phase 2: Fetch data by region (CN/EN/JP/KR/TW) ==========
+      - name: "Cache: External data"
+        uses: actions/cache@v4
+        id: cache-external
+        with:
+          path: _external
+          key: external-data-${{ hashFiles('go.mod') }}
+          restore-keys: external-data-
+
       - name: "Data: AzurLane game (CN/EN/JP/KR/TW)"
+        if: steps.cache-external.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneData
@@ -38,6 +47,7 @@ jobs:
             versions
 
       - name: "Data: AzurLane version info (CN/EN/JP/KR/TW)"
+        if: steps.cache-external.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneLuaScripts
