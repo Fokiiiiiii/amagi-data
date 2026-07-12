@@ -66,8 +66,26 @@ go run ./cmd/belfast_json_mvp \
   -legacy-fallback-root "$GITHUB_WORKSPACE" \
   -output-root "$second"
 
-diff -r -q \
-  <(find "$out" -type f ! -name belfast-json-mvp-report.json -print0 | sort -z | xargs -0 -I{} sh -c 'printf "%s  " "${1#'"$out"'/}"; sha256sum "$1"' _ {}) \
-  <(find "$second" -type f ! -name belfast-json-mvp-report.json -print0 | sort -z | xargs -0 -I{} sh -c 'printf "%s  " "${1#'"$second"'/}"; sha256sum "$1"' _ {})
+python3 - "$out" "$second" <<'PY'
+import hashlib
+import pathlib
+import sys
+
+def hashes(root):
+    root = pathlib.Path(root)
+    result = {}
+    for path in root.rglob("*"):
+        if path.is_file() and path.name != "belfast-json-mvp-report.json":
+            result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return result
+
+first, second = hashes(sys.argv[1]), hashes(sys.argv[2])
+if first != second:
+    print("second-run differences:")
+    for path in sorted(set(first) | set(second)):
+        if first.get(path) != second.get(path):
+            print(path)
+    raise SystemExit(1)
+PY
 echo "second-run diff: 0"
 git diff --check
