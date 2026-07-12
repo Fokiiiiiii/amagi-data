@@ -36,15 +36,6 @@ jobs:
             TW
             versions
 
-      - name: "Data: Restore required historical Lua source"
-        shell: bash
-        run: |
-          set -euo pipefail
-          source_commit="a2adc78f5346f2d2616cbf73277653870f81d387"
-          git -C _external/AzurLaneLuaScripts fetch --no-tags --depth=1 origin "$source_commit"
-          mkdir -p _external/AzurLaneLuaScripts/JP/sharecfg
-          git -C _external/AzurLaneLuaScripts show "$source_commit:JP/sharecfg/item_data_template.lua" > _external/AzurLaneLuaScripts/JP/sharecfg/item_data_template.lua
-
       # ========== Phase 3: Setup tools ==========
       - name: "Setup: Go toolchain"
         uses: actions/setup-go@v5

@@ -91,6 +91,8 @@ type Report struct {
 	TotalGeneratedCount     int                  `json:"total_generated_count"`
 	TotalFallbackCount      int                  `json:"total_fallback_count"`
 	TotalUnsupportedCount   int                  `json:"total_unsupported_count"`
+	CategoryCounts          map[string]int       `json:"category_counts,omitempty"`
+	CategoryIDs             map[string][]int64   `json:"category_ids,omitempty"`
 }
 
 func MVPFiles() []string {
@@ -155,7 +157,14 @@ func ConvertMVP(opts Options) (*Report, error) {
 		}
 	}
 
-	if err := generateAuditedFiles(opts, manifest.SafeToPromoteFiles, allowlists, report); err != nil {
+	if opts.LuaScriptsRoot != "" {
+		report.UnsupportedFiles = []string{}
+		report.MissingReferenceFiles = []string{}
+		report.SkippedUnsafeFiles = []string{}
+		if err := generateDiscoveredLuaFiles(opts, report); err != nil {
+			return nil, err
+		}
+	} else if err := generateAuditedFiles(opts, manifest.SafeToPromoteFiles, allowlists, report); err != nil {
 		return nil, err
 	}
 	if err := generateRootHelpers(opts, report); err != nil {
@@ -182,6 +191,87 @@ func ConvertMVP(opts Options) (*Report, error) {
 		return nil, err
 	}
 	return report, nil
+}
+
+func generateDiscoveredLuaFiles(opts Options, report *Report) error {
+	report.CategoryCounts = map[string]int{}
+	report.CategoryIDs = map[string][]int64{}
+	for _, region := range supportedRegions {
+		for _, dir := range []string{"sharecfg", "sharecfgdata"} {
+			root := filepath.Join(opts.LuaScriptsRoot, region, dir)
+			if _, err := os.Stat(root); err != nil {
+				continue
+			}
+			err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
+				if walkErr != nil {
+					return walkErr
+				}
+				if entry.IsDir() || strings.Contains(filepath.ToSlash(path), "/sublist/") || !strings.HasSuffix(entry.Name(), ".lua") {
+					return nil
+				}
+				relDir := map[string]string{"sharecfg": "ShareCfg", "sharecfgdata": "sharecfgdata"}[dir]
+				rel := region + "/" + relDir + "/" + strings.TrimSuffix(entry.Name(), ".lua") + ".json"
+				value, err := belfastlua.LoadFile(path)
+				if err != nil {
+					report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
+					report.TotalUnsupportedCount++
+					return nil
+				}
+				converted := belfastlua.ToPlain(value)
+				if strings.HasSuffix(rel, "/ship_skin_template.json") {
+					converted, err = loadLuaSublist(opts.LuaScriptsRoot, region, "ship_skin_template_sublist")
+					if err != nil {
+						return err
+					}
+				}
+				converted = normalizeNumericTables(converted)
+				converted, err = dictKeyedToSortedList(normalizeEmpty(converted))
+				if err != nil {
+					report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
+					report.TotalUnsupportedCount++
+					return nil
+				}
+				if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), converted); err != nil {
+					return err
+				}
+				report.GeneratedFiles = append(report.GeneratedFiles, rel)
+				report.TotalGeneratedCount++
+				category := strings.ToLower(dir)
+				report.CategoryCounts[category] += recordCount(converted)
+				for _, rec := range comparableIDs(converted) {
+					report.CategoryIDs[category] = append(report.CategoryIDs[category], rec)
+				}
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	for _, rel := range LegacyFallbackFiles() {
+		if _, err := os.Stat(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel))); err != nil {
+			if _, err := copyLegacyFallback(opts, rel, report); err != nil {
+				return err
+			}
+		}
+	}
+	sortStrings(report.GeneratedFiles)
+	for key := range report.CategoryIDs {
+		sort.Slice(report.CategoryIDs[key], func(i, j int) bool { return report.CategoryIDs[key][i] < report.CategoryIDs[key][j] })
+		report.CategoryIDs[key] = slices.Compact(report.CategoryIDs[key])
+	}
+	return nil
+}
+
+func comparableIDs(value any) []int64 {
+	rows, _ := extractComparableRecords(value)
+	out := make([]int64, 0, len(rows))
+	for _, row := range rows {
+		if id, ok := intFromAny(row["id"]); ok {
+			out = append(out, int64(id))
+		}
+	}
+	return out
 }
 
 func generateAdditionalLuaFiles(opts Options, report *Report) error {

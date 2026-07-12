@@ -28,24 +28,6 @@ if [ ! -f "$report_path" ]; then
   exit 1
 fi
 
-python3 - "$out" <<'PY'
-import pathlib
-import sys
-
-out = pathlib.Path(sys.argv[1])
-expected = {
-    line.split(",", 1)[0]
-    for line in pathlib.Path("reports/golden-compatibility/reference-manifest.csv")
-    .read_text(encoding="utf-8")
-    .splitlines()[1:]
-    if line
-}
-for path in out.rglob("*"):
-    if path.is_file() and path.name != "belfast-json-mvp-report.json":
-        if path.relative_to(out).as_posix() not in expected:
-            path.unlink()
-PY
-
 echo "Publishing generated files to repository working directory"
 for entry in "$out"/*; do
   name="$(basename "$entry")"
