@@ -165,7 +165,7 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	if !containsString(report.GeneratedHelperFiles, "global/versions.json") {
 		t.Fatalf("expected generated_helper_files to contain versions.json, got %v", report.GeneratedHelperFiles)
 	}
-	if !containsString(report.GeneratedHelperFiles, "global/buff_cfg.json") || !containsString(report.GeneratedHelperFiles, "global/skill_cfg.json") {
+	if !containsString(report.GeneratedHelperFiles, "JP/buff_cfg.json") || !containsString(report.GeneratedHelperFiles, "JP/skill_cfg.json") {
 		t.Fatalf("expected root helper files to be generated, got %v", report.GeneratedHelperFiles)
 	}
 	if !containsString(report.GeneratedHelperFiles, "global/build_pools.json") || !containsString(report.GeneratedHelperFiles, "global/build_times.json") || !containsString(report.GeneratedHelperFiles, "global/requisition_ships.json") {
@@ -175,8 +175,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 		t.Fatalf("versions.json should not be unsupported when generation succeeds: %v", report.UnsupportedHelperFiles)
 	}
 	for _, rel := range []string{
-		"global/buff_cfg.json",
-		"global/skill_cfg.json",
+		"JP/buff_cfg.json",
+		"JP/skill_cfg.json",
 		"global/build_pools.json",
 		"global/build_times.json",
 		"global/requisition_ships.json",
