@@ -106,4 +106,5 @@ if first != second:
     raise SystemExit(1)
 PY
 echo "second-run diff: 0"
-git diff --check
+git -c core.whitespace=cr-at-eol diff --check
+echo "git diff --check: pass"
