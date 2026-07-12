@@ -85,6 +85,12 @@ if first != second:
     for path in sorted(set(first) | set(second)):
         if first.get(path) != second.get(path):
             print(path)
+            left = pathlib.Path(sys.argv[1], path)
+            right = pathlib.Path(sys.argv[2], path)
+            try:
+                print("  semantic_json_equal:", json.loads(left.read_text(encoding="utf-8")) == json.loads(right.read_text(encoding="utf-8")))
+            except (ValueError, OSError):
+                pass
     raise SystemExit(1)
 PY
 echo "second-run diff: 0"
