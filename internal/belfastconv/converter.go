@@ -947,32 +947,6 @@ func applyClassification(rel string, decoded any, classification string, allowli
 }
 
 func generateRootHelpers(opts Options, report *Report) error {
-	helpers := []struct {
-		sourceRel string
-		targetRel string
-	}{
-		{sourceRel: "JP/GameCfg/buff.json", targetRel: "global/buff_cfg.json"},
-		{sourceRel: "JP/GameCfg/skill.json", targetRel: "global/skill_cfg.json"},
-	}
-	for _, helper := range helpers {
-		var converted any
-		var err error
-		if opts.LuaScriptsRoot != "" {
-			converted, err = convertLuaFile(luaPathFor(opts.LuaScriptsRoot, helper.sourceRel), helper.sourceRel, "match_after_empty_normalization", nil)
-		} else {
-			converted, err = convertAuditedFile(helper.sourceRel, filepath.Join(opts.SourceRoot, filepath.FromSlash(helper.sourceRel)), "match_after_empty_normalization", nil)
-		}
-		if err != nil {
-			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, helper.targetRel)
-			report.TotalUnsupportedCount++
-			continue
-		}
-		if err := writeJSON(filepath.Join(opts.OutputRoot, helper.targetRel), converted); err != nil {
-			return err
-		}
-		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, helper.targetRel)
-	}
-
 	// Copy static helper files from data/global directory.
 	staticHelpers := []string{
 		"global/build_pools.json",
