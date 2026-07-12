@@ -5,6 +5,7 @@ out="${RUNNER_TEMP:?}/amagi_belfast_json_mvp"
 report="$out/belfast-json-mvp-report.json"
 
 python3 - "$out" "$report" <<'PY'
+import json
 import pathlib
 import sys
 
