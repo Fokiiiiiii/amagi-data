@@ -706,7 +706,30 @@ func convertLuaFile(path, rel, classification string, allowlist []int) (any, err
 	if strings.HasSuffix(rel, "/ShareCfg/battle_environment_behaviour_template.json") {
 		decoded = restoreBattleRouteShape(decoded)
 	}
-	return applyClassification(rel, decoded, classification, allowlist)
+	converted, err := applyClassification(rel, decoded, classification, allowlist)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(rel, "/ShareCfg/error_message.json") {
+		converted = stabilizeErrorMessageOrder(converted)
+	}
+	return converted, nil
+}
+
+func stabilizeErrorMessageOrder(value any) any {
+	records, ok := value.([]any)
+	if !ok {
+		return value
+	}
+	sort.SliceStable(records, func(i, j int) bool {
+		left, leftErr := marshalBelfast(records[i])
+		right, rightErr := marshalBelfast(records[j])
+		if leftErr != nil || rightErr != nil {
+			return false
+		}
+		return bytes.Compare(left, right) < 0
+	})
+	return records
 }
 
 func restoreBattleRouteShape(v any) any {
