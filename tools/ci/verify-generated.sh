@@ -47,6 +47,10 @@ if missing:
     print("missing paths:", *missing, sep="\n  ")
 if relevant_missing:
     print("missing source paths:", *sorted(relevant_missing), sep="\n  ")
+if relevant_unsupported:
+    print("unsupported paths:", *sorted(relevant_unsupported), sep="\n  ")
+if report.get("unsupported_helper_files"):
+    print("unsupported helper paths:", *report.get("unsupported_helper_files"), sep="\n  ")
 if extra:
     print("extra paths:", *extra, sep="\n  ")
 if not all(checks.values()):
