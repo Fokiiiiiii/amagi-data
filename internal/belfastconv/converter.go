@@ -682,8 +682,6 @@ func luaPathFor(root, rel string) string {
 	stem := strings.ToLower(strings.TrimSuffix(parts[2], ".json"))
 	aliases := map[string]string{
 		"battle_nodes_cfg": "battlenodescfg",
-		"card_affix":       "puzzle_card_affix",
-		"card_template":    "puzzle_card_template",
 		"dorm3_d_dolly":    "dorm3d_dolly",
 		"inform_cfg":       "informcfg",
 		"inform_for_back_yard_theme_template_cfg": "informforbackyardthemetemplatecfg",
