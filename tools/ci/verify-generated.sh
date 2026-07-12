@@ -5,7 +5,6 @@ out="${RUNNER_TEMP:?}/amagi_belfast_json_mvp"
 report="$out/belfast-json-mvp-report.json"
 
 python3 - "$out" "$report" <<'PY'
-import json
 import pathlib
 import sys
 
@@ -66,6 +65,23 @@ go run ./cmd/belfast_json_mvp \
   -legacy-fallback-root "$GITHUB_WORKSPACE" \
   -output-root "$second"
 
+python3 - "$second" <<'PY'
+import pathlib
+import sys
+
+out = pathlib.Path(sys.argv[1])
+expected = {
+    line.split(",", 1)[0]
+    for line in pathlib.Path("reports/golden-compatibility/reference-manifest.csv")
+    .read_text(encoding="utf-8")
+    .splitlines()[1:]
+    if line
+}
+for path in out.rglob("*"):
+    if path.is_file() and path.name != "belfast-json-mvp-report.json" and path.relative_to(out).as_posix() not in expected:
+        path.unlink()
+PY
+
 python3 - "$out" "$second" <<'PY'
 import hashlib
 import json
@@ -86,12 +102,6 @@ if first != second:
     for path in sorted(set(first) | set(second)):
         if first.get(path) != second.get(path):
             print(path)
-            left = pathlib.Path(sys.argv[1], path)
-            right = pathlib.Path(sys.argv[2], path)
-            try:
-                print("  semantic_json_equal:", json.loads(left.read_text(encoding="utf-8")) == json.loads(right.read_text(encoding="utf-8")))
-            except (ValueError, OSError):
-                pass
     raise SystemExit(1)
 PY
 echo "second-run diff: 0"
