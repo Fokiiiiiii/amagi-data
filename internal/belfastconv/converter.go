@@ -159,6 +159,7 @@ func ConvertMVP(opts Options) (*Report, error) {
 
 	if opts.LuaScriptsRoot != "" {
 		report.UnsupportedFiles = []string{}
+		report.UnsupportedHelperFiles = []string{}
 		report.MissingReferenceFiles = []string{}
 		report.SkippedUnsafeFiles = []string{}
 		if err := generateDiscoveredLuaFiles(opts, report); err != nil {
@@ -225,11 +226,11 @@ func generateDiscoveredLuaFiles(opts Options, report *Report) error {
 					}
 				}
 				converted = normalizeNumericTables(converted)
-				converted, err = dictKeyedToSortedList(normalizeEmpty(converted))
+				rawConverted := normalizeEmpty(converted)
+				converted, err = dictKeyedToSortedList(rawConverted)
 				if err != nil {
-					report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
-					report.TotalUnsupportedCount++
-					return nil
+					converted = rawConverted
+					err = nil
 				}
 				if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), converted); err != nil {
 					return err
