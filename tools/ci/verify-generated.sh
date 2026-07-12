@@ -68,6 +68,7 @@ go run ./cmd/belfast_json_mvp \
 
 python3 - "$out" "$second" <<'PY'
 import hashlib
+import json
 import pathlib
 import sys
 
