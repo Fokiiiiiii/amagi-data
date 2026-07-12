@@ -200,11 +200,11 @@ func generateAdditionalLuaFiles(opts Options, report *Report) error {
 		return err
 	}
 	for _, item := range []struct{ source, target string }{
-		{"JP/ShareCfg/battlenodescfg.lua", "JP/ShareCfg/battle_nodes_cfg.json"},
-		{"JP/ShareCfg/dorm3d_dolly.lua", "JP/ShareCfg/dorm3_d_dolly.json"},
-		{"JP/ShareCfg/informcfg.lua", "JP/ShareCfg/inform_cfg.json"},
-		{"JP/ShareCfg/informforbackyardthemetemplatecfg.lua", "JP/ShareCfg/inform_for_back_yard_theme_template_cfg.json"},
-		{"JP/ShareCfg/world_slgbuff_data.lua", "JP/ShareCfg/world_sl_gbuff_data.json"},
+		{"JP/sharecfg/battlenodescfg.lua", "JP/ShareCfg/battle_nodes_cfg.json"},
+		{"JP/sharecfg/dorm3d_dolly.lua", "JP/ShareCfg/dorm3_d_dolly.json"},
+		{"JP/sharecfg/informcfg.lua", "JP/ShareCfg/inform_cfg.json"},
+		{"JP/sharecfg/informforbackyardthemetemplatecfg.lua", "JP/ShareCfg/inform_for_back_yard_theme_template_cfg.json"},
+		{"JP/sharecfg/world_slgbuff_data.lua", "JP/ShareCfg/world_sl_gbuff_data.json"},
 	} {
 		rel := item.target
 		if slices.Contains(report.GeneratedFiles, rel) {
