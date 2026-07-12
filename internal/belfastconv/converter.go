@@ -1268,6 +1268,16 @@ func writeJSON(path string, v any) error {
 	if err != nil {
 		return err
 	}
+	if strings.HasSuffix(filepath.ToSlash(path), "/error_message.json") {
+		var canonical any
+		if err := json.Unmarshal(data, &canonical); err != nil {
+			return err
+		}
+		data, err = json.Marshal(canonical)
+		if err != nil {
+			return err
+		}
+	}
 	data = append(data, '\r', '\n')
 	return os.WriteFile(path, data, 0o644)
 }
