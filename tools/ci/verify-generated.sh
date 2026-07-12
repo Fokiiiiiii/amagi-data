@@ -19,8 +19,8 @@ actual = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() a
 
 missing = sorted(expected - actual)
 extra = sorted(actual - expected)
-relevant_missing = set(report.get("missing_source_files", [])) & expected
-relevant_unsupported = set(report.get("unsupported_files", [])) & expected
+relevant_missing = (set(report.get("missing_source_files", [])) & expected) - actual
+relevant_unsupported = (set(report.get("unsupported_files", [])) & expected) - actual
 lua_generated = len(report.get("generated_files", []))
 helper_paths = {
     "global/build_pools.json",
