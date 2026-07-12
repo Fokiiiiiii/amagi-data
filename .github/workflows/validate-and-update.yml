@@ -1,0 +1,92 @@
+name: Validate and Update Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 15 * * *"
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # ========== Phase 1: Main setup ==========
+      - name: "Checkout: Main repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ========== Phase 2: Fetch data (CN/EN/JP/KR/TW) ==========
+      - name: "Cache: External data"
+        uses: actions/cache@v4
+        id: cache-external
+        with:
+          path: _external
+          key: external-data-${{ hashFiles('go.mod') }}
+          restore-keys: external-data-
+
+      - name: "Data: AzurLane game (CN/EN/JP/KR/TW)"
+        if: steps.cache-external.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: AzurLaneTools/AzurLaneData
+          ref: main
+          path: _external/AzurLaneData
+          sparse-checkout-cone-mode: true
+          sparse-checkout: |
+            CN
+            EN
+            JP
+            KR
+            TW
+            versions
+
+      - name: "Data: AzurLane version info (CN/EN/JP/KR/TW)"
+        if: steps.cache-external.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: AzurLaneTools/AzurLaneLuaScripts
+          ref: main
+          path: _external/AzurLaneLuaScripts
+          sparse-checkout-cone-mode: true
+          sparse-checkout: |
+            versions/CN.txt
+            versions/EN.txt
+            versions/JP.txt
+            versions/KR.txt
+            versions/TW.txt
+
+      # ========== Phase 3: Setup tools ==========
+      - name: "Setup: Go toolchain"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # ========== Phase 4: Test code ==========
+      - name: "Test: Code validation"
+        shell: bash
+        run: tools/ci/test.sh
+
+      # ========== Phase 5: Generate Belfast JSON (all regions, single pass) ==========
+      - name: "Generate: Belfast JSON"
+        shell: bash
+        run: tools/ci/generate.sh
+
+      # ========== Phase 6: Commit & Push ==========
+      - name: "Commit: Generated data"
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --short)" ]; then
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git add --all
+            git commit -m "data: update generated belfast json [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "No generated file changes to commit"
+          fi

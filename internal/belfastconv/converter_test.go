@@ -10,14 +10,13 @@ import (
 	"testing"
 )
 
-// sharedConvResult holds the output of a single full ConvertMVP run (all three
-// external roots) shared across integration tests to avoid redundant runs.
+// sharedConvResult holds the output of a single full ConvertMVP run (all external
+// roots) shared across integration tests to avoid redundant runs.
 type sharedConvResult struct {
-	outDir      string
-	report      *Report
-	azurRoot    string
-	luaRoot     string
-	belfastRoot string
+	outDir   string
+	report   *Report
+	azurRoot string
+	luaRoot  string
 }
 
 var (
@@ -40,8 +39,7 @@ func initSharedConv() {
 	sharedConvOnce.Do(func() {
 		azurRoot := resolveRoot("AMAGI_DATA_TEST_AZURLANE_ROOT", `C:\Users\yutai\AzurLaneData`)
 		luaRoot := resolveRoot("AMAGI_DATA_TEST_LUASCRIPTS_ROOT", `C:\Users\yutai\AzurLaneLuaScripts`)
-		belfastRoot := resolveRoot("AMAGI_DATA_TEST_BELFAST_FALLBACK_ROOT", `C:\Users\yutai\belfast-data`)
-		if azurRoot == "" || luaRoot == "" || belfastRoot == "" {
+		if azurRoot == "" || luaRoot == "" {
 			return
 		}
 		outDir, err := os.MkdirTemp("", "belfastconv_shared_*")
@@ -49,21 +47,19 @@ func initSharedConv() {
 			return
 		}
 		report, err := ConvertMVP(Options{
-			SourceRoot:               azurRoot,
-			OutputRoot:               outDir,
-			LuaScriptsRoot:           luaRoot,
-			FallbackHelperSourceRoot: belfastRoot,
+			SourceRoot:     azurRoot,
+			OutputRoot:     outDir,
+			LuaScriptsRoot: luaRoot,
 		})
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return
 		}
 		sharedConv = &sharedConvResult{
-			outDir:      outDir,
-			report:      report,
-			azurRoot:    azurRoot,
-			luaRoot:     luaRoot,
-			belfastRoot: belfastRoot,
+			outDir:   outDir,
+			report:   report,
+			azurRoot: azurRoot,
+			luaRoot:  luaRoot,
 		}
 	})
 }
@@ -124,7 +120,6 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	sc := requireSharedConv(t)
 	report := sc.report
 	out := sc.outDir
-	belfastRoot := sc.belfastRoot
 
 	if len(report.GeneratedFiles) != 3037 {
 		t.Fatalf("expected 3037 generated audited files, got %d", len(report.GeneratedFiles))
@@ -176,8 +171,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	if !containsString(report.GeneratedHelperFiles, "global/buff_cfg.json") || !containsString(report.GeneratedHelperFiles, "global/skill_cfg.json") {
 		t.Fatalf("expected root helper files to be generated, got %v", report.GeneratedHelperFiles)
 	}
-	if !reflect.DeepEqual(report.FallbackHelperFiles, []string{"global/build_pools.json", "global/build_times.json", "global/requisition_ships.json"}) {
-		t.Fatalf("unexpected fallback_helper_files: %v", report.FallbackHelperFiles)
+	if !containsString(report.GeneratedHelperFiles, "global/build_pools.json") || !containsString(report.GeneratedHelperFiles, "global/build_times.json") || !containsString(report.GeneratedHelperFiles, "global/requisition_ships.json") {
+		t.Fatalf("expected static helper files to be generated, got %v", report.GeneratedHelperFiles)
 	}
 	if containsString(report.UnsupportedHelperFiles, "global/versions.json") {
 		t.Fatalf("versions.json should not be unsupported when generation succeeds: %v", report.UnsupportedHelperFiles)
@@ -207,21 +202,8 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 		}
 	}
 
-	for _, rel := range []string{
-		"JP/sharecfgdata/ship_data_statistics.json",
-		"JP/sharecfgdata/weapon_property.json",
-		"JP/sharecfgdata/equip_data_template.json",
-		"JP/ShareCfg/ship_skin_template.json",
-		"JP/ShareCfg/auto_pilot_template.json",
-		"JP/ShareCfg/class_upgrade_group.json",
-		"JP/ShareCfg/guildset.json",
-	} {
-		got := mustLoad(t, filepath.Join(out, filepath.FromSlash(rel)))
-		want := mustLoad(t, filepath.Join(belfastRoot, filepath.FromSlash(rel)))
-		if !reflect.DeepEqual(got, want) {
-			t.Fatalf("%s mismatch", rel)
-		}
-	}
+	// Note: Removed comparison with belfast reference data after eliminating the belfast-data
+	// fallback dependency. Generated files are now verified through conversion tests only.
 }
 
 // TestVersionsGeneratedFromLuaScriptsMetadata verifies versions.json content

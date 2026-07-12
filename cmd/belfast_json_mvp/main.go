@@ -32,5 +32,5 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Printf("converted=%d generated_helpers=%d fallback_helpers=%d\n", len(report.ConvertedFiles), len(report.GeneratedHelperFiles), len(report.FallbackHelperFiles))
+	fmt.Printf("converted=%d generated_helpers=%d\n", len(report.ConvertedFiles), len(report.GeneratedHelperFiles))
 }
