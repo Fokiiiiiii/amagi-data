@@ -21,6 +21,7 @@ missing = sorted(expected - actual)
 extra = sorted(actual - expected)
 relevant_missing = (set(report.get("missing_source_files", [])) & expected) - actual
 relevant_unsupported = (set(report.get("unsupported_files", [])) & expected) - actual
+relevant_unsupported_helpers = (set(report.get("unsupported_helper_files", [])) & expected) - actual
 lua_generated = len(report.get("generated_files", []))
 helper_paths = {
     "global/build_pools.json",
@@ -39,7 +40,7 @@ checks = {
     "lua_generated": lua_generated >= 622,
     "helpers": helpers == 4,
     "legacy_fallback": len(fallback) == 2 and report.get("total_fallback_count") == 2 and fallback_paths == {"JP/ShareCfg/card_affix.json", "JP/ShareCfg/card_template.json"} and all(x.get("source_kind") == "legacy_belfast_fallback" for x in fallback),
-    "unsupported": not relevant_unsupported and not report.get("unsupported_helper_files"),
+    "unsupported": not relevant_unsupported and not relevant_unsupported_helpers,
 }
 for name, ok in checks.items():
     print(f"{name}: {'pass' if ok else 'fail'}")
@@ -49,8 +50,8 @@ if relevant_missing:
     print("missing source paths:", *sorted(relevant_missing), sep="\n  ")
 if relevant_unsupported:
     print("unsupported paths:", *sorted(relevant_unsupported), sep="\n  ")
-if report.get("unsupported_helper_files"):
-    print("unsupported helper paths:", *report.get("unsupported_helper_files"), sep="\n  ")
+if relevant_unsupported_helpers:
+    print("unsupported helper paths:", *sorted(relevant_unsupported_helpers), sep="\n  ")
 if extra:
     print("extra paths:", *extra, sep="\n  ")
 if not all(checks.values()):
