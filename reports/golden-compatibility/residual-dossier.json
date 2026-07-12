@@ -1,0 +1,40 @@
+[
+  {
+    "candidate_lua_files": "",
+    "candidate_table_names": "",
+    "first_json_path": "/\u003cids\u003e",
+    "generated_only_ids": "",
+    "generated_record_count": "6",
+    "generated_type": "list",
+    "generated_value_summary": "",
+    "path": "ShareCfg/card_affix.json",
+    "recommended_action": "investigate source snapshot before parser changes",
+    "reference_commit": "33c61c5c239e267e77573d945bfcca691114d60f",
+    "reference_only_ids": "",
+    "reference_record_count": "13",
+    "reference_type": "list",
+    "reference_value_summary": "",
+    "root_cause": "snapshot_difference",
+    "source_commit": "",
+    "status": "mismatched"
+  },
+  {
+    "candidate_lua_files": "",
+    "candidate_table_names": "",
+    "first_json_path": "/\u003cids\u003e",
+    "generated_only_ids": "",
+    "generated_record_count": "16",
+    "generated_type": "list",
+    "generated_value_summary": "",
+    "path": "ShareCfg/card_template.json",
+    "recommended_action": "investigate source snapshot before parser changes",
+    "reference_commit": "33c61c5c239e267e77573d945bfcca691114d60f",
+    "reference_only_ids": "",
+    "reference_record_count": "62",
+    "reference_type": "list",
+    "reference_value_summary": "",
+    "root_cause": "snapshot_difference",
+    "source_commit": "",
+    "status": "mismatched"
+  }
+]

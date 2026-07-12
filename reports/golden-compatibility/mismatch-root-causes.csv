@@ -1,0 +1,3 @@
+path,primary_cause,secondary_cause,first_json_path,reference_type,generated_type,reference_count,generated_count,fix_strategy
+ShareCfg/card_affix.json,snapshot_difference,record_order,/<ids>,list,list,13,6,investigate source snapshot before parser changes
+ShareCfg/card_template.json,snapshot_difference,record_order,/<ids>,list,list,62,16,investigate source snapshot before parser changes

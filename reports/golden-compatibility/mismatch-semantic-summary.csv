@@ -1,0 +1,3 @@
+path,classification,first_json_path,difference_type,reference_type,generated_type,reference_value,generated_value
+ShareCfg/card_affix.json,source_snapshot_card_id_series_mismatch,/<ids>,semantic_different,list,list,13 records IDs 100..400,6 records IDs 100..306
+ShareCfg/card_template.json,source_snapshot_card_id_series_mismatch,/<ids>,semantic_different,list,list,62 records IDs 10001..542050,16 records IDs 20001..999992

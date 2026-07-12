@@ -1,0 +1,47 @@
+{
+  "CN": {
+    "repository": "AzurLaneTools/AzurLaneLuaScripts",
+    "commit": "eac8a3796f23174041f1c93c5db78facc3476c3b",
+    "path": "versions/CN.txt",
+    "version": "9.6.667",
+    "commit_date": "2026-04-24T04:50:27Z",
+    "before_reference": true,
+    "selection_reason": "closest matching commit before reference timestamp"
+  },
+  "EN": {
+    "repository": "AzurLaneTools/AzurLaneLuaScripts",
+    "commit": "3645f28bdad0b41e0fd7f63f011b2270e609e735",
+    "path": "versions/EN.txt",
+    "version": "9.2.557",
+    "commit_date": "2026-04-30T10:37:42Z",
+    "before_reference": true,
+    "selection_reason": "closest matching commit before reference timestamp"
+  },
+  "JP": {
+    "repository": "AzurLaneTools/AzurLaneLuaScripts",
+    "commit": "d5c1de511bcd5b8e62d8e742189d55e68dd229e7",
+    "path": "versions/JP.txt",
+    "version": "9.2.821",
+    "commit_date": "2026-04-30T07:53:50Z",
+    "before_reference": true,
+    "selection_reason": "closest matching commit before reference timestamp"
+  },
+  "KR": {
+    "repository": "AzurLaneTools/AzurLaneLuaScripts",
+    "commit": "855ec2d3e1f62b6aed8d1fa643432e7df06c8d73",
+    "path": "versions/KR.txt",
+    "version": "8.4.137",
+    "commit_date": "2026-05-08T16:20:16Z",
+    "before_reference": false,
+    "selection_reason": "only matching commit found after reference timestamp"
+  },
+  "TW": {
+    "repository": "AzurLaneTools/AzurLaneLuaScripts",
+    "commit": "ebb60369c32b57c53f12999ee1c0fee9ea6c9879",
+    "path": "versions/TW.txt",
+    "version": "8.4.272",
+    "commit_date": "2026-05-08T10:58:30Z",
+    "before_reference": true,
+    "selection_reason": "closest matching commit before reference timestamp"
+  }
+}

@@ -1,0 +1,3 @@
+path,status,root_cause,first_json_path,reference_type,generated_type,reference_value_summary,generated_value_summary,reference_record_count,generated_record_count,reference_only_ids,generated_only_ids,candidate_lua_files,candidate_table_names,source_commit,reference_commit,recommended_action
+ShareCfg/card_affix.json,mismatched,snapshot_difference,/<ids>,list,list,,,13,6,,,,,,33c61c5c239e267e77573d945bfcca691114d60f,investigate source snapshot before parser changes
+ShareCfg/card_template.json,mismatched,snapshot_difference,/<ids>,list,list,,,62,16,,,,,,33c61c5c239e267e77573d945bfcca691114d60f,investigate source snapshot before parser changes

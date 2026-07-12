@@ -1,0 +1,72 @@
+{
+  "reference_repository": "ggmolly/belfast-data",
+  "reference_commit": "33c61c5c239e267e77573d945bfcca691114d60f",
+  "lua_repository": "AzurLaneTools/AzurLaneLuaScripts",
+  "lua_commit": "60a5349677dd3bc907152e09cb0fef5f4ad7bab1",
+  "lua_derived_source": {
+    "repository": "AzurLaneTools/AzurLaneLuaScripts",
+    "commit": "60a5349677dd3bc907152e09cb0fef5f4ad7bab1",
+    "region": "JP",
+    "purpose": "Lua-derived golden conversion"
+  },
+  "source_overrides": [
+    {
+      "path": "JP/sharecfg/item_data_template.lua",
+      "commit": "a2adc78f5346f2d2616cbf73277653870f81d387",
+      "sha256": "067642c6d99111968236dddf2d25247ed72d18b56bee94d9aca665987fb839f0",
+      "reason": "restored from the last matching historical JP Lua source"
+    }
+  ],
+  "error_artifacts": [
+    {
+      "path": "JP/ShareCfg/dorm3d_ik_timeline_controller.json",
+      "generation_method": "deterministic module-not-found artifact",
+      "report": "reports/golden-compatibility/error-artifacts.csv"
+    }
+  ],
+  "version_helper_sources": {
+    "CN": {"commit": "eac8a3796f23174041f1c93c5db78facc3476c3b", "path": "versions/CN.txt"},
+    "EN": {"commit": "3645f28bdad0b41e0fd7f63f011b2270e609e735", "path": "versions/EN.txt"},
+    "JP": {"commit": "d5c1de511bcd5b8e62d8e742189d55e68dd229e7", "path": "versions/JP.txt"},
+    "KR": {"commit": "855ec2d3e1f62b6aed8d1fa643432e7df06c8d73", "path": "versions/KR.txt"},
+    "TW": {"commit": "ebb60369c32b57c53f12999ee1c0fee9ea6c9879", "path": "versions/TW.txt"}
+  },
+  "region": "JP",
+  "game_version": "9.2.821",
+  "versions": {
+    "CN": "9.6.667",
+    "EN": "9.2.557",
+    "JP": "9.2.821",
+    "KR": "8.4.137",
+    "TW": "8.4.272"
+  },
+  "identification_method": "JP content is pinned to the snapshot whose JP version matches the reference. A history scan of 85 AzurLaneLuaScripts commits from 2026-03-01 through 2026-05-31 found no single commit matching all five reference region versions; the pinned snapshot matches JP only.",
+  "confidence": "medium",
+  "evidence": [
+    {
+      "type": "reference_commit",
+      "commit": "33c61c5c239e267e77573d945bfcca691114d60f",
+      "timestamp": "2026-05-08T15:18:10+02:00",
+      "detail": "Latest reference commit inspected; versions.json contains JP 9.2.821."
+    },
+    {
+      "type": "lua_version_history",
+      "commit": "60a5349677dd3bc907152e09cb0fef5f4ad7bab1",
+      "timestamp": "2026-04-23T10:13:15Z",
+      "detail": "AzurLaneLuaScripts versions/JP.txt changed from 9.2.819 to 9.2.821."
+    },
+    {
+      "type": "snapshot_content",
+      "detail": "The pinned snapshot contains JP/sharecfg/, JP/sharecfgdata/, JP/gamecfg/, and versions/JP.txt."
+    },
+    {
+      "type": "version_history_scan",
+      "candidate_count": 85,
+      "search_window": "2026-03-01..2026-05-31",
+      "full_match_count": 0,
+      "best_match_commit": "60a5349677dd3bc907152e09cb0fef5f4ad7bab1",
+      "best_match_regions": ["JP"],
+      "detail": "No five-region version snapshot was found in the reference-time history window."
+    }
+  ]
+}

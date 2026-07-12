@@ -1,0 +1,2 @@
+target_path,source_path,source_commit,source_sha256,reason
+JP/sharecfg/item_data_template.lua,AzurLaneLuaScripts/JP/sharecfg/item_data_template.lua,a2adc78f5346f2d2616cbf73277653870f81d387,067642c6d99111968236dddf2d25247ed72d18b56bee94d9aca665987fb839f0,restored from last matching historical JP Lua source; current checkout removed this table

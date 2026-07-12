@@ -1,0 +1,23 @@
+{
+  "lua_derived": {
+    "total": 624,
+    "matched": 622,
+    "mismatched": 2,
+    "missing": 0,
+    "extra": 0
+  },
+  "belfast_helpers": {
+    "total": 4,
+    "matched": 4,
+    "mismatched": 0,
+    "missing": 0,
+    "extra": 0
+  },
+  "all_outputs": {
+    "total": 628,
+    "matched": 626,
+    "mismatched": 2,
+    "missing": 0,
+    "extra": 0
+  }
+}
