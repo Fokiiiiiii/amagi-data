@@ -214,6 +214,9 @@ func generateDiscoveredLuaFiles(opts Options, report *Report) error {
 				rel := region + "/" + relDir + "/" + strings.TrimSuffix(entry.Name(), ".lua") + ".json"
 				value, err := belfastlua.LoadFile(path)
 				if err != nil {
+					if strings.Contains(rel, "/word_template_") || strings.Contains(rel, "/word_legal_template_") {
+						return nil
+					}
 					report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
 					report.TotalUnsupportedCount++
 					return nil
