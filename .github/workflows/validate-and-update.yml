@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source_commit="21136cb07"
+          source_commit="21136cb07f9a03deadb0a48111e89d107d0a43be"
           git -C _external/AzurLaneLuaScripts fetch --no-tags --depth=1 origin "$source_commit"
           mkdir -p _external/AzurLaneLuaScripts/JP/sharecfg
           git -C _external/AzurLaneLuaScripts show "$source_commit:JP/sharecfg/item_data_template.lua" > _external/AzurLaneLuaScripts/JP/sharecfg/item_data_template.lua
