@@ -37,11 +37,21 @@ type Options struct {
 	ReferenceRoot            string
 	FallbackHelperSourceRoot string
 	VersionSourceMapPath     string
+	LegacyFallbackSourceRoot string
 }
 
 type FileReport struct {
 	RelativePath string `json:"relative_path"`
 	Records      int    `json:"records"`
+}
+
+type FallbackFileReport struct {
+	RelativePath    string `json:"relative_path"`
+	SourceKind      string `json:"source_kind"`
+	SourcePath      string `json:"source_path"`
+	ReferenceSHA256 string `json:"reference_sha256"`
+	GeneratedSHA256 string `json:"generated_sha256"`
+	Match           bool   `json:"match"`
 }
 
 type SafePromoteFile struct {
@@ -60,26 +70,27 @@ type SafeManifest struct {
 }
 
 type Report struct {
-	SourceRoot              string            `json:"source_root"`
-	OutputRoot              string            `json:"output_root"`
-	Regions                 []string          `json:"regions"`
-	Categories              []string          `json:"categories"`
-	ConvertedFiles          []FileReport      `json:"converted_files"`
-	GeneratedFiles          []string          `json:"generated_files"`
-	GeneratedHelperFiles    []string          `json:"generated_helper_files"`
-	FallbackFiles           []string          `json:"fallback_files"`
-	FallbackHelperFiles     []string          `json:"fallback_helper_files"`
-	UnsupportedFiles        []string          `json:"unsupported_files"`
-	UnsupportedHelperFiles  []string          `json:"unsupported_helper_files"`
-	MissingSourceFiles      []string          `json:"missing_source_files"`
-	MissingReferenceFiles   []string          `json:"missing_reference_files"`
-	SkippedUnsafeFiles      []string          `json:"skipped_unsafe_files"`
-	GeneratedVersions       bool              `json:"generated_versions"`
-	LuaScriptsVersionsRoot  string            `json:"lua_scripts_versions_root,omitempty"`
-	LuaScriptsVersionSource map[string]string `json:"lua_scripts_version_source,omitempty"`
-	TotalGeneratedCount     int               `json:"total_generated_count"`
-	TotalFallbackCount      int               `json:"total_fallback_count"`
-	TotalUnsupportedCount   int               `json:"total_unsupported_count"`
+	SourceRoot              string               `json:"source_root"`
+	OutputRoot              string               `json:"output_root"`
+	Regions                 []string             `json:"regions"`
+	Categories              []string             `json:"categories"`
+	ConvertedFiles          []FileReport         `json:"converted_files"`
+	GeneratedFiles          []string             `json:"generated_files"`
+	GeneratedHelperFiles    []string             `json:"generated_helper_files"`
+	FallbackFiles           []string             `json:"fallback_files"`
+	FallbackFileReports     []FallbackFileReport `json:"fallback_file_reports"`
+	FallbackHelperFiles     []string             `json:"fallback_helper_files"`
+	UnsupportedFiles        []string             `json:"unsupported_files"`
+	UnsupportedHelperFiles  []string             `json:"unsupported_helper_files"`
+	MissingSourceFiles      []string             `json:"missing_source_files"`
+	MissingReferenceFiles   []string             `json:"missing_reference_files"`
+	SkippedUnsafeFiles      []string             `json:"skipped_unsafe_files"`
+	GeneratedVersions       bool                 `json:"generated_versions"`
+	LuaScriptsVersionsRoot  string               `json:"lua_scripts_versions_root,omitempty"`
+	LuaScriptsVersionSource map[string]string    `json:"lua_scripts_version_source,omitempty"`
+	TotalGeneratedCount     int                  `json:"total_generated_count"`
+	TotalFallbackCount      int                  `json:"total_fallback_count"`
+	TotalUnsupportedCount   int                  `json:"total_unsupported_count"`
 }
 
 func MVPFiles() []string {
@@ -130,12 +141,18 @@ func ConvertMVP(opts Options) (*Report, error) {
 		GeneratedFiles:         []string{},
 		GeneratedHelperFiles:   []string{},
 		FallbackFiles:          []string{},
+		FallbackFileReports:    []FallbackFileReport{},
 		FallbackHelperFiles:    []string{},
 		UnsupportedFiles:       slices.Clone(manifest.UnsupportedFiles),
 		UnsupportedHelperFiles: UnsupportedHelperFiles(opts.LuaScriptsRoot != ""),
 		MissingSourceFiles:     []string{},
 		MissingReferenceFiles:  slices.Clone(manifest.MissingReferenceFiles),
 		SkippedUnsafeFiles:     skippedUnsafeFiles(manifest),
+	}
+	if opts.LegacyFallbackSourceRoot != "" {
+		if err := validateLegacyFallbackSources(opts.LegacyFallbackSourceRoot); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := generateAuditedFiles(opts, manifest.SafeToPromoteFiles, allowlists, report); err != nil {
@@ -546,6 +563,11 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 				luaPath = filepath.Join(filepath.Dir(filepath.Dir(luaPath)), "sharecfgdata", filepath.Base(luaPath))
 			}
 			if _, statErr := os.Stat(luaPath); statErr != nil {
+				if handled, fallbackErr := copyLegacyFallback(opts, file.RelativePath, report); fallbackErr != nil {
+					return fallbackErr
+				} else if handled {
+					continue
+				}
 				report.MissingSourceFiles = append(report.MissingSourceFiles, file.RelativePath)
 				continue
 			}
@@ -559,6 +581,11 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 		}
 	converted:
 		if err != nil {
+			if handled, fallbackErr := copyLegacyFallback(opts, file.RelativePath, report); fallbackErr != nil {
+				return fallbackErr
+			} else if handled {
+				continue
+			}
 			report.UnsupportedFiles = append(report.UnsupportedFiles, file.RelativePath)
 			report.TotalUnsupportedCount++
 			continue
@@ -834,14 +861,18 @@ func generateRootHelpers(opts Options, report *Report) error {
 		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, helper.targetRel)
 	}
 
-	// Copy static helper files from data/global directory
+	// Copy static helper files from data/global directory.
 	staticHelpers := []string{
 		"global/build_pools.json",
 		"global/build_times.json",
 		"global/requisition_ships.json",
 	}
 	for _, relPath := range staticHelpers {
-		dataSourcePath := filepath.Join(opts.SourceRoot, "..", "..", "data", filepath.FromSlash(relPath))
+		dataRoot := filepath.Join(opts.SourceRoot, "data")
+		if _, err := os.Stat(dataRoot); err != nil {
+			dataRoot = filepath.Join(opts.SourceRoot, "..", "..", "data")
+		}
+		dataSourcePath := filepath.Join(dataRoot, filepath.FromSlash(relPath))
 		if _, err := os.Stat(dataSourcePath); err != nil {
 			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, relPath)
 			continue

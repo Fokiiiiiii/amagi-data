@@ -10,12 +10,13 @@ import (
 )
 
 func main() {
-	sourceRoot := flag.String("source-root", "", "AzurLaneData source root")
+	sourceRoot := flag.String("source-root", "", "repository/source root")
 	outputRoot := flag.String("output-root", filepath.Join(os.TempDir(), "amagi_belfast_json_mvp"), "output root")
 	luaScriptsRoot := flag.String("luascripts-root", "", "AzurLaneLuaScripts root")
 	fallbackRoot := flag.String("copy-helper-fallback-from", "", "existing belfast-data root for fallback helpers")
 	versionSourceMap := flag.String("version-source-map", "", "region-specific versions source map")
 	referenceRoot := flag.String("reference-root", "", "reference root used to select aggregate Lua records")
+	legacyFallbackRoot := flag.String("legacy-fallback-root", "", "repository root containing the fixed legacy fallback files")
 	reportPath := flag.String("report-path", "", "report path")
 	flag.Parse()
 
@@ -27,6 +28,7 @@ func main() {
 		ReferenceRoot:            *referenceRoot,
 		FallbackHelperSourceRoot: *fallbackRoot,
 		VersionSourceMapPath:     *versionSourceMap,
+		LegacyFallbackSourceRoot: *legacyFallbackRoot,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

@@ -19,22 +19,14 @@ jobs:
         with:
           fetch-depth: 1
 
-      # ========== Phase 2: Fetch data (CN/EN/JP/KR/TW) ==========
-      - name: "Cache: External data"
-        uses: actions/cache@v4
-        id: cache-external
-        with:
-          path: _external
-          key: external-data-${{ hashFiles('go.mod') }}
-          restore-keys: external-data-
-
-      - name: "Data: AzurLane game (CN/EN/JP/KR/TW)"
-        if: steps.cache-external.outputs.cache-hit != 'true'
+      # ========== Phase 2: Fetch latest Lua source (CN/EN/JP/KR/TW + versions) ==========
+      - name: "Data: AzurLaneLuaScripts"
         uses: actions/checkout@v4
         with:
-          repository: AzurLaneTools/AzurLaneData
+          repository: AzurLaneTools/AzurLaneLuaScripts
           ref: main
-          path: _external/AzurLaneData
+          path: _external/AzurLaneLuaScripts
+          fetch-depth: 1
           sparse-checkout-cone-mode: true
           sparse-checkout: |
             CN
@@ -43,21 +35,6 @@ jobs:
             KR
             TW
             versions
-
-      - name: "Data: AzurLane version info (CN/EN/JP/KR/TW)"
-        if: steps.cache-external.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: AzurLaneTools/AzurLaneLuaScripts
-          ref: main
-          path: _external/AzurLaneLuaScripts
-          sparse-checkout-cone-mode: true
-          sparse-checkout: |
-            versions/CN.txt
-            versions/EN.txt
-            versions/JP.txt
-            versions/KR.txt
-            versions/TW.txt
 
       # ========== Phase 3: Setup tools ==========
       - name: "Setup: Go toolchain"
@@ -76,7 +53,12 @@ jobs:
         shell: bash
         run: tools/ci/generate.sh
 
-      # ========== Phase 6: Commit & Push ==========
+      # ========== Phase 6: Verify generated output ==========
+      - name: "Verify: Generated output"
+        shell: bash
+        run: tools/ci/verify-generated.sh
+
+      # ========== Phase 7: Commit & Push ==========
       - name: "Commit: Generated data"
         shell: bash
         run: |

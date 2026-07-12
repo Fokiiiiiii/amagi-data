@@ -13,10 +13,9 @@ import (
 // sharedConvResult holds the output of a single full ConvertMVP run (all external
 // roots) shared across integration tests to avoid redundant runs.
 type sharedConvResult struct {
-	outDir   string
-	report   *Report
-	azurRoot string
-	luaRoot  string
+	outDir  string
+	report  *Report
+	luaRoot string
 }
 
 var (
@@ -33,13 +32,12 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// initSharedConv runs ConvertMVP exactly once with all three external roots and
-// stores the result in sharedConv. It is a no-op if any root is unavailable.
+// initSharedConv runs ConvertMVP exactly once with the Lua source root and
+// stores the result in sharedConv. It is a no-op if the root is unavailable.
 func initSharedConv() {
 	sharedConvOnce.Do(func() {
-		azurRoot := resolveRoot("AMAGI_DATA_TEST_AZURLANE_ROOT", `C:\Users\yutai\AzurLaneData`)
 		luaRoot := resolveRoot("AMAGI_DATA_TEST_LUASCRIPTS_ROOT", `C:\Users\yutai\AzurLaneLuaScripts`)
-		if azurRoot == "" || luaRoot == "" {
+		if luaRoot == "" {
 			return
 		}
 		outDir, err := os.MkdirTemp("", "belfastconv_shared_*")
@@ -47,7 +45,7 @@ func initSharedConv() {
 			return
 		}
 		report, err := ConvertMVP(Options{
-			SourceRoot:     azurRoot,
+			SourceRoot:     filepath.Join("..", ".."),
 			OutputRoot:     outDir,
 			LuaScriptsRoot: luaRoot,
 		})
@@ -56,10 +54,9 @@ func initSharedConv() {
 			return
 		}
 		sharedConv = &sharedConvResult{
-			outDir:   outDir,
-			report:   report,
-			azurRoot: azurRoot,
-			luaRoot:  luaRoot,
+			outDir:  outDir,
+			report:  report,
+			luaRoot: luaRoot,
 		}
 	})
 }
