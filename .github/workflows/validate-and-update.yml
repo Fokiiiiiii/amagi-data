@@ -3,11 +3,15 @@ name: Validate and Update Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 15 * * *"
-    - cron: "0 3 * * *"
+    - cron: "0 6 * * *"  # 15:00 JST
+    - cron: "0 15 * * *" # 24:00 JST
 
 permissions:
   contents: write
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   build:
@@ -45,22 +49,18 @@ jobs:
 
       # ========== Phase 4: Test code ==========
       - name: "Test: Code validation"
-        shell: bash
         run: tools/ci/test.sh
 
       # ========== Phase 5: Generate Belfast JSON (all regions, single pass) ==========
       - name: "Generate: Belfast JSON"
-        shell: bash
         run: tools/ci/generate.sh
 
       # ========== Phase 6: Verify generated output ==========
       - name: "Verify: Generated output"
-        shell: bash
         run: tools/ci/verify-generated.sh
 
       # ========== Phase 7: Commit & Push ==========
       - name: "Commit: Generated data"
-        shell: bash
         run: |
           set -euo pipefail
           if [ -n "$(git status --short)" ]; then
