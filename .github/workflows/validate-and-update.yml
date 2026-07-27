@@ -3,7 +3,6 @@ name: Validate and Update Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 6 * * *"  # 15:00 JST
     - cron: "0 15 * * *" # 24:00 JST
 
 permissions:
