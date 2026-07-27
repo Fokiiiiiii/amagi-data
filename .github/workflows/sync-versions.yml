@@ -3,7 +3,7 @@ name: Sync Versions
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 1,4,7,10,13,16,19,22 * * *"
+    - cron: "0 * * * *"
 
 permissions:
   contents: write
