@@ -113,6 +113,75 @@ func TestNormalizeEmptyAndDictOrdering(t *testing.T) {
 	}
 }
 
+func TestGenerateDiscoveredLuaFilesUsesStreamBackingData(t *testing.T) {
+	luaRoot := t.TempDir()
+	shareCfg := filepath.Join(luaRoot, "JP", "sharecfg")
+	shareCfgData := filepath.Join(luaRoot, "JP", "sharecfgdata")
+	if err := os.MkdirAll(shareCfg, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(shareCfgData, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	facade := `pg = pg or {}
+pg.example_template = rawget(pg, "example_template") or setmetatable({
+	__name = "example_template"
+}, confNEO)
+pg.example_template.__stream__ = true
+pg.example_template.all = { 100 }
+`
+	backing := `pg = pg or {}
+pg.example_template = {
+	[100] = { id = 100, name = "backing record" }
+}
+`
+	if err := os.WriteFile(filepath.Join(shareCfg, "example_template.lua"), []byte(facade), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(shareCfgData, "example_template.lua"), []byte(backing), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	out := t.TempDir()
+	report := &Report{}
+	if err := generateDiscoveredLuaFiles(Options{OutputRoot: out, LuaScriptsRoot: luaRoot}, report); err != nil {
+		t.Fatalf("generate discovered Lua files: %v", err)
+	}
+	for _, rel := range []string{"JP/ShareCfg/example_template.json", "JP/sharecfgdata/example_template.json"} {
+		got, ok := mustLoad(t, filepath.Join(out, filepath.FromSlash(rel))).([]any)
+		if !ok || len(got) != 1 {
+			t.Fatalf("%s expected one backing record, got %#v", rel, got)
+		}
+		record, ok := got[0].(map[string]any)
+		if !ok || record["name"] != "backing record" {
+			t.Fatalf("%s used facade metadata instead of backing data: %#v", rel, got[0])
+		}
+	}
+}
+
+func TestGenerateDiscoveredLuaFilesRejectsMissingStreamBackingData(t *testing.T) {
+	luaRoot := t.TempDir()
+	shareCfg := filepath.Join(luaRoot, "JP", "sharecfg")
+	if err := os.MkdirAll(shareCfg, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	facade := `pg = pg or {}
+pg.example_template = rawget(pg, "example_template") or setmetatable({
+	__name = "example_template"
+}, confNEO)
+pg.example_template.__stream__ = true
+pg.example_template.all = { 100 }
+`
+	if err := os.WriteFile(filepath.Join(shareCfg, "example_template.lua"), []byte(facade), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := generateDiscoveredLuaFiles(Options{OutputRoot: t.TempDir(), LuaScriptsRoot: luaRoot}, &Report{})
+	if err == nil || !strings.Contains(err.Error(), "stream backing data") {
+		t.Fatalf("expected missing stream backing error, got %v", err)
+	}
+}
+
 func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	sc := requireSharedConv(t)
 	report := sc.report
@@ -134,6 +203,14 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	}
 	if !containsString(report.GeneratedFiles, "CN/ShareCfg/achievement_data_template.json") {
 		t.Fatalf("expected audited safe file to be generated")
+	}
+	for _, region := range supportedRegions {
+		for _, name := range []string{"buff", "card", "dorm", "dungeon", "skill", "story"} {
+			rel := region + "/GameCfg/" + name + ".json"
+			if !containsString(report.GeneratedFiles, rel) {
+				t.Fatalf("expected %s to be generated", rel)
+			}
+		}
 	}
 	for _, rel := range []string{
 		"CN/ShareCfg/auto_pilot_template.json",

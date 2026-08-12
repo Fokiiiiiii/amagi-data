@@ -222,11 +222,14 @@ func generateDiscoveredLuaFiles(opts Options, report *Report) error {
 					return nil
 				}
 				converted := belfastlua.ToPlain(value)
-				if strings.HasSuffix(rel, "/ship_skin_template.json") {
-					converted, err = loadLuaSublist(opts.LuaScriptsRoot, region, "ship_skin_template_sublist")
+				if backingPath, resolveErr := streamBackingPath(opts.LuaScriptsRoot, region, dir, entry.Name(), converted); resolveErr != nil {
+					return resolveErr
+				} else if backingPath != "" {
+					value, err = belfastlua.LoadFile(backingPath)
 					if err != nil {
 						return err
 					}
+					converted = belfastlua.ToPlain(value)
 				}
 				converted = normalizeNumericTables(converted)
 				rawConverted := normalizeEmpty(converted)
@@ -279,14 +282,17 @@ func comparableIDs(value any) []int64 {
 }
 
 func generateAdditionalLuaFiles(opts Options, report *Report) error {
-	if err := generateReturnedGameCfg(opts, report, "buff"); err != nil {
-		return err
-	}
-	if err := generateReturnedGameCfg(opts, report, "skill"); err != nil {
-		return err
-	}
-	for _, name := range []string{"card", "dorm", "dungeon", "storyjp"} {
-		if err := generateReturnedGameCfg(opts, report, name); err != nil {
+	for _, region := range supportedRegions {
+		for _, name := range []string{"buff", "card", "dorm", "dungeon", "skill"} {
+			if err := generateReturnedGameCfg(opts, report, region, name, name); err != nil {
+				return err
+			}
+		}
+		storySource := "story"
+		if region == "JP" {
+			storySource = "storyjp"
+		}
+		if err := generateReturnedGameCfg(opts, report, region, storySource, "story"); err != nil {
 			return err
 		}
 	}
@@ -400,8 +406,8 @@ stack traceback:
 	return nil
 }
 
-func generateReturnedGameCfg(opts Options, report *Report, name string) error {
-	pattern := filepath.Join(opts.LuaScriptsRoot, "JP", "gamecfg", name, "*.lua")
+func generateReturnedGameCfg(opts Options, report *Report, region, sourceName, targetName string) error {
+	pattern := filepath.Join(opts.LuaScriptsRoot, region, "gamecfg", sourceName, "*.lua")
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
 		return err
@@ -415,7 +421,7 @@ func generateReturnedGameCfg(opts Options, report *Report, name string) error {
 		stem := strings.TrimSuffix(filepath.Base(path), ".lua")
 		value, loadErr := belfastlua.LoadFile(path)
 		if loadErr != nil {
-			report.UnsupportedFiles = append(report.UnsupportedFiles, "JP/GameCfg/"+name+".json")
+			report.UnsupportedFiles = append(report.UnsupportedFiles, region+"/GameCfg/"+targetName+".json")
 			return nil
 		}
 		if list, ok := belfastlua.ToPlain(value).([]any); ok && len(list) == 0 {
@@ -425,7 +431,7 @@ func generateReturnedGameCfg(opts Options, report *Report, name string) error {
 		merged.Values[stem] = belfastlua.ToPlain(value)
 	}
 	if opts.ReferenceRoot != "" {
-		refPath := filepath.Join(opts.ReferenceRoot, "JP", "GameCfg", name+".json")
+		refPath := filepath.Join(opts.ReferenceRoot, region, "GameCfg", targetName+".json")
 		if data, readErr := os.ReadFile(refPath); readErr == nil {
 			var reference map[string]any
 			if json.Unmarshal(data, &reference) == nil {
@@ -445,10 +451,10 @@ func generateReturnedGameCfg(opts Options, report *Report, name string) error {
 			}
 		}
 	}
-	rel := "JP/GameCfg/" + name + ".json"
+	rel := region + "/GameCfg/" + targetName + ".json"
 	output := any(merged)
 	if opts.ReferenceRoot != "" {
-		refPath := filepath.Join(opts.ReferenceRoot, "JP", "GameCfg", name+".json")
+		refPath := filepath.Join(opts.ReferenceRoot, region, "GameCfg", targetName+".json")
 		if data, readErr := os.ReadFile(refPath); readErr == nil {
 			if ordered, parseErr := decodeOrderedJSON(data); parseErr == nil {
 				output = reorderToReference(output, ordered)
@@ -634,29 +640,10 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 		var converted any
 		var err error
 		if opts.LuaScriptsRoot != "" {
-			if strings.HasSuffix(file.RelativePath, "/sharecfgdata/enemy_data_statistics.json") || strings.HasSuffix(file.RelativePath, "/sharecfgdata/ship_skin_template.json") {
-				converted = []any{}
-				err = nil
-				goto converted
-			}
-			if strings.HasSuffix(file.RelativePath, "/ShareCfg/enemy_data_statistics.json") || strings.HasSuffix(file.RelativePath, "/ShareCfg/ship_skin_template.json") {
-				subdir := "enemy_data_statistics_sublist"
-				if strings.HasSuffix(file.RelativePath, "/ShareCfg/ship_skin_template.json") {
-					subdir = "ship_skin_template_sublist"
-				}
-				decoded, loadErr := loadLuaSublist(opts.LuaScriptsRoot, strings.Split(filepath.ToSlash(file.RelativePath), "/")[0], subdir)
-				if loadErr != nil {
-					err = loadErr
-					goto converted
-				}
-				converted, err = applyClassification(file.RelativePath, decoded, file.Classification, allowlist)
-				goto converted
-			}
-			luaPath := luaPathFor(opts.LuaScriptsRoot, file.RelativePath)
-			if strings.HasSuffix(file.RelativePath, "/ShareCfg/enemy_data_statistics.json") || strings.HasSuffix(file.RelativePath, "/ShareCfg/ship_skin_template.json") {
-				luaPath = filepath.Join(filepath.Dir(filepath.Dir(luaPath)), "sharecfgdata", filepath.Base(luaPath))
-			}
-			if _, statErr := os.Stat(luaPath); statErr != nil {
+			luaPath, resolveErr := completeLuaPath(opts.LuaScriptsRoot, file.RelativePath)
+			if resolveErr != nil {
+				err = resolveErr
+			} else if _, statErr := os.Stat(luaPath); statErr != nil {
 				if handled, fallbackErr := copyLegacyFallback(opts, file.RelativePath, report); fallbackErr != nil {
 					return fallbackErr
 				} else if handled {
@@ -664,8 +651,9 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 				}
 				report.MissingSourceFiles = append(report.MissingSourceFiles, file.RelativePath)
 				continue
+			} else {
+				converted, err = convertLuaFile(luaPath, file.RelativePath, file.Classification, allowlist)
 			}
-			converted, err = convertLuaFile(luaPath, file.RelativePath, file.Classification, allowlist)
 		} else {
 			if _, statErr := os.Stat(sourcePath); statErr != nil {
 				report.MissingSourceFiles = append(report.MissingSourceFiles, file.RelativePath)
@@ -673,7 +661,6 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 			}
 			converted, err = convertAuditedFile(file.RelativePath, sourcePath, file.Classification, allowlist)
 		}
-	converted:
 		if err != nil {
 			if handled, fallbackErr := copyLegacyFallback(opts, file.RelativePath, report); fallbackErr != nil {
 				return fallbackErr
@@ -701,30 +688,6 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 	sortStrings(report.GeneratedFiles)
 	sortFileReports(report.ConvertedFiles)
 	return nil
-}
-
-func loadLuaSublist(root, region, subdir string) (any, error) {
-	paths, err := filepath.Glob(filepath.Join(root, region, "sharecfg", subdir, "*.lua"))
-	if err != nil {
-		return nil, err
-	}
-	sort.Strings(paths)
-	merged := map[string]any{}
-	for _, path := range paths {
-		value, err := belfastlua.LoadFile(path)
-		if err != nil {
-			return nil, err
-		}
-		plain := belfastlua.ToPlain(value)
-		m, ok := plain.(map[string]any)
-		if !ok {
-			continue
-		}
-		for key, child := range m {
-			merged[key] = child
-		}
-	}
-	return merged, nil
 }
 
 func filterToReferenceIDs(value any, referencePath string) any {
@@ -785,6 +748,42 @@ func luaPathFor(root, rel string) string {
 		stem = alias
 	}
 	return filepath.Join(root, parts[0], dir, stem+".lua")
+}
+
+func streamBackingPath(root, region, dir, name string, value any) (string, error) {
+	if dir != "sharecfg" {
+		return "", nil
+	}
+	object, ok := value.(map[string]any)
+	if !ok {
+		return "", nil
+	}
+	streamed, ok := object["__stream__"].(bool)
+	if !ok || !streamed {
+		return "", nil
+	}
+	path := filepath.Join(root, region, "sharecfgdata", name)
+	if _, err := os.Stat(path); err != nil {
+		return "", fmt.Errorf("stream backing data for %s/%s/%s: %w", region, dir, name, err)
+	}
+	return path, nil
+}
+
+func completeLuaPath(root, rel string) (string, error) {
+	path := luaPathFor(root, rel)
+	parts := strings.Split(filepath.ToSlash(rel), "/")
+	if len(parts) != 3 || parts[1] != "ShareCfg" {
+		return path, nil
+	}
+	value, err := belfastlua.LoadFile(path)
+	if err != nil {
+		return path, nil
+	}
+	backingPath, err := streamBackingPath(root, parts[0], "sharecfg", filepath.Base(path), belfastlua.ToPlain(value))
+	if err != nil || backingPath == "" {
+		return path, err
+	}
+	return backingPath, nil
 }
 
 func convertLuaFile(path, rel, classification string, allowlist []int) (any, error) {

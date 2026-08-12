@@ -6,8 +6,12 @@ import (
 	"testing"
 )
 
-func TestLegacyFallbackManifestIsExactlyTwoFiles(t *testing.T) {
-	want := []string{"JP/ShareCfg/card_affix.json", "JP/ShareCfg/card_template.json"}
+func TestLegacyFallbackManifestCoversAllLegacyCardRegions(t *testing.T) {
+	want := []string{
+		"CN/ShareCfg/card_affix.json", "CN/ShareCfg/card_template.json",
+		"JP/ShareCfg/card_affix.json", "JP/ShareCfg/card_template.json",
+		"TW/ShareCfg/card_affix.json", "TW/ShareCfg/card_template.json",
+	}
 	got := LegacyFallbackFiles()
 	if len(got) != len(want) {
 		t.Fatalf("fallback count = %d, want %d", len(got), len(want))
@@ -16,7 +20,7 @@ func TestLegacyFallbackManifestIsExactlyTwoFiles(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("fallback[%d] = %q, want %q", i, got[i], want[i])
 		}
-		if legacyFallbackFiles[got[i]] == "" {
+		if legacyFallbackFiles[got[i]].SHA256 == "" || legacyFallbackFiles[got[i]].SourcePath == "" {
 			t.Fatalf("fallback %q has no fixed SHA-256", got[i])
 		}
 	}
@@ -26,7 +30,7 @@ func TestLegacyFallbackCopiesOnlyOnRequest(t *testing.T) {
 	sourceRoot := t.TempDir()
 	outputRoot := t.TempDir()
 	for _, rel := range LegacyFallbackFiles() {
-		source := filepath.Join(".", "..", "..", rel)
+		source := filepath.Join(".", "..", "..", legacyFallbackFiles[rel].SourcePath)
 		data, err := os.ReadFile(source)
 		if err != nil {
 			t.Fatal(err)
@@ -49,7 +53,7 @@ func TestLegacyFallbackCopiesOnlyOnRequest(t *testing.T) {
 			t.Fatalf("copy fallback %s: handled=%v err=%v", rel, handled, err)
 		}
 	}
-	if len(report.FallbackFileReports) != 2 || report.TotalFallbackCount != 2 {
+	if len(report.FallbackFileReports) != len(LegacyFallbackFiles()) || report.TotalFallbackCount != len(LegacyFallbackFiles()) {
 		t.Fatalf("fallback report = %#v", report)
 	}
 }
