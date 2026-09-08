@@ -75,12 +75,7 @@ jobs:
         if: steps.processed.outputs.cache-hit != 'true'
         run: tools/ci/verify-generated.sh
 
-      # ========== Phase 8: Mark processed revision ==========
-      - name: "Cache: Mark processed data"
-        if: steps.processed.outputs.cache-hit != 'true'
-        run: mkdir -p "${{ runner.temp }}/amagi-data-processed" && touch "${{ runner.temp }}/amagi-data-processed/done"
-
-      # ========== Phase 9: Commit & Push ==========
+      # ========== Phase 8: Commit & Push ==========
       - name: "Commit: Generated data"
         if: steps.processed.outputs.cache-hit != 'true'
         run: |
@@ -95,3 +90,8 @@ jobs:
           else
             echo "No generated file changes to commit"
           fi
+
+      # ========== Phase 9: Mark processed revision ==========
+      - name: "Cache: Mark processed data"
+        if: steps.processed.outputs.cache-hit != 'true'
+        run: mkdir -p "${{ runner.temp }}/amagi-data-processed" && touch "${{ runner.temp }}/amagi-data-processed/done"
