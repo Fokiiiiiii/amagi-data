@@ -22,12 +22,25 @@ jobs:
         with:
           fetch-depth: 1
 
-      # ========== Phase 2: Fetch latest Lua source (CN/EN/JP/KR/TW + versions) ==========
+      # ========== Phase 2: Check whether this upstream revision was processed ==========
+      - name: "Data: Get latest AzurLaneLuaScripts SHA"
+        id: upstream
+        run: echo "sha=$(git ls-remote https://github.com/AzurLaneTools/AzurLaneLuaScripts.git refs/heads/main | cut -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: "Cache: Check processed data"
+        id: processed
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/amagi-data-processed
+          key: processed-${{ steps.upstream.outputs.sha }}-${{ hashFiles('cmd/**', 'internal/**', 'tools/ci/**', 'go.mod') }}
+
+      # ========== Phase 3: Fetch latest Lua source (CN/EN/JP/KR/TW + versions) ==========
       - name: "Data: AzurLaneLuaScripts"
+        if: steps.processed.outputs.cache-hit != 'true'
         uses: actions/checkout@v4
         with:
           repository: AzurLaneTools/AzurLaneLuaScripts
-          ref: main
+          ref: ${{ steps.upstream.outputs.sha }}
           path: _external/AzurLaneLuaScripts
           fetch-depth: 1
           sparse-checkout-cone-mode: true
@@ -39,27 +52,37 @@ jobs:
             TW
             versions
 
-      # ========== Phase 3: Setup tools ==========
+      # ========== Phase 4: Setup tools ==========
       - name: "Setup: Go toolchain"
+        if: steps.processed.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
 
-      # ========== Phase 4: Test code ==========
+      # ========== Phase 5: Test code ==========
       - name: "Test: Code validation"
+        if: steps.processed.outputs.cache-hit != 'true'
         run: tools/ci/test.sh
 
-      # ========== Phase 5: Generate Belfast JSON (all regions, single pass) ==========
+      # ========== Phase 6: Generate Belfast JSON (all regions, single pass) ==========
       - name: "Generate: Belfast JSON"
+        if: steps.processed.outputs.cache-hit != 'true'
         run: tools/ci/generate.sh
 
-      # ========== Phase 6: Verify generated output ==========
+      # ========== Phase 7: Verify generated output ==========
       - name: "Verify: Generated output"
+        if: steps.processed.outputs.cache-hit != 'true'
         run: tools/ci/verify-generated.sh
 
-      # ========== Phase 7: Commit & Push ==========
+      # ========== Phase 8: Mark processed revision ==========
+      - name: "Cache: Mark processed data"
+        if: steps.processed.outputs.cache-hit != 'true'
+        run: mkdir -p "${{ runner.temp }}/amagi-data-processed" && touch "${{ runner.temp }}/amagi-data-processed/done"
+
+      # ========== Phase 9: Commit & Push ==========
       - name: "Commit: Generated data"
+        if: steps.processed.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           if [ -n "$(git status --short)" ]; then
