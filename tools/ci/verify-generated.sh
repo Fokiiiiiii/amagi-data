@@ -3,8 +3,78 @@ set -euo pipefail
 
 out="${RUNNER_TEMP:?}/amagi_belfast_json_mvp"
 report="$out/belfast-json-mvp-report.json"
+source_root="${AMAGI_UPSTREAM_ROOT:-$GITHUB_WORKSPACE/_external/AzurLaneLuaScripts}"
 
-python3 - "$out" "$report" <<'PY'
+if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
+python3 - "$out" "$report" "$AMAGI_INCREMENTAL_PLAN" "$source_root" <<'PY'
+import json
+import pathlib
+import sys
+
+out = pathlib.Path(sys.argv[1])
+report_path = pathlib.Path(sys.argv[2])
+plan = json.loads(pathlib.Path(sys.argv[3]).read_text(encoding="utf-8"))
+source = pathlib.Path(sys.argv[4])
+report = json.loads(report_path.read_text(encoding="utf-8"))
+
+actual = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() and p.name != report_path.name}
+generated = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", []))
+missing = sorted(generated - actual)
+extra = sorted(actual - generated)
+invalid_json = []
+for rel in sorted(actual):
+    try:
+        json.loads((out / rel).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        invalid_json.append(f"{rel}: {exc}")
+
+stream_mismatches = []
+for rel in plan.get("source_paths", []):
+    parts = rel.split("/")
+    if len(parts) != 3 or parts[1] != "sharecfg" or not rel.endswith(".lua"):
+        continue
+    facade = source / rel
+    if not facade.is_file() or "__stream__ = true" not in facade.read_text(encoding="utf-8"):
+        continue
+    name = pathlib.Path(rel).with_suffix(".json").name
+    upper = out / parts[0] / "ShareCfg" / name
+    lower = out / parts[0] / "sharecfgdata" / name
+    if not upper.is_file() or not lower.is_file():
+        stream_mismatches.append(f"{parts[0]}/{name}: missing generated pair")
+        continue
+    if json.loads(upper.read_text(encoding="utf-8")) != json.loads(lower.read_text(encoding="utf-8")):
+        stream_mismatches.append(f"{parts[0]}/{name}: ShareCfg differs from sharecfgdata")
+
+deleted_present = sorted(rel for rel in plan.get("delete_outputs", []) if (pathlib.Path.cwd() / rel).exists())
+checks = {
+    "generated_files": not missing and not extra,
+    "json": not invalid_json,
+    "unsupported": not report.get("unsupported_files") and not report.get("unsupported_helper_files"),
+    "missing_sources": not report.get("missing_source_files"),
+    "stream_backing": not stream_mismatches,
+    "deleted_outputs": not deleted_present,
+}
+for name, ok in checks.items():
+    print(f"{name}: {'pass' if ok else 'fail'}")
+if missing:
+    print("missing generated paths:", *missing, sep="\n  ")
+if extra:
+    print("unexpected generated paths:", *extra, sep="\n  ")
+if invalid_json:
+    print("invalid JSON:", *invalid_json, sep="\n  ")
+if stream_mismatches:
+    print("stream backing mismatches:", *stream_mismatches, sep="\n  ")
+if deleted_present:
+    print("deleted outputs still present:", *deleted_present, sep="\n  ")
+if not all(checks.values()):
+    raise SystemExit(1)
+PY
+git -c core.whitespace=cr-at-eol diff --check
+echo "git diff --check: pass"
+exit 0
+fi
+
+python3 - "$out" "$report" "$source_root" <<'PY'
 import json
 import pathlib
 import sys
@@ -12,12 +82,13 @@ import sys
 out = pathlib.Path(sys.argv[1])
 report_path = pathlib.Path(sys.argv[2])
 report = json.loads(report_path.read_text(encoding="utf-8"))
-source = pathlib.Path.cwd() / "_external" / "AzurLaneLuaScripts"
+source = pathlib.Path(sys.argv[3])
 
 actual = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() and p.name != report_path.name}
 
 missing = sorted(report.get("missing_source_files", []))
-extra = []
+expected = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", [])) | set(report.get("fallback_files", [])) | set(report.get("fallback_helper_files", []))
+extra = sorted(actual - expected)
 relevant_missing = set(missing)
 relevant_unsupported = set(report.get("unsupported_files", []))
 relevant_unsupported_helpers = set(report.get("unsupported_helper_files", []))
@@ -91,7 +162,7 @@ second="${RUNNER_TEMP}/amagi_belfast_json_mvp_second"
 rm -rf -- "$second"
 go run ./cmd/belfast_json_mvp \
   -source-root "$GITHUB_WORKSPACE" \
-  -luascripts-root "$GITHUB_WORKSPACE/_external/AzurLaneLuaScripts" \
+  -luascripts-root "$source_root" \
   -legacy-fallback-root "$GITHUB_WORKSPACE" \
   -output-root "$second"
 

@@ -2,11 +2,21 @@ name: Validate and Update Data
 
 on:
   workflow_dispatch:
+    inputs:
+      full_build:
+        description: Run the full conversion instead of incremental generation
+        required: false
+        default: false
+        type: boolean
   schedule:
-    - cron: "0 * * * *" # 24:00 JST
+    - cron: "0 * * * *" # every hour
 
 permissions:
   contents: write
+
+concurrency:
+  group: validate-and-update-main
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -22,62 +32,72 @@ jobs:
         with:
           fetch-depth: 1
 
-      # ========== Phase 2: Check whether this upstream revision was processed ==========
+      # ========== Phase 2: Detect upstream delta and plan dependencies ==========
       - name: "Data: Get latest AzurLaneLuaScripts SHA"
         id: upstream
-        run: echo "sha=$(git ls-remote https://github.com/AzurLaneTools/AzurLaneLuaScripts.git refs/heads/main | cut -f1)" >> "$GITHUB_OUTPUT"
+        run: |
+          set -euo pipefail
+          sha="$(git ls-remote https://github.com/AzurLaneTools/AzurLaneLuaScripts.git refs/heads/main | awk 'NR == 1 { print $1 }')"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
-      - name: "Cache: Check processed data"
-        id: processed
-        uses: actions/cache@v4
-        with:
-          path: ${{ runner.temp }}/amagi-data-processed
-          key: processed-${{ steps.upstream.outputs.sha }}-${{ hashFiles('cmd/**', 'internal/**', 'tools/ci/**', 'go.mod') }}
+      - name: "Plan: Detect upstream changes"
+        id: delta
+        env:
+          UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
+          FORCE_FULL: ${{ inputs.full_build || false }}
+          STATE_FILE: .github/azurlane-state
+          PLAN_PATH: ${{ runner.temp }}/amagi-incremental-plan.json
+          UPSTREAM_ROOT: ${{ runner.temp }}/AzurLaneLuaScripts
+        run: tools/ci/sync-upstream.sh
 
-      # ========== Phase 3: Fetch latest Lua source (CN/EN/JP/KR/TW + versions) ==========
-      - name: "Data: AzurLaneLuaScripts"
-        if: steps.processed.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: AzurLaneTools/AzurLaneLuaScripts
-          ref: ${{ steps.upstream.outputs.sha }}
-          path: _external/AzurLaneLuaScripts
-          fetch-depth: 1
-          sparse-checkout-cone-mode: true
-          sparse-checkout: |
-            CN
-            EN
-            JP
-            KR
-            TW
-            versions
-
-      # ========== Phase 4: Setup tools ==========
+      # ========== Phase 3: Setup tools ==========
       - name: "Setup: Go toolchain"
-        if: steps.processed.outputs.cache-hit != 'true'
+        if: steps.delta.outputs.needs_sources == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
 
-      # ========== Phase 5: Test code ==========
+      # ========== Phase 4: Test code ==========
       - name: "Test: Code validation"
-        if: steps.processed.outputs.cache-hit != 'true'
+        if: steps.delta.outputs.needs_sources == 'true'
+        env:
+          AMAGI_MODE: ${{ steps.delta.outputs.mode }}
+          AMAGI_UPSTREAM_ROOT: ${{ steps.delta.outputs.source_root }}
         run: tools/ci/test.sh
 
-      # ========== Phase 6: Generate Belfast JSON (all regions, single pass) ==========
+      # ========== Phase 5: Generate changed outputs ==========
       - name: "Generate: Belfast JSON"
-        if: steps.processed.outputs.cache-hit != 'true'
+        if: steps.delta.outputs.needs_sources == 'true'
+        env:
+          AMAGI_MODE: ${{ steps.delta.outputs.mode }}
+          AMAGI_INCREMENTAL_PLAN: ${{ steps.delta.outputs.plan_path }}
+          AMAGI_UPSTREAM_ROOT: ${{ steps.delta.outputs.source_root }}
         run: tools/ci/generate.sh
 
-      # ========== Phase 7: Verify generated output ==========
+      # ========== Phase 6: Verify changed outputs ==========
       - name: "Verify: Generated output"
-        if: steps.processed.outputs.cache-hit != 'true'
+        if: steps.delta.outputs.needs_sources == 'true'
+        env:
+          AMAGI_MODE: ${{ steps.delta.outputs.mode }}
+          AMAGI_INCREMENTAL_PLAN: ${{ steps.delta.outputs.plan_path }}
+          AMAGI_UPSTREAM_ROOT: ${{ steps.delta.outputs.source_root }}
         run: tools/ci/verify-generated.sh
+
+      # ========== Phase 7: Persist the last successful upstream revision ==========
+      - name: "State: Record processed upstream revision"
+        if: steps.delta.outputs.needs_processing == 'true'
+        run: |
+          set -euo pipefail
+          {
+            echo "upstream_sha: ${{ steps.delta.outputs.latest_sha }}"
+            echo "generator_hash: ${{ steps.delta.outputs.generator_hash }}"
+          } > .github/azurlane-state
 
       # ========== Phase 8: Commit & Push ==========
       - name: "Commit: Generated data"
-        if: steps.processed.outputs.cache-hit != 'true'
+        if: steps.delta.outputs.needs_processing == 'true'
         run: |
           set -euo pipefail
           if [ -n "$(git status --short)" ]; then
@@ -90,8 +110,3 @@ jobs:
           else
             echo "No generated file changes to commit"
           fi
-
-      # ========== Phase 9: Mark processed revision ==========
-      - name: "Cache: Mark processed data"
-        if: steps.processed.outputs.cache-hit != 'true'
-        run: mkdir -p "${{ runner.temp }}/amagi-data-processed" && touch "${{ runner.temp }}/amagi-data-processed/done"

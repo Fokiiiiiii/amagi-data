@@ -20,9 +20,10 @@ func main() {
 	referenceRoot := flag.String("reference-root", "", "reference root used to select aggregate Lua records")
 	legacyFallbackRoot := flag.String("legacy-fallback-root", "", "repository root containing the fixed legacy fallback files")
 	reportPath := flag.String("report-path", "", "report path")
+	incrementalPlanPath := flag.String("incremental-plan", "", "incremental conversion plan")
 	flag.Parse()
 
-	report, err := belfastconv.ConvertMVP(belfastconv.Options{
+	opts := belfastconv.Options{
 		SourceRoot:               *sourceRoot,
 		OutputRoot:               *outputRoot,
 		ReportPath:               *reportPath,
@@ -31,7 +32,19 @@ func main() {
 		FallbackHelperSourceRoot: *fallbackRoot,
 		VersionSourceMapPath:     *versionSourceMap,
 		LegacyFallbackSourceRoot: *legacyFallbackRoot,
-	})
+	}
+	var report *belfastconv.Report
+	var err error
+	if *incrementalPlanPath != "" {
+		plan, planErr := belfastconv.ReadIncrementalPlan(*incrementalPlanPath)
+		if planErr != nil {
+			err = planErr
+		} else {
+			report, err = belfastconv.ConvertMVPIncremental(opts, plan)
+		}
+	} else {
+		report, err = belfastconv.ConvertMVP(opts)
+	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

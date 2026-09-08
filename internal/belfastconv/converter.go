@@ -117,6 +117,33 @@ func UnsupportedHelperFiles(includeVersions bool) []string {
 
 func FallbackHelperFiles() []string { return slices.Clone(fallbackHelperFiles) }
 
+func newReport(opts Options, manifest *SafeManifest) *Report {
+	return &Report{
+		SourceRoot:             opts.SourceRoot,
+		OutputRoot:             opts.OutputRoot,
+		Regions:                slices.Clone(supportedRegions),
+		Categories:             []string{"GameCfg", "ShareCfg", "sharecfgdata", "root-helpers"},
+		ConvertedFiles:         []FileReport{},
+		GeneratedFiles:         []string{},
+		GeneratedHelperFiles:   []string{},
+		FallbackFiles:          []string{},
+		FallbackFileReports:    []FallbackFileReport{},
+		FallbackHelperFiles:    []string{},
+		UnsupportedFiles:       slices.Clone(manifest.UnsupportedFiles),
+		UnsupportedHelperFiles: UnsupportedHelperFiles(opts.LuaScriptsRoot != ""),
+		MissingSourceFiles:     []string{},
+		MissingReferenceFiles:  slices.Clone(manifest.MissingReferenceFiles),
+		SkippedUnsafeFiles:     skippedUnsafeFiles(manifest),
+	}
+}
+
+func resetLuaReport(report *Report) {
+	report.UnsupportedFiles = []string{}
+	report.UnsupportedHelperFiles = []string{}
+	report.MissingReferenceFiles = []string{}
+	report.SkippedUnsafeFiles = []string{}
+}
+
 func ConvertMVP(opts Options) (*Report, error) {
 	if opts.SourceRoot == "" && opts.LuaScriptsRoot == "" {
 		return nil, fmt.Errorf("source root or Lua scripts root is required")
@@ -134,23 +161,7 @@ func ConvertMVP(opts Options) (*Report, error) {
 		return nil, err
 	}
 
-	report := &Report{
-		SourceRoot:             opts.SourceRoot,
-		OutputRoot:             opts.OutputRoot,
-		Regions:                slices.Clone(supportedRegions),
-		Categories:             []string{"GameCfg", "ShareCfg", "sharecfgdata", "root-helpers"},
-		ConvertedFiles:         []FileReport{},
-		GeneratedFiles:         []string{},
-		GeneratedHelperFiles:   []string{},
-		FallbackFiles:          []string{},
-		FallbackFileReports:    []FallbackFileReport{},
-		FallbackHelperFiles:    []string{},
-		UnsupportedFiles:       slices.Clone(manifest.UnsupportedFiles),
-		UnsupportedHelperFiles: UnsupportedHelperFiles(opts.LuaScriptsRoot != ""),
-		MissingSourceFiles:     []string{},
-		MissingReferenceFiles:  slices.Clone(manifest.MissingReferenceFiles),
-		SkippedUnsafeFiles:     skippedUnsafeFiles(manifest),
-	}
+	report := newReport(opts, manifest)
 	if opts.LegacyFallbackSourceRoot != "" {
 		if err := validateLegacyFallbackSources(opts.LegacyFallbackSourceRoot); err != nil {
 			return nil, err
@@ -158,10 +169,7 @@ func ConvertMVP(opts Options) (*Report, error) {
 	}
 
 	if opts.LuaScriptsRoot != "" {
-		report.UnsupportedFiles = []string{}
-		report.UnsupportedHelperFiles = []string{}
-		report.MissingReferenceFiles = []string{}
-		report.SkippedUnsafeFiles = []string{}
+		resetLuaReport(report)
 		if err := generateDiscoveredLuaFiles(opts, report); err != nil {
 			return nil, err
 		}
@@ -210,45 +218,7 @@ func generateDiscoveredLuaFiles(opts Options, report *Report) error {
 				if entry.IsDir() || strings.Contains(filepath.ToSlash(path), "/sublist/") || !strings.HasSuffix(entry.Name(), ".lua") {
 					return nil
 				}
-				relDir := map[string]string{"sharecfg": "ShareCfg", "sharecfgdata": "sharecfgdata"}[dir]
-				rel := region + "/" + relDir + "/" + strings.TrimSuffix(entry.Name(), ".lua") + ".json"
-				value, err := belfastlua.LoadFile(path)
-				if err != nil {
-					if strings.Contains(rel, "/word_template_") || strings.Contains(rel, "/word_legal_template_") {
-						return nil
-					}
-					report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
-					report.TotalUnsupportedCount++
-					return nil
-				}
-				converted := belfastlua.ToPlain(value)
-				if backingPath, resolveErr := streamBackingPath(opts.LuaScriptsRoot, region, dir, entry.Name(), converted); resolveErr != nil {
-					return resolveErr
-				} else if backingPath != "" {
-					value, err = belfastlua.LoadFile(backingPath)
-					if err != nil {
-						return err
-					}
-					converted = belfastlua.ToPlain(value)
-				}
-				converted = normalizeNumericTables(converted)
-				rawConverted := normalizeEmpty(converted)
-				converted, err = dictKeyedToSortedList(rawConverted)
-				if err != nil {
-					converted = rawConverted
-					err = nil
-				}
-				if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), converted); err != nil {
-					return err
-				}
-				report.GeneratedFiles = append(report.GeneratedFiles, rel)
-				report.TotalGeneratedCount++
-				category := strings.ToLower(dir)
-				report.CategoryCounts[category] += recordCount(converted)
-				for _, rec := range comparableIDs(converted) {
-					report.CategoryIDs[category] = append(report.CategoryIDs[category], rec)
-				}
-				return nil
+				return generateDiscoveredLuaFile(opts, report, region, dir, entry.Name())
 			})
 			if err != nil {
 				return err
@@ -266,6 +236,58 @@ func generateDiscoveredLuaFiles(opts Options, report *Report) error {
 	for key := range report.CategoryIDs {
 		sort.Slice(report.CategoryIDs[key], func(i, j int) bool { return report.CategoryIDs[key][i] < report.CategoryIDs[key][j] })
 		report.CategoryIDs[key] = slices.Compact(report.CategoryIDs[key])
+	}
+	return nil
+}
+
+func generateDiscoveredLuaFile(opts Options, report *Report, region, dir, name string) error {
+	path := filepath.Join(opts.LuaScriptsRoot, region, dir, name)
+	entry, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	if entry.IsDir() || strings.Contains(filepath.ToSlash(path), "/sublist/") || !strings.HasSuffix(name, ".lua") {
+		return nil
+	}
+	relDir := map[string]string{"sharecfg": "ShareCfg", "sharecfgdata": "sharecfgdata"}[dir]
+	rel := region + "/" + relDir + "/" + strings.TrimSuffix(name, ".lua") + ".json"
+	value, err := belfastlua.LoadFile(path)
+	if err != nil {
+		if strings.Contains(rel, "/word_template_") || strings.Contains(rel, "/word_legal_template_") {
+			return nil
+		}
+		report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
+		report.TotalUnsupportedCount++
+		return nil
+	}
+	converted := belfastlua.ToPlain(value)
+	if backingPath, resolveErr := streamBackingPath(opts.LuaScriptsRoot, region, dir, name, converted); resolveErr != nil {
+		return resolveErr
+	} else if backingPath != "" {
+		value, err = belfastlua.LoadFile(backingPath)
+		if err != nil {
+			return err
+		}
+		converted = belfastlua.ToPlain(value)
+	}
+	converted = normalizeNumericTables(converted)
+	rawConverted := normalizeEmpty(converted)
+	converted, err = dictKeyedToSortedList(rawConverted)
+	if err != nil {
+		converted = rawConverted
+	}
+	if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), converted); err != nil {
+		return err
+	}
+	report.GeneratedFiles = append(report.GeneratedFiles, rel)
+	report.TotalGeneratedCount++
+	category := strings.ToLower(dir)
+	report.CategoryCounts[category] += recordCount(converted)
+	for _, rec := range comparableIDs(converted) {
+		report.CategoryIDs[category] = append(report.CategoryIDs[category], rec)
 	}
 	return nil
 }
@@ -306,34 +328,9 @@ func generateAdditionalLuaFiles(opts Options, report *Report) error {
 		{"JP/sharecfg/informforbackyardthemetemplatecfg.lua", "JP/ShareCfg/inform_for_back_yard_theme_template_cfg.json"},
 		{"JP/sharecfg/world_slgbuff_data.lua", "JP/ShareCfg/world_sl_gbuff_data.json"},
 	} {
-		rel := item.target
-		if slices.Contains(report.GeneratedFiles, rel) {
-			continue
-		}
-		luaPath := filepath.Join(opts.LuaScriptsRoot, filepath.FromSlash(item.source))
-		if _, err := os.Stat(luaPath); err != nil {
-			continue
-		}
-		decoded, err := belfastlua.LoadFile(luaPath)
-		if err != nil {
-			report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
-			continue
-		}
-		converted := belfastlua.ToPlain(decoded)
-		if rel != "JP/ShareCfg/voice_actor_cn.json" &&
-			rel != "JP/ShareCfg/inform_cfg.json" &&
-			rel != "JP/ShareCfg/inform_for_back_yard_theme_template_cfg.json" {
-			converted, err = dictKeyedToSortedList(normalizeEmpty(converted))
-			if err != nil {
-				report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
-				continue
-			}
-		}
-		if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), converted); err != nil {
+		if err := generateAdditionalLuaFile(opts, report, item.source, item.target); err != nil {
 			return err
 		}
-		report.GeneratedFiles = append(report.GeneratedFiles, rel)
-		report.TotalGeneratedCount++
 	}
 	for _, rel := range []string{"JP/ShareCfg/enemy_data_statistics.json", "JP/ShareCfg/voice_actor_cn.json", "JP/ShareCfg/word_legal_template.json", "JP/ShareCfg/word_template.json", "JP/sharecfgdata/aircraft_template.json", "JP/sharecfgdata/enemy_data_statistics.json", "JP/sharecfgdata/equip_data_statistics.json", "JP/sharecfgdata/equip_data_template.json", "JP/sharecfgdata/weapon_property.json"} {
 		if slices.Contains(report.GeneratedFiles, rel) {
