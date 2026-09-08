@@ -90,6 +90,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git add --all
             git commit -m "data: update generated belfast json [skip ci]"
+            git pull --rebase origin "${{ github.ref_name }}"
             git push origin HEAD:${{ github.ref_name }}
           else
             echo "No generated file changes to commit"
