@@ -1,4 +1,4 @@
-package belfastconv
+package dataconv
 
 import (
 	"crypto/sha256"
@@ -138,7 +138,7 @@ func treeHashes(t *testing.T, root string) map[string]string {
 		if walkErr != nil {
 			return walkErr
 		}
-		if entry.IsDir() || entry.Name() == "belfast-json-mvp-report.json" {
+		if entry.IsDir() || entry.Name() == "generation-report.json" {
 			return nil
 		}
 		file, err := os.Open(path)

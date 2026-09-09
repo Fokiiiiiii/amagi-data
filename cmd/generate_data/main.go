@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/belfastconv"
+	"github.com/Fokiiiiiii/amagi-data/internal/dataconv"
 )
 
 func main() {
 	sourceRoot := flag.String("source-root", "", "repository/source root")
-	outputRoot := flag.String("output-root", filepath.Join(os.TempDir(), "amagi_belfast_json_mvp"), "output root")
+	outputRoot := flag.String("output-root", filepath.Join(os.TempDir(), "amagi_data_generation"), "output root")
 	luaScriptsRoot := flag.String("luascripts-root", "", "AzurLaneLuaScripts root")
 	fallbackRoot := flag.String("copy-helper-fallback-from", "", "existing data root for fallback helpers")
 	versionSourceMap := flag.String("version-source-map", "", "region-specific versions source map")
@@ -23,7 +23,7 @@ func main() {
 	incrementalPlanPath := flag.String("incremental-plan", "", "incremental conversion plan")
 	flag.Parse()
 
-	opts := belfastconv.Options{
+	opts := dataconv.Options{
 		SourceRoot:               *sourceRoot,
 		OutputRoot:               *outputRoot,
 		ReportPath:               *reportPath,
@@ -33,17 +33,17 @@ func main() {
 		VersionSourceMapPath:     *versionSourceMap,
 		LegacyFallbackSourceRoot: *legacyFallbackRoot,
 	}
-	var report *belfastconv.Report
+	var report *dataconv.Report
 	var err error
 	if *incrementalPlanPath != "" {
-		plan, planErr := belfastconv.ReadIncrementalPlan(*incrementalPlanPath)
+		plan, planErr := dataconv.ReadIncrementalPlan(*incrementalPlanPath)
 		if planErr != nil {
 			err = planErr
 		} else {
-			report, err = belfastconv.ConvertMVPIncremental(opts, plan)
+			report, err = dataconv.ConvertMVPIncremental(opts, plan)
 		}
 	} else {
-		report, err = belfastconv.ConvertMVP(opts)
+		report, err = dataconv.ConvertMVP(opts)
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -56,7 +56,7 @@ func main() {
 	fmt.Printf("converted=%d generated_helpers=%d\n", len(report.ConvertedFiles), len(report.GeneratedHelperFiles))
 }
 
-func incompleteReportError(report *belfastconv.Report) error {
+func incompleteReportError(report *dataconv.Report) error {
 	if report == nil {
 		return errors.New("conversion produced no report")
 	}

@@ -1,4 +1,4 @@
-package belfastconv
+package dataconv
 
 import (
 	"encoding/json"
@@ -40,7 +40,7 @@ func initSharedConv() {
 		if luaRoot == "" {
 			return
 		}
-		outDir, err := os.MkdirTemp("", "belfastconv_shared_*")
+		outDir, err := os.MkdirTemp("", "dataconv_shared_*")
 		if err != nil {
 			return
 		}
@@ -276,8 +276,7 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 		}
 	}
 
-	// Note: Removed comparison with belfast reference data after eliminating the belfast-data
-	// fallback dependency. Generated files are now verified through conversion tests only.
+	// Generated files are verified through conversion tests only.
 }
 
 // TestVersionsGeneratedFromLuaScriptsMetadata verifies versions.json content

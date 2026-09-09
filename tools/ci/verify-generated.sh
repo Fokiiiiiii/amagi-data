@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-out="${RUNNER_TEMP:?}/amagi_belfast_json_mvp"
-report="$out/belfast-json-mvp-report.json"
+out="${RUNNER_TEMP:?}/amagi_data_generation"
+report="$out/generation-report.json"
 source_root="${AMAGI_UPSTREAM_ROOT:-$GITHUB_WORKSPACE/_external/AzurLaneLuaScripts}"
 
 if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
@@ -158,9 +158,9 @@ if not all(checks.values()):
     raise SystemExit(1)
 PY
 
-second="${RUNNER_TEMP}/amagi_belfast_json_mvp_second"
+second="${RUNNER_TEMP}/amagi_data_generation_second"
 rm -rf -- "$second"
-go run ./cmd/belfast_json_mvp \
+go run ./cmd/generate_data \
   -source-root "$GITHUB_WORKSPACE" \
   -luascripts-root "$source_root" \
   -legacy-fallback-root "$GITHUB_WORKSPACE" \
@@ -176,7 +176,7 @@ def hashes(root):
     root = pathlib.Path(root)
     result = {}
     for path in root.rglob("*"):
-        if path.is_file() and path.name != "belfast-json-mvp-report.json":
+        if path.is_file() and path.name != "generation-report.json":
             result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
     return result
 

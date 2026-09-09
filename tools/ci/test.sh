@@ -12,7 +12,7 @@ fi
 
 if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
   echo "Running focused incremental/full equivalence test"
-  go test ./internal/belfastconv -run '^TestConvertMVPIncrementalMatchesFullBuildAfterUpstreamChanges$' -count=1
+  go test ./internal/dataconv -run '^TestConvertMVPIncrementalMatchesFullBuildAfterUpstreamChanges$' -count=1
   exit
 fi
 

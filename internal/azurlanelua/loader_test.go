@@ -1,4 +1,4 @@
-package belfastlua
+package azurlanelua
 
 import (
 	"os"

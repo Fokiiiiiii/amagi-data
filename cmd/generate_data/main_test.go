@@ -4,14 +4,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/belfastconv"
+	"github.com/Fokiiiiiii/amagi-data/internal/dataconv"
 )
 
 func TestIncompleteReportError(t *testing.T) {
-	if err := incompleteReportError(&belfastconv.Report{}); err != nil {
+	if err := incompleteReportError(&dataconv.Report{}); err != nil {
 		t.Fatalf("complete report rejected: %v", err)
 	}
-	err := incompleteReportError(&belfastconv.Report{
+	err := incompleteReportError(&dataconv.Report{
 		MissingSourceFiles:     []string{"CN/ShareCfg/missing.json"},
 		UnsupportedFiles:       []string{"JP/ShareCfg/unsupported.json"},
 		UnsupportedHelperFiles: []string{"global/versions.json"},

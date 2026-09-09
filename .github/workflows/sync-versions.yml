@@ -89,7 +89,7 @@ jobs:
               repo: context.repo.repo,
               path: targetPath,
               branch: targetBranch,
-              message: `data: sync versions from ${upstreamSha.slice(0, 12)} [skip ci]`,
+              message: `data: sync upstream ${upstreamSha.slice(0, 12)} [skip ci]`,
               content: Buffer.from(content, "utf8").toString("base64"),
               sha: currentResponse.data.sha,
             });

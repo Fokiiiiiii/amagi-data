@@ -1,4 +1,4 @@
-package belfastconv
+package dataconv
 
 import (
 	"os"

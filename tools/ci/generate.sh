@@ -10,7 +10,7 @@ else
   echo "AzurLaneLuaScripts root exists: False"
 fi
 
-out="$RUNNER_TEMP/amagi_belfast_json_mvp"
+out="$RUNNER_TEMP/amagi_data_generation"
 rm -rf -- "$out"
 
 args=(
@@ -23,14 +23,14 @@ if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
   : "${AMAGI_INCREMENTAL_PLAN:?AMAGI_INCREMENTAL_PLAN is required for incremental generation}"
   args+=(-incremental-plan "$AMAGI_INCREMENTAL_PLAN")
 fi
-go run ./cmd/belfast_json_mvp "${args[@]}"
+go run ./cmd/generate_data "${args[@]}"
 
 if [ ! -d "$out" ]; then
   echo "output dir missing: $out" >&2
   exit 1
 fi
 
-report_path="$out/belfast-json-mvp-report.json"
+report_path="$out/generation-report.json"
 if [ ! -f "$report_path" ]; then
   echo "report missing: $report_path" >&2
   exit 1
@@ -85,10 +85,10 @@ publish_entry() {
 if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
   while IFS= read -r -d '' entry; do
     publish_entry "$entry"
-  done < <(find "$out" -type f ! -name "belfast-json-mvp-report.json" -print0)
+  done < <(find "$out" -type f ! -name "generation-report.json" -print0)
 else
   for entry in "$out"/*; do
-    [[ "$(basename "$entry")" == "belfast-json-mvp-report.json" ]] && continue
+    [[ "$(basename "$entry")" == "generation-report.json" ]] && continue
     publish_entry "$entry"
   done
 fi

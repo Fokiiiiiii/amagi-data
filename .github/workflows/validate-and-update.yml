@@ -12,7 +12,7 @@ on:
     - cron: "0 * * * *" # every hour
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: validate-and-update-main
@@ -23,8 +23,115 @@ defaults:
     shell: bash
 
 jobs:
-  build:
+  preflight:
     runs-on: ubuntu-latest
+    outputs:
+      needs_build: ${{ steps.check.outputs.needs_build }}
+      force_full: ${{ steps.check.outputs.force_full }}
+      upstream_sha: ${{ steps.check.outputs.upstream_sha }}
+    steps:
+      - name: "Preflight: Get latest AzurLaneLuaScripts SHA"
+        id: upstream
+        run: |
+          set -u
+          sha="$(git ls-remote https://github.com/AzurLaneTools/AzurLaneLuaScripts.git refs/heads/main | awk 'NR == 1 { print $1 }' || true)"
+          if [[ "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            echo "upstream_lookup_failed=true" >> "$GITHUB_OUTPUT"
+            echo "Could not read the upstream SHA; build will use the safe fallback path" >&2
+          fi
+
+      - name: "Preflight: Read state and generator fingerprint"
+        id: check
+        uses: actions/github-script@v7
+        env:
+          UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
+          FORCE_FULL: ${{ github.event.inputs.full_build || 'false' }}
+        with:
+          script: |
+            const crypto = require("crypto");
+            const latest = process.env.UPSTREAM_SHA || "";
+            const forceRequested = process.env.FORCE_FULL === "true";
+            const shaPattern = /^[0-9a-f]{40}$/;
+            const isGeneratorPath = (path) =>
+              path.startsWith("cmd/generate_data/") ||
+              path.startsWith("internal/dataconv/") ||
+              path.startsWith("internal/azurlanelua/") ||
+              path.startsWith("tools/ci/") ||
+              path.startsWith("data/global/") ||
+              [
+                ".github/workflows/validate-and-update.yml",
+                "go.mod",
+                "go.sum",
+              ].includes(path);
+
+            let needsBuild = true;
+            let forceFull = forceRequested;
+            let preflightError = false;
+            let previousSHA = "";
+            let generatorHash = "";
+            let previousGeneratorHash = "";
+
+            try {
+              if (!shaPattern.test(latest)) {
+                throw new Error("upstream SHA is unavailable");
+              }
+              const treeResponse = await github.rest.git.getTree({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tree_sha: context.sha,
+                recursive: "1",
+              });
+              if (treeResponse.data.truncated) {
+                throw new Error("repository Git tree is truncated");
+              }
+              const lines = treeResponse.data.tree
+                .filter((entry) => entry.type === "blob" && isGeneratorPath(entry.path))
+                .map((entry) => `${entry.mode} ${entry.type} ${entry.sha}\t${entry.path}`)
+                .sort()
+                .join("\n");
+              generatorHash = crypto.createHash("sha256").update(lines ? `${lines}\n` : "").digest("hex");
+
+              try {
+                const stateResponse = await github.rest.repos.getContent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path: ".github/azurlane-state",
+                  ref: context.sha,
+                });
+                if (!Array.isArray(stateResponse.data) && stateResponse.data.content) {
+                  const state = Buffer.from(stateResponse.data.content.replace(/\s/g, ""), "base64").toString("utf8");
+                  previousSHA = state.match(/^upstream_sha:\s*([0-9a-f]{40})\s*$/m)?.[1] || "";
+                  previousGeneratorHash = state.match(/^generator_hash:\s*([0-9a-f]{64})\s*$/m)?.[1] || "";
+                }
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+              }
+
+              forceFull = forceRequested || !shaPattern.test(previousSHA) || previousGeneratorHash !== generatorHash;
+              needsBuild = forceFull || previousSHA !== latest;
+            } catch (error) {
+              preflightError = true;
+              needsBuild = true;
+              forceFull = true;
+              core.warning(`Preflight could not prove the repository is current: ${error.message}`);
+            }
+
+            core.setOutput("needs_build", String(needsBuild));
+            core.setOutput("force_full", String(forceFull || preflightError || !generatorHash));
+            core.setOutput("upstream_sha", latest);
+            core.info(`preflight: needs_build=${needsBuild} force_full=${forceFull || preflightError || !generatorHash}`);
+
+  build:
+    if: needs.preflight.outputs.needs_build == 'true'
+    needs: preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       # ========== Phase 1: Main setup ==========
       - name: "Checkout: Main repository"
@@ -35,9 +142,14 @@ jobs:
       # ========== Phase 2: Detect upstream delta and plan dependencies ==========
       - name: "Data: Get latest AzurLaneLuaScripts SHA"
         id: upstream
+        env:
+          PREFLIGHT_SHA: ${{ needs.preflight.outputs.upstream_sha }}
         run: |
           set -euo pipefail
-          sha="$(git ls-remote https://github.com/AzurLaneTools/AzurLaneLuaScripts.git refs/heads/main | awk 'NR == 1 { print $1 }')"
+          sha="$PREFLIGHT_SHA"
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            sha="$(git ls-remote https://github.com/AzurLaneTools/AzurLaneLuaScripts.git refs/heads/main | awk 'NR == 1 { print $1 }')"
+          fi
           [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
@@ -45,7 +157,7 @@ jobs:
         id: delta
         env:
           UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
-          FORCE_FULL: ${{ inputs.full_build || false }}
+          FORCE_FULL: ${{ needs.preflight.outputs.force_full }}
           STATE_FILE: .github/azurlane-state
           PLAN_PATH: ${{ runner.temp }}/amagi-incremental-plan.json
           UPSTREAM_ROOT: ${{ runner.temp }}/AzurLaneLuaScripts
@@ -68,7 +180,7 @@ jobs:
         run: tools/ci/test.sh
 
       # ========== Phase 5: Generate changed outputs ==========
-      - name: "Generate: Belfast JSON"
+      - name: "Generate: Data JSON"
         if: steps.delta.outputs.needs_sources == 'true'
         env:
           AMAGI_MODE: ${{ steps.delta.outputs.mode }}
@@ -104,7 +216,7 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git config user.name "github-actions[bot]"
             git add --all
-            git commit -m "data: update generated belfast json [skip ci]"
+            git commit -m "data: sync generated data [skip ci]"
             git pull --rebase origin "${{ github.ref_name }}"
             git push origin HEAD:${{ github.ref_name }}
           else

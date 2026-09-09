@@ -1,4 +1,4 @@
-package belfastconv
+package dataconv
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/belfastlua"
+	"github.com/Fokiiiiiii/amagi-data/internal/azurlanelua"
 )
 
 // IncrementalPlan is the small, source-controlled contract between the CI
@@ -182,12 +182,12 @@ func generateAdditionalLuaFile(opts Options, report *Report, source, target stri
 		}
 		return err
 	}
-	decoded, err := belfastlua.LoadFile(luaPath)
+	decoded, err := azurlanelua.LoadFile(luaPath)
 	if err != nil {
 		report.UnsupportedFiles = append(report.UnsupportedFiles, target)
 		return nil
 	}
-	converted := belfastlua.ToPlain(decoded)
+	converted := azurlanelua.ToPlain(decoded)
 	if target != "JP/ShareCfg/inform_cfg.json" && target != "JP/ShareCfg/inform_for_back_yard_theme_template_cfg.json" {
 		converted, err = dictKeyedToSortedList(normalizeEmpty(converted))
 		if err != nil {

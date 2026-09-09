@@ -1,6 +1,6 @@
-// Package belfastlua loads the restricted Lua data dialect used by
+// Package azurlanelua loads the restricted Lua data dialect used by
 // AzurLaneLuaScripts. It intentionally does not execute Lua code.
-package belfastlua
+package azurlanelua
 
 import (
 	"bytes"
@@ -88,12 +88,12 @@ func ToPlain(value any) any {
 				return arr
 			}
 		}
-			m := make(map[string]any, len(v.Values))
-			for key, child := range v.Values {
-				if child == nil {
-					continue
-				}
-				if function, ignored := child.(ignoredLuaFunction); ignored {
+		m := make(map[string]any, len(v.Values))
+		for key, child := range v.Values {
+			if child == nil {
+				continue
+			}
+			if function, ignored := child.(ignoredLuaFunction); ignored {
 				m[key] = function.comment
 				continue
 			}
@@ -443,7 +443,7 @@ func (p *parser) parseValue() (any, error) {
 			name += "." + p.tokens[p.i+1].text
 			p.i += 2
 		}
-		// Bare identifiers are not evaluated by the Belfast-compatible parser.
+		// Bare identifiers are not evaluated by the target-compatible parser.
 		// An undefined enum in an array is consequently omitted by Lua's
 		// table-to-JSON behavior (for example SYSTEM_DUEL in buff limits).
 		if value, ok := p.constants[name]; ok && structuredConstant(value) {
@@ -501,7 +501,7 @@ func (p *parser) parseValue() (any, error) {
 			}
 			return first, nil
 		}
-		// Belfast does not resolve bare globals while converting these tables.
+		// The target format does not resolve bare globals while converting these tables.
 		// The resulting nil element is retained as a sparse Lua table entry.
 		return nil, nil
 	case "{":
@@ -591,7 +591,7 @@ func (p *parser) parseTable() (any, error) {
 
 // LoadFile reads assignments below _G.pg.base or pg.base and returns the
 // named dataset. Numeric keys are retained as decimal string keys so the
-// converter can apply Belfast's id-list transformations deterministically.
+// converter can apply deterministic id-list transformations.
 func LoadFile(path string) (any, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -730,9 +730,9 @@ func LoadFile(path string) (any, error) {
 
 func loadConstants(dataPath string) map[string]any {
 	constants := map[string]any{
-		"ShipType.MainShipType": []any{json.Number("4"), json.Number("5"), json.Number("6"), json.Number("7"), json.Number("10"), json.Number("12"), json.Number("13"), json.Number("21"), json.Number("24")},
-		"STORY_EVENT.TEST":      "story event test",
-		"STORY_EVENT.TEST_DONE": "story event test done",
+		"ShipType.MainShipType":  []any{json.Number("4"), json.Number("5"), json.Number("6"), json.Number("7"), json.Number("10"), json.Number("12"), json.Number("13"), json.Number("21"), json.Number("24")},
+		"STORY_EVENT.TEST":       "story event test",
+		"STORY_EVENT.TEST_DONE":  "story event test done",
 		"AspectMode.FitInParent": "FitInParent",
 	}
 	regionRoot := filepath.Dir(filepath.Dir(filepath.Dir(dataPath)))

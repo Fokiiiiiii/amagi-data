@@ -1,4 +1,4 @@
-package belfastconv
+package dataconv
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/belfastlua"
+	"github.com/Fokiiiiiii/amagi-data/internal/azurlanelua"
 )
 
 //go:embed safe_to_promote_manifest.json safe_to_promote_allowlists.json
@@ -254,7 +254,7 @@ func generateDiscoveredLuaFile(opts Options, report *Report, region, dir, name s
 	}
 	relDir := map[string]string{"sharecfg": "ShareCfg", "sharecfgdata": "sharecfgdata"}[dir]
 	rel := region + "/" + relDir + "/" + strings.TrimSuffix(name, ".lua") + ".json"
-	value, err := belfastlua.LoadFile(path)
+	value, err := azurlanelua.LoadFile(path)
 	if err != nil {
 		if strings.Contains(rel, "/word_template_") || strings.Contains(rel, "/word_legal_template_") {
 			return nil
@@ -263,15 +263,15 @@ func generateDiscoveredLuaFile(opts Options, report *Report, region, dir, name s
 		report.TotalUnsupportedCount++
 		return nil
 	}
-	converted := belfastlua.ToPlain(value)
+	converted := azurlanelua.ToPlain(value)
 	if backingPath, resolveErr := streamBackingPath(opts.LuaScriptsRoot, region, dir, name, converted); resolveErr != nil {
 		return resolveErr
 	} else if backingPath != "" {
-		value, err = belfastlua.LoadFile(backingPath)
+		value, err = azurlanelua.LoadFile(backingPath)
 		if err != nil {
 			return err
 		}
-		converted = belfastlua.ToPlain(value)
+		converted = azurlanelua.ToPlain(value)
 	}
 	converted = normalizeNumericTables(converted)
 	rawConverted := normalizeEmpty(converted)
@@ -340,12 +340,12 @@ func generateAdditionalLuaFiles(opts Options, report *Report) error {
 		if _, err := os.Stat(luaPath); err != nil {
 			continue
 		}
-		decoded, err := belfastlua.LoadFile(luaPath)
+		decoded, err := azurlanelua.LoadFile(luaPath)
 		if err != nil {
 			report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
 			continue
 		}
-		converted := belfastlua.ToPlain(decoded)
+		converted := azurlanelua.ToPlain(decoded)
 		if strings.Contains(rel, "/sharecfgdata/") {
 			converted = normalizeNumericTables(converted)
 			converted, err = dictKeyedToSortedList(normalizeEmpty(converted))
@@ -413,19 +413,19 @@ func generateReturnedGameCfg(opts Options, report *Report, region, sourceName, t
 		return nil
 	}
 	sort.Strings(paths)
-	merged := belfastlua.OrderedObject{Values: map[string]any{}}
+	merged := azurlanelua.OrderedObject{Values: map[string]any{}}
 	for _, path := range paths {
 		stem := strings.TrimSuffix(filepath.Base(path), ".lua")
-		value, loadErr := belfastlua.LoadFile(path)
+		value, loadErr := azurlanelua.LoadFile(path)
 		if loadErr != nil {
 			report.UnsupportedFiles = append(report.UnsupportedFiles, region+"/GameCfg/"+targetName+".json")
 			return nil
 		}
-		if list, ok := belfastlua.ToPlain(value).([]any); ok && len(list) == 0 {
+		if list, ok := azurlanelua.ToPlain(value).([]any); ok && len(list) == 0 {
 			value = nil
 		}
 		merged.Keys = append(merged.Keys, stem)
-		merged.Values[stem] = belfastlua.ToPlain(value)
+		merged.Values[stem] = azurlanelua.ToPlain(value)
 	}
 	if opts.ReferenceRoot != "" {
 		refPath := filepath.Join(opts.ReferenceRoot, region, "GameCfg", targetName+".json")
@@ -504,7 +504,7 @@ func decodeOrderedJSONValue(decoder *json.Decoder) (any, error) {
 	switch value := token.(type) {
 	case json.Delim:
 		if value == '{' {
-			out := belfastlua.OrderedObject{Values: map[string]any{}}
+			out := azurlanelua.OrderedObject{Values: map[string]any{}}
 			for decoder.More() {
 				keyToken, err := decoder.Token()
 				if err != nil {
@@ -538,7 +538,7 @@ func decodeOrderedJSONValue(decoder *json.Decoder) (any, error) {
 }
 
 func reorderToReference(value, reference any) any {
-	refObject, ok := reference.(belfastlua.OrderedObject)
+	refObject, ok := reference.(azurlanelua.OrderedObject)
 	if !ok {
 		refList, listOK := reference.([]any)
 		valueList, valueOK := value.([]any)
@@ -556,7 +556,7 @@ func reorderToReference(value, reference any) any {
 		return value
 	}
 	if valueList, ok := value.([]any); ok {
-		out := belfastlua.OrderedObject{Values: map[string]any{}}
+		out := azurlanelua.OrderedObject{Values: map[string]any{}}
 		for _, key := range refObject.Keys {
 			n, err := strconv.Atoi(key)
 			if err != nil || n < 1 || n > len(valueList) {
@@ -574,14 +574,14 @@ func reorderToReference(value, reference any) any {
 		case map[string]any:
 			child, exists := current[key]
 			return child, exists
-		case belfastlua.OrderedObject:
+		case azurlanelua.OrderedObject:
 			child, exists := current.Values[key]
 			return child, exists
 		default:
 			return nil, false
 		}
 	}
-	out := belfastlua.OrderedObject{Values: map[string]any{}}
+	out := azurlanelua.OrderedObject{Values: map[string]any{}}
 	seen := map[string]struct{}{}
 	for _, key := range refObject.Keys {
 		child, exists := lookup(key)
@@ -772,11 +772,11 @@ func completeLuaPath(root, rel string) (string, error) {
 	if len(parts) != 3 || parts[1] != "ShareCfg" {
 		return path, nil
 	}
-	value, err := belfastlua.LoadFile(path)
+	value, err := azurlanelua.LoadFile(path)
 	if err != nil {
 		return path, nil
 	}
-	backingPath, err := streamBackingPath(root, parts[0], "sharecfg", filepath.Base(path), belfastlua.ToPlain(value))
+	backingPath, err := streamBackingPath(root, parts[0], "sharecfg", filepath.Base(path), azurlanelua.ToPlain(value))
 	if err != nil || backingPath == "" {
 		return path, err
 	}
@@ -784,11 +784,11 @@ func completeLuaPath(root, rel string) (string, error) {
 }
 
 func convertLuaFile(path, rel, classification string, allowlist []int) (any, error) {
-	decoded, err := belfastlua.LoadFile(path)
+	decoded, err := azurlanelua.LoadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	decoded = belfastlua.ToPlain(decoded)
+	decoded = azurlanelua.ToPlain(decoded)
 	if strings.HasSuffix(rel, "/sharecfgdata/expedition_data_template.json") ||
 		strings.HasSuffix(rel, "/sharecfgdata/activity_coloring_template.json") {
 		decoded = normalizeNumericTables(decoded)
@@ -812,8 +812,8 @@ func stabilizeErrorMessageOrder(value any) any {
 		return value
 	}
 	sort.SliceStable(records, func(i, j int) bool {
-		left, leftErr := marshalBelfast(records[i])
-		right, rightErr := marshalBelfast(records[j])
+		left, leftErr := marshalGeneratedJSON(records[i])
+		right, rightErr := marshalGeneratedJSON(records[j])
 		if leftErr != nil || rightErr != nil {
 			return false
 		}
@@ -1328,7 +1328,7 @@ func writeJSON(path string, v any) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	data, err := marshalBelfast(v)
+	data, err := marshalGeneratedJSON(v)
 	if err != nil {
 		return err
 	}
@@ -1346,9 +1346,9 @@ func writeJSON(path string, v any) error {
 	return os.WriteFile(path, data, 0o644)
 }
 
-func marshalBelfast(v any) ([]byte, error) {
+func marshalGeneratedJSON(v any) ([]byte, error) {
 	switch value := v.(type) {
-	case belfastlua.OrderedObject:
+	case azurlanelua.OrderedObject:
 		var b bytes.Buffer
 		b.WriteByte('{')
 		for i, key := range value.Keys {
@@ -1358,7 +1358,7 @@ func marshalBelfast(v any) ([]byte, error) {
 			kb, _ := json.Marshal(key)
 			b.Write(kb)
 			b.WriteByte(':')
-			child, err := marshalBelfast(value.Values[key])
+			child, err := marshalGeneratedJSON(value.Values[key])
 			if err != nil {
 				return nil, err
 			}
@@ -1427,7 +1427,7 @@ func marshalBelfast(v any) ([]byte, error) {
 			kb, _ := json.Marshal(key)
 			b.Write(kb)
 			b.WriteByte(':')
-			child, err := marshalBelfast(value[key])
+			child, err := marshalGeneratedJSON(value[key])
 			if err != nil {
 				return nil, err
 			}
@@ -1442,7 +1442,7 @@ func marshalBelfast(v any) ([]byte, error) {
 			if i > 0 {
 				b.WriteByte(',')
 			}
-			child, err := marshalBelfast(childValue)
+			child, err := marshalGeneratedJSON(childValue)
 			if err != nil {
 				return nil, err
 			}
@@ -1475,7 +1475,7 @@ func marshalBelfast(v any) ([]byte, error) {
 func writeReport(opts Options, report *Report) error {
 	reportPath := opts.ReportPath
 	if reportPath == "" {
-		reportPath = filepath.Join(opts.OutputRoot, "belfast-json-mvp-report.json")
+		reportPath = filepath.Join(opts.OutputRoot, "generation-report.json")
 	}
 	return writeJSON(reportPath, report)
 }

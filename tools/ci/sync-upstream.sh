@@ -22,7 +22,7 @@ if [[ "$upstream_root" != "$RUNNER_TEMP"/* ]]; then
 	exit 1
 fi
 
-generator_hash="$({ git ls-files -s -- cmd internal tools/ci data/global .github/workflows/validate-and-update.yml go.mod go.sum; } | sha256sum | cut -d' ' -f1)"
+generator_hash="$({ git ls-tree -r --full-tree HEAD -- cmd/generate_data internal/dataconv internal/azurlanelua tools/ci data/global .github/workflows/validate-and-update.yml go.mod go.sum; } | sha256sum | cut -d' ' -f1)"
 previous_sha=""
 previous_generator_hash=""
 if [[ -f "$state_file" ]]; then

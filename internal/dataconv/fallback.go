@@ -1,4 +1,4 @@
-package belfastconv
+package dataconv
 
 import (
 	"crypto/sha256"
@@ -9,6 +9,7 @@ import (
 	"sort"
 )
 
+// Keep this report field value stable for compatibility with existing reports.
 const legacyFallbackSourceKind = "legacy_belfast_fallback"
 
 type legacyFallbackFile struct {

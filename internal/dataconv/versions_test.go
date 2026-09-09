@@ -1,4 +1,4 @@
-package belfastconv
+package dataconv
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestWriteVersionsJSONUsesBelfastOrderAndCRLF(t *testing.T) {
+func TestWriteVersionsJSONUsesStableOrderAndCRLF(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "global", "versions.json")
 	versions := map[string]string{
 		"CN": "9.6.667",
