@@ -1,0 +1,64 @@
+name: Code Quality
+
+on:
+  push:
+    paths:
+      - 'cmd/**'
+      - 'internal/**'
+      - 'tools/ci/**'
+      - 'data/global/**'
+      - '.github/workflows/**'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    paths:
+      - 'cmd/**'
+      - 'internal/**'
+      - 'tools/ci/**'
+      - 'data/global/**'
+      - '.github/workflows/**'
+      - 'go.mod'
+      - 'go.sum'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.mod
+      - name: Validate shell scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for script in tools/ci/*.sh; do
+            bash -n "$script"
+          done
+      - name: Test converter and offline CI contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/ci/test_pipeline.py -v &
+          pipeline_pid=$!
+          go test ./... &
+          go_pid=$!
+          failed=0
+          wait "$pipeline_pid" || failed=1
+          wait "$go_pid" || failed=1
+          exit "$failed"

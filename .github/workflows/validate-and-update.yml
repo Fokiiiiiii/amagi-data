@@ -89,8 +89,9 @@ jobs:
               }
               const lines = treeResponse.data.tree
                 .filter((entry) => entry.type === "blob" && isGeneratorPath(entry.path))
+                // Match git ls-tree's path order, not blob-SHA or mode order.
+                .sort((a, b) => Buffer.compare(Buffer.from(a.path), Buffer.from(b.path)))
                 .map((entry) => `${entry.mode} ${entry.type} ${entry.sha}\t${entry.path}`)
-                .sort()
                 .join("\n");
               generatorHash = crypto.createHash("sha256").update(lines ? `${lines}\n` : "").digest("hex");
 
@@ -170,6 +171,7 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+          cache-dependency-path: go.mod
 
       # ========== Phase 4: Test code ==========
       - name: "Test: Code validation"

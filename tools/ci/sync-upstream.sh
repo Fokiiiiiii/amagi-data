@@ -48,7 +48,7 @@ git -C "$upstream_root" init -q
 git -C "$upstream_root" remote add origin "$remote"
 git -C "$upstream_root" config remote.origin.promisor true
 git -C "$upstream_root" config remote.origin.partialclonefilter blob:none
-git -C "$upstream_root" fetch --quiet --filter=blob:none --no-tags origin "$latest_sha"
+git -C "$upstream_root" fetch --quiet --depth=1 --filter=blob:none --no-tags origin "$latest_sha"
 
 diff_path="$RUNNER_TEMP/amagi-upstream.diff"
 source_paths=()
@@ -143,6 +143,8 @@ case "$path" in
 		[[ "$status" == "D" ]] && append_unique delete_outputs "JP/ShareCfg/world_sl_gbuff_data.json"
 		;;
 esac
+	# A non-deletion is valid; do not leak the last conditional's false status.
+	return 0
 }
 
 add_gamecfg() {
@@ -163,7 +165,7 @@ add_gamecfg() {
 output_paths=()
 
 if [[ "$mode" == "incremental" ]]; then
-	if ! git -C "$upstream_root" fetch --quiet --filter=blob:none --no-tags origin "$previous_sha"; then
+	if ! git -C "$upstream_root" fetch --quiet --depth=1 --filter=blob:none --no-tags origin "$previous_sha"; then
 		echo "previous upstream SHA is unavailable; falling back to full build: $previous_sha"
 		mode="full"
 	elif ! git -C "$upstream_root" cat-file -e "$previous_sha^{commit}"; then

@@ -21,6 +21,7 @@ actual = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() a
 generated = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", []))
 missing = sorted(generated - actual)
 extra = sorted(actual - generated)
+unplanned = sorted(actual - set(plan["output_paths"]))
 invalid_json = []
 for rel in sorted(actual):
     try:
@@ -48,6 +49,7 @@ for rel in plan.get("source_paths", []):
 deleted_present = sorted(rel for rel in plan.get("delete_outputs", []) if (pathlib.Path.cwd() / rel).exists())
 checks = {
     "generated_files": not missing and not extra,
+    "planned_outputs": not unplanned,
     "json": not invalid_json,
     "unsupported": not report.get("unsupported_files") and not report.get("unsupported_helper_files"),
     "missing_sources": not report.get("missing_source_files"),
@@ -60,6 +62,8 @@ if missing:
     print("missing generated paths:", *missing, sep="\n  ")
 if extra:
     print("unexpected generated paths:", *extra, sep="\n  ")
+if unplanned:
+    print("outputs outside incremental plan:", *unplanned, sep="\n  ")
 if invalid_json:
     print("invalid JSON:", *invalid_json, sep="\n  ")
 if stream_mismatches:
@@ -89,6 +93,15 @@ actual = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() a
 missing = sorted(report.get("missing_source_files", []))
 expected = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", [])) | set(report.get("fallback_files", [])) | set(report.get("fallback_helper_files", []))
 extra = sorted(actual - expected)
+missing_generated = sorted(expected - actual)
+invalid_json = []
+for rel in sorted(actual):
+    try:
+        json.loads((out / rel).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        invalid_json.append(f"{rel}: {exc}")
+missing_regions = [region for region in ("CN", "EN", "JP", "KR", "TW")
+                   if not (source / region / "sharecfg").is_dir()]
 relevant_missing = set(missing)
 relevant_unsupported = set(report.get("unsupported_files", []))
 relevant_unsupported_helpers = set(report.get("unsupported_helper_files", []))
@@ -129,6 +142,9 @@ for facade in source.glob("*/sharecfg/*.lua"):
 
 checks = {
     "all_outputs": len(actual) > 0,
+    "generated_files": not missing_generated,
+    "json": not invalid_json,
+    "source_regions": not missing_regions,
     "missing": not relevant_missing,
     "extra": not extra,
     "lua_generated": lua_generated >= 622,
@@ -140,6 +156,12 @@ checks = {
 }
 for name, ok in checks.items():
     print(f"{name}: {'pass' if ok else 'fail'}")
+if missing_generated:
+    print("missing generated paths:", *missing_generated, sep="\n  ")
+if invalid_json:
+    print("invalid JSON:", *invalid_json, sep="\n  ")
+if missing_regions:
+    print("missing source regions:", *missing_regions, sep="\n  ")
 if missing:
     print("missing paths:", *missing, sep="\n  ")
 if relevant_missing:
