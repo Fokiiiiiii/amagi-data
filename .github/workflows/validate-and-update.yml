@@ -136,7 +136,7 @@ jobs:
     steps:
       # ========== Phase 1: Main setup ==========
       - name: "Checkout: Main repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
@@ -167,7 +167,7 @@ jobs:
       # ========== Phase 3: Setup tools ==========
       - name: "Setup: Go toolchain"
         if: steps.delta.outputs.needs_sources == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
