@@ -45,7 +45,7 @@ jobs:
 
       - name: "Preflight: Read state and generator fingerprint"
         id: check
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
           FORCE_FULL: ${{ github.event.inputs.full_build || 'false' }}
