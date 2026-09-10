@@ -23,10 +23,13 @@ missing = sorted(generated - actual)
 extra = sorted(actual - generated)
 unplanned = sorted(actual - set(plan["output_paths"]))
 invalid_json = []
+error_outputs = []
 for rel in sorted(actual):
     try:
-        json.loads((out / rel).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        value = json.loads((out / rel).read_text(encoding="utf-8"))
+        if isinstance(value, dict) and "__ERROR" in value:
+            error_outputs.append(rel)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         invalid_json.append(f"{rel}: {exc}")
 
 stream_mismatches = []
@@ -51,6 +54,7 @@ checks = {
     "generated_files": not missing and not extra,
     "planned_outputs": not unplanned,
     "json": not invalid_json,
+    "error_outputs": not error_outputs,
     "unsupported": not report.get("unsupported_files") and not report.get("unsupported_helper_files"),
     "missing_sources": not report.get("missing_source_files"),
     "stream_backing": not stream_mismatches,
@@ -66,6 +70,8 @@ if unplanned:
     print("outputs outside incremental plan:", *unplanned, sep="\n  ")
 if invalid_json:
     print("invalid JSON:", *invalid_json, sep="\n  ")
+if error_outputs:
+    print("error outputs:", *error_outputs, sep="\n  ")
 if stream_mismatches:
     print("stream backing mismatches:", *stream_mismatches, sep="\n  ")
 if deleted_present:
@@ -95,9 +101,12 @@ expected = set(report.get("generated_files", [])) | set(report.get("generated_he
 extra = sorted(actual - expected)
 missing_generated = sorted(expected - actual)
 invalid_json = []
+error_outputs = []
 for rel in sorted(actual):
     try:
-        json.loads((out / rel).read_text(encoding="utf-8"))
+        value = json.loads((out / rel).read_text(encoding="utf-8"))
+        if isinstance(value, dict) and "__ERROR" in value:
+            error_outputs.append(rel)
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         invalid_json.append(f"{rel}: {exc}")
 missing_regions = [region for region in ("CN", "EN", "JP", "KR", "TW")
@@ -144,6 +153,7 @@ checks = {
     "all_outputs": len(actual) > 0,
     "generated_files": not missing_generated,
     "json": not invalid_json,
+    "error_outputs": not error_outputs,
     "source_regions": not missing_regions,
     "missing": not relevant_missing,
     "extra": not extra,
@@ -160,6 +170,8 @@ if missing_generated:
     print("missing generated paths:", *missing_generated, sep="\n  ")
 if invalid_json:
     print("invalid JSON:", *invalid_json, sep="\n  ")
+if error_outputs:
+    print("error outputs:", *error_outputs, sep="\n  ")
 if missing_regions:
     print("missing source regions:", *missing_regions, sep="\n  ")
 if missing:

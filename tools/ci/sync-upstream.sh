@@ -11,6 +11,7 @@ plan_path="${PLAN_PATH:-$RUNNER_TEMP/amagi-incremental-plan.json}"
 upstream_root="${UPSTREAM_ROOT:-$RUNNER_TEMP/AzurLaneLuaScripts}"
 force_full="${FORCE_FULL:-false}"
 latest_sha="$UPSTREAM_SHA"
+constant_sources=("CN/const.lua" "CN/model/const/shiptype.lua")
 
 if [[ ! "$latest_sha" =~ ^[0-9a-f]{40}$ ]]; then
 	echo "invalid upstream SHA: $latest_sha" >&2
@@ -175,7 +176,11 @@ if [[ "$mode" == "incremental" ]]; then
 		git -C "$upstream_root" diff --no-renames --name-status "$previous_sha" "$latest_sha" > "$diff_path"
 		while IFS=$'\t' read -r status path; do
 			[[ -z "$path" ]] && continue
-			if [[ "$path" =~ ^(CN|EN|JP|KR|TW)/(sharecfg|sharecfgdata)/([^/]+\.lua)$ ]]; then
+			if [[ "$path" == "CN/const.lua" || "$path" == "CN/model/const/shiptype.lua" ]]; then
+				echo "shared constants changed; falling back to full build"
+				mode="full"
+				break
+			elif [[ "$path" =~ ^(CN|EN|JP|KR|TW)/(sharecfg|sharecfgdata)/([^/]+\.lua)$ ]]; then
 				add_source_pair "$status" "$path" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"
 			elif [[ "$path" =~ ^(CN|EN|JP|KR|TW)/gamecfg/(buff|card|dorm|dungeon|skill|story|storyjp)/.+$ ]]; then
 				region="${BASH_REMATCH[1]}"
@@ -220,7 +225,7 @@ if [[ "$mode" == "full" ]]; then
 			sparse_patterns+=("/$region/gamecfg/story/**/*.lua")
 		fi
 	done
-	sparse_patterns+=("/versions/*.txt")
+	sparse_patterns+=("/versions/*.txt" "/CN/const.lua" "/CN/model/const/shiptype.lua")
 elif [[ "$mode" == "incremental" ]]; then
 	if (( ${#source_paths[@]} == 0 && ${#gamecfg[@]} == 0 )) && [[ "$versions" != "true" ]]; then
 		mode="noop"
@@ -234,6 +239,16 @@ json_array() {
 	fi
 	printf '%s\n' "$@" | jq -Rsc 'split("\n") | map(select(length > 0))'
 }
+
+needs_sources=false
+if [[ "$mode" == "full" ]] || (( ${#source_paths[@]} > 0 || ${#gamecfg[@]} > 0 )) || [[ "$versions" == "true" ]]; then
+	needs_sources=true
+fi
+if [[ "$needs_sources" == "true" ]] && [[ "$mode" == "incremental" ]] && (( ${#source_paths[@]} > 0 || ${#gamecfg[@]} > 0 )); then
+	for constant_source in "${constant_sources[@]}"; do
+		append_unique required_source_paths "$constant_source"
+	done
+fi
 
 source_json="$(json_array "${source_paths[@]-}")"
 required_source_json="$(json_array "${required_source_paths[@]-}")"
@@ -251,12 +266,12 @@ jq -n \
 	--argjson delete_outputs "$delete_json" \
 	'{mode: $mode, previous_sha: $previous_sha, latest_sha: $latest_sha, source_paths: $source_paths, required_source_paths: $required_source_paths, output_paths: $output_paths, gamecfg: $gamecfg, versions: $versions, delete_outputs: $delete_outputs}' > "$plan_path"
 
-needs_sources=false
-if [[ "$mode" == "full" ]] || (( ${#source_paths[@]} > 0 || ${#gamecfg[@]} > 0 )) || [[ "$versions" == "true" ]]; then
-	needs_sources=true
-fi
-
 if [[ "$needs_sources" == "true" ]]; then
+	if [[ "$mode" == "full" ]] || (( ${#source_paths[@]} > 0 || ${#gamecfg[@]} > 0 )); then
+		for constant_source in "${constant_sources[@]}"; do
+			append_unique sparse_patterns "/$constant_source"
+		done
+	fi
 	git -C "$upstream_root" sparse-checkout init --no-cone
 	git -C "$upstream_root" sparse-checkout set --no-cone "${sparse_patterns[@]}"
 	git -C "$upstream_root" checkout --quiet --detach "$latest_sha"

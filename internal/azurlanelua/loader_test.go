@@ -23,26 +23,32 @@ func TestLoadReferenceSamples(t *testing.T) {
 	if root == "" {
 		t.Skip("Lua source root unavailable")
 	}
+	load := func(path string) (any, error) {
+		return LoadFileWithConstantsRoot(path, filepath.Join(root, "CN"))
+	}
 	loaded := 0
 	if paths, _ := filepath.Glob(filepath.Join(root, "JP", "gamecfg", "buff", "*.lua")); len(paths) > 0 {
 		for _, path := range paths {
-			if _, err := LoadFile(path); err != nil {
-				t.Logf("buff %s: %v", filepath.Base(path), err)
-				break
+			if _, err := load(path); err != nil {
+				t.Fatalf("buff %s: %v", filepath.Base(path), err)
 			}
 			loaded++
 		}
 	}
 	if paths, _ := filepath.Glob(filepath.Join(root, "JP", "gamecfg", "storyjp", "*.lua")); len(paths) > 0 {
 		for _, path := range paths {
-			if _, err := LoadFile(path); err != nil {
-				t.Logf("storyjp %s: %v", filepath.Base(path), err)
-				break
+			if _, err := load(path); err != nil {
+				t.Fatalf("storyjp %s: %v", filepath.Base(path), err)
 			}
 			loaded++
 		}
 	}
-	if v, err := LoadFile(filepath.Join(root, "JP", "sharecfgdata", "ship_data_template.lua")); err == nil {
+	shipDataPath := filepath.Join(root, "JP", "sharecfgdata", "ship_data_template.lua")
+	if _, err := os.Stat(shipDataPath); err == nil {
+		v, err := load(shipDataPath)
+		if err != nil {
+			t.Fatalf("ship_data_template.lua: %v", err)
+		}
 		loaded++
 		if m, ok := v.(map[string]any); ok {
 			missing, nonmap := 0, 0
@@ -74,7 +80,7 @@ func TestLoadReferenceSamples(t *testing.T) {
 		if _, err := os.Stat(path); err != nil {
 			continue
 		}
-		if _, err := LoadFile(path); err != nil {
+		if _, err := load(path); err != nil {
 			t.Fatalf("%s: %v", path, err)
 		}
 		loaded++
@@ -93,7 +99,7 @@ func TestDebugArg(t *testing.T) {
 	if _, err := os.Stat(path); err != nil {
 		t.Skip("strategy_data_template.lua unavailable")
 	}
-	v, err := LoadFile(path)
+	v, err := LoadFileWithConstantsRoot(path, filepath.Join(root, "CN"))
 	if err != nil {
 		t.Fatal(err)
 	}

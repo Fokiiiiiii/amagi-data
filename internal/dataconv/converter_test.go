@@ -48,6 +48,7 @@ func initSharedConv() {
 			SourceRoot:     filepath.Join("..", ".."),
 			OutputRoot:     outDir,
 			LuaScriptsRoot: luaRoot,
+			ConstantsRoot:  filepath.Join(luaRoot, "CN"),
 		})
 		if err != nil {
 			_ = os.RemoveAll(outDir)
@@ -179,6 +180,22 @@ pg.example_template.all = { 100 }
 	err := generateDiscoveredLuaFiles(Options{OutputRoot: t.TempDir(), LuaScriptsRoot: luaRoot}, &Report{})
 	if err == nil || !strings.Contains(err.Error(), "stream backing data") {
 		t.Fatalf("expected missing stream backing error, got %v", err)
+	}
+}
+
+func TestMissingDorm3dTimelineControllerIsNotPublishedAsGeneratedError(t *testing.T) {
+	luaRoot := t.TempDir()
+	out := t.TempDir()
+	report := &Report{}
+	if err := generateAdditionalLuaFiles(Options{LuaScriptsRoot: luaRoot, OutputRoot: out}, report); err != nil {
+		t.Fatalf("generate additional files: %v", err)
+	}
+	legacyError := filepath.Join(out, "JP", "ShareCfg", "dorm3d_ik_timeline_controller.json")
+	if _, err := os.Stat(legacyError); !os.IsNotExist(err) {
+		t.Fatalf("unexpected compatibility error output: %v", err)
+	}
+	if containsString(report.GeneratedFiles, "JP/ShareCfg/dorm3d_ik_timeline_controller.json") {
+		t.Fatal("compatibility error output reported as generated")
 	}
 }
 

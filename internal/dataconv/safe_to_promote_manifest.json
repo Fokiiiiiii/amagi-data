@@ -277,12 +277,6 @@
       "classification": "exact_raw_match"
     },
     {
-      "relative_path": "CN/ShareCfg/dorm3d_ik_timeline_controller.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "exact_raw_match"
-    },
-    {
       "relative_path": "CN/ShareCfg/dorm3d_ins_language.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -661,12 +655,6 @@
       "classification": "exact_raw_match"
     },
     {
-      "relative_path": "EN/ShareCfg/dorm3d_ik_timeline_controller.json",
-      "region": "EN",
-      "category": "ShareCfg",
-      "classification": "exact_raw_match"
-    },
-    {
       "relative_path": "EN/ShareCfg/dorm3d_ins_language.json",
       "region": "EN",
       "category": "ShareCfg",
@@ -1034,12 +1022,6 @@
     },
     {
       "relative_path": "JP/ShareCfg/dorm3d_default_hidden_part.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "exact_raw_match"
-    },
-    {
-      "relative_path": "JP/ShareCfg/dorm3d_ik_timeline_controller.json",
       "region": "JP",
       "category": "ShareCfg",
       "classification": "exact_raw_match"
@@ -1441,12 +1423,6 @@
       "classification": "exact_raw_match"
     },
     {
-      "relative_path": "KR/ShareCfg/dorm3d_ik_timeline_controller.json",
-      "region": "KR",
-      "category": "ShareCfg",
-      "classification": "exact_raw_match"
-    },
-    {
       "relative_path": "KR/ShareCfg/dorm3d_ins_language.json",
       "region": "KR",
       "category": "ShareCfg",
@@ -1832,12 +1808,6 @@
     },
     {
       "relative_path": "TW/ShareCfg/dorm3d_default_hidden_part.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "exact_raw_match"
-    },
-    {
-      "relative_path": "TW/ShareCfg/dorm3d_ik_timeline_controller.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "exact_raw_match"

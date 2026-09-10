@@ -182,7 +182,7 @@ func generateAdditionalLuaFile(opts Options, report *Report, source, target stri
 		}
 		return err
 	}
-	decoded, err := azurlanelua.LoadFile(luaPath)
+	decoded, err := loadLuaFile(opts, luaPath)
 	if err != nil {
 		report.UnsupportedFiles = append(report.UnsupportedFiles, target)
 		return nil

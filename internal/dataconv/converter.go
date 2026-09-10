@@ -34,6 +34,7 @@ type Options struct {
 	OutputRoot               string
 	ReportPath               string
 	LuaScriptsRoot           string
+	ConstantsRoot            string
 	ReferenceRoot            string
 	FallbackHelperSourceRoot string
 	VersionSourceMapPath     string
@@ -116,6 +117,13 @@ func UnsupportedHelperFiles(includeVersions bool) []string {
 }
 
 func FallbackHelperFiles() []string { return slices.Clone(fallbackHelperFiles) }
+
+func loadLuaFile(opts Options, path string) (any, error) {
+	if opts.ConstantsRoot == "" {
+		return azurlanelua.LoadFile(path)
+	}
+	return azurlanelua.LoadFileWithConstantsRoot(path, opts.ConstantsRoot)
+}
 
 func newReport(opts Options, manifest *SafeManifest) *Report {
 	return &Report{
@@ -254,7 +262,7 @@ func generateDiscoveredLuaFile(opts Options, report *Report, region, dir, name s
 	}
 	relDir := map[string]string{"sharecfg": "ShareCfg", "sharecfgdata": "sharecfgdata"}[dir]
 	rel := region + "/" + relDir + "/" + strings.TrimSuffix(name, ".lua") + ".json"
-	value, err := azurlanelua.LoadFile(path)
+	value, err := loadLuaFile(opts, path)
 	if err != nil {
 		if strings.Contains(rel, "/word_template_") || strings.Contains(rel, "/word_legal_template_") {
 			return nil
@@ -267,7 +275,7 @@ func generateDiscoveredLuaFile(opts Options, report *Report, region, dir, name s
 	if backingPath, resolveErr := streamBackingPath(opts.LuaScriptsRoot, region, dir, name, converted); resolveErr != nil {
 		return resolveErr
 	} else if backingPath != "" {
-		value, err = azurlanelua.LoadFile(backingPath)
+		value, err = loadLuaFile(opts, backingPath)
 		if err != nil {
 			return err
 		}
@@ -318,9 +326,6 @@ func generateAdditionalLuaFiles(opts Options, report *Report) error {
 			return err
 		}
 	}
-	if err := generateDorm3dIKTimelineControllerError(opts, report); err != nil {
-		return err
-	}
 	for _, item := range []struct{ source, target string }{
 		{"JP/sharecfg/battlenodescfg.lua", "JP/ShareCfg/battle_nodes_cfg.json"},
 		{"JP/sharecfg/dorm3d_dolly.lua", "JP/ShareCfg/dorm3_d_dolly.json"},
@@ -340,7 +345,7 @@ func generateAdditionalLuaFiles(opts Options, report *Report) error {
 		if _, err := os.Stat(luaPath); err != nil {
 			continue
 		}
-		decoded, err := azurlanelua.LoadFile(luaPath)
+		decoded, err := loadLuaFile(opts, luaPath)
 		if err != nil {
 			report.UnsupportedFiles = append(report.UnsupportedFiles, rel)
 			continue
@@ -373,36 +378,6 @@ func generateAdditionalLuaFiles(opts Options, report *Report) error {
 	return nil
 }
 
-func generateDorm3dIKTimelineControllerError(opts Options, report *Report) error {
-	rel := "JP/ShareCfg/dorm3d_ik_timeline_controller.json"
-	if slices.Contains(report.GeneratedFiles, rel) {
-		return nil
-	}
-	const message = `module 'sharecfg.dorm3d_ik_timeline_controller' not found:
-	no field package.preload['sharecfg.dorm3d_ik_timeline_controller']
-	no file './sharecfg/dorm3d_ik_timeline_controller.lua'
-	no file '/usr/local/share/luajit-2.1.0-beta3/sharecfg/dorm3d_ik_timeline_controller.lua'
-	no file '/usr/local/share/lua/5.1/sharecfg/dorm3d_ik_timeline_controller.lua'
-	no file '/usr/local/share/lua/5.1/sharecfg/dorm3d_ik_timeline_controller/init.lua'
-	no file './sharecfg/dorm3d_ik_timeline_controller.so'
-	no file '/usr/local/lib/lua/5.1/sharecfg/dorm3d_ik_timeline_controller.so'
-	no file '/usr/local/lib/lua/5.1/loadall.so'
-	no file './sharecfg.so'
-	no file '/usr/local/lib/lua/5.1/sharecfg.so'
-	no file '/usr/local/lib/lua/5.1/loadall.so'
-stack traceback:
-	[C]: at 0x7fc2de8d80b0
-	[C]: at 0x7fc2de8894d0
-	[C]: in function 'pcall'
-	[string "<python>"]:67: in function <[string "<python>"]:66>`
-	if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), map[string]any{"__ERROR": message}); err != nil {
-		return err
-	}
-	report.GeneratedFiles = append(report.GeneratedFiles, rel)
-	report.TotalGeneratedCount++
-	return nil
-}
-
 func generateReturnedGameCfg(opts Options, report *Report, region, sourceName, targetName string) error {
 	pattern := filepath.Join(opts.LuaScriptsRoot, region, "gamecfg", sourceName, "*.lua")
 	paths, err := filepath.Glob(pattern)
@@ -416,7 +391,7 @@ func generateReturnedGameCfg(opts Options, report *Report, region, sourceName, t
 	merged := azurlanelua.OrderedObject{Values: map[string]any{}}
 	for _, path := range paths {
 		stem := strings.TrimSuffix(filepath.Base(path), ".lua")
-		value, loadErr := azurlanelua.LoadFile(path)
+		value, loadErr := loadLuaFile(opts, path)
 		if loadErr != nil {
 			report.UnsupportedFiles = append(report.UnsupportedFiles, region+"/GameCfg/"+targetName+".json")
 			return nil
@@ -637,7 +612,7 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 		var converted any
 		var err error
 		if opts.LuaScriptsRoot != "" {
-			luaPath, resolveErr := completeLuaPath(opts.LuaScriptsRoot, file.RelativePath)
+			luaPath, resolveErr := completeLuaPath(opts, file.RelativePath)
 			if resolveErr != nil {
 				err = resolveErr
 			} else if _, statErr := os.Stat(luaPath); statErr != nil {
@@ -649,7 +624,7 @@ func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[
 				report.MissingSourceFiles = append(report.MissingSourceFiles, file.RelativePath)
 				continue
 			} else {
-				converted, err = convertLuaFile(luaPath, file.RelativePath, file.Classification, allowlist)
+				converted, err = convertLuaFile(opts, luaPath, file.RelativePath, file.Classification, allowlist)
 			}
 		} else {
 			if _, statErr := os.Stat(sourcePath); statErr != nil {
@@ -766,25 +741,25 @@ func streamBackingPath(root, region, dir, name string, value any) (string, error
 	return path, nil
 }
 
-func completeLuaPath(root, rel string) (string, error) {
-	path := luaPathFor(root, rel)
+func completeLuaPath(opts Options, rel string) (string, error) {
+	path := luaPathFor(opts.LuaScriptsRoot, rel)
 	parts := strings.Split(filepath.ToSlash(rel), "/")
 	if len(parts) != 3 || parts[1] != "ShareCfg" {
 		return path, nil
 	}
-	value, err := azurlanelua.LoadFile(path)
+	value, err := loadLuaFile(opts, path)
 	if err != nil {
 		return path, nil
 	}
-	backingPath, err := streamBackingPath(root, parts[0], "sharecfg", filepath.Base(path), azurlanelua.ToPlain(value))
+	backingPath, err := streamBackingPath(opts.LuaScriptsRoot, parts[0], "sharecfg", filepath.Base(path), azurlanelua.ToPlain(value))
 	if err != nil || backingPath == "" {
 		return path, err
 	}
 	return backingPath, nil
 }
 
-func convertLuaFile(path, rel, classification string, allowlist []int) (any, error) {
-	decoded, err := azurlanelua.LoadFile(path)
+func convertLuaFile(opts Options, path, rel, classification string, allowlist []int) (any, error) {
+	decoded, err := loadLuaFile(opts, path)
 	if err != nil {
 		return nil, err
 	}

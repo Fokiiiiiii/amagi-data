@@ -23,11 +23,16 @@ func main() {
 	incrementalPlanPath := flag.String("incremental-plan", "", "incremental conversion plan")
 	flag.Parse()
 
+	constantsRoot := ""
+	if *luaScriptsRoot != "" {
+		constantsRoot = filepath.Join(*luaScriptsRoot, "CN")
+	}
 	opts := dataconv.Options{
 		SourceRoot:               *sourceRoot,
 		OutputRoot:               *outputRoot,
 		ReportPath:               *reportPath,
 		LuaScriptsRoot:           *luaScriptsRoot,
+		ConstantsRoot:            constantsRoot,
 		ReferenceRoot:            *referenceRoot,
 		FallbackHelperSourceRoot: *fallbackRoot,
 		VersionSourceMapPath:     *versionSourceMap,

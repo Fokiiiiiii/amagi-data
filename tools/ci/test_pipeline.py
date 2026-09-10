@@ -90,6 +90,13 @@ class FixtureTest(unittest.TestCase):
         commit(self.workspace)
 
 
+class WorkflowTests(unittest.TestCase):
+    def test_versions_have_one_publishing_workflow(self) -> None:
+        planner = (ROOT / "tools/ci/sync-upstream.sh").read_text()
+        self.assertIn("global/versions.json", planner)
+        self.assertFalse((ROOT / ".github/workflows/sync-versions.yml").exists())
+
+
 class PreflightTests(FixtureTest):
     def preflight(self, *, latest: str = "a" * 40, old: str = "a" * 40,
                   old_hash: str | None = None, force: bool = False,
@@ -163,6 +170,8 @@ class PlannerTests(FixtureTest):
         for region in REGIONS:
             put(self.upstream, f"{region}/sharecfg/normal.lua", "return { id = 1 }\n")
             put(self.upstream, f"versions/{region}.txt", "1.2.3\n")
+        put(self.upstream, "CN/const.lua", "SYSTEM_DUEL = 3\n")
+        put(self.upstream, "CN/model/const/shiptype.lua", 'slot0 = class("ShipType")\nslot0.QuZhu = 1\n')
         put(self.upstream, "JP/gamecfg/skill/one.lua", "return {}\n")
         put(self.upstream, "JP/gamecfg/skill/two.lua", "return {}\n")
         self.previous = commit(self.upstream)
@@ -200,7 +209,9 @@ class PlannerTests(FixtureTest):
         for name in ALIASES:
             put(self.upstream, f"JP/sharecfg/{name}.lua", "return { id = 2 }\n")
         plan, _ = self.plan(commit(self.upstream))
-        self.assertEqual(len(plan["required_source_paths"]), len(ALIASES))
+        self.assertEqual(len(plan["required_source_paths"]), len(ALIASES) + 2)
+        self.assertIn("CN/const.lua", plan["required_source_paths"])
+        self.assertIn("CN/model/const/shiptype.lua", plan["required_source_paths"])
         self.assertEqual(plan["delete_outputs"], [])
 
     def test_alias_deletions(self) -> None:
@@ -210,16 +221,40 @@ class PlannerTests(FixtureTest):
         for name in ALIASES:
             (self.upstream / f"JP/sharecfg/{name}.lua").unlink()
         plan, _ = self.plan(commit(self.upstream))
-        self.assertEqual(plan["required_source_paths"], [])
+        self.assertEqual(
+            plan["required_source_paths"],
+            ["CN/const.lua", "CN/model/const/shiptype.lua"],
+        )
         self.assertEqual(len(plan["delete_outputs"]), 2 * len(ALIASES))
 
     def test_only_changed_region_is_checked_out(self) -> None:
         put(self.upstream, "JP/sharecfg/normal.lua", "return { id = 2 }\n")
         plan, outputs = self.plan(commit(self.upstream))
-        self.assertEqual(plan["required_source_paths"], ["JP/sharecfg/normal.lua"])
+        self.assertEqual(
+            plan["required_source_paths"],
+            [
+                "JP/sharecfg/normal.lua",
+                "CN/const.lua",
+                "CN/model/const/shiptype.lua",
+            ],
+        )
         source = Path(outputs["source_root"])
         self.assertTrue((source / "JP/sharecfg/normal.lua").is_file())
         self.assertFalse((source / "CN/sharecfg/normal.lua").exists())
+
+    def test_shared_constants_are_fetched_for_lua_changes(self) -> None:
+        put(self.upstream, "JP/sharecfg/normal.lua", "return { id = 2 }\n")
+        plan, outputs = self.plan(commit(self.upstream))
+        self.assertIn("CN/model/const/shiptype.lua", plan["required_source_paths"])
+        self.assertIn("CN/const.lua", plan["required_source_paths"])
+        self.assertTrue((Path(outputs["source_root"]) / "CN/model/const/shiptype.lua").is_file())
+        self.assertTrue((Path(outputs["source_root"]) / "CN/const.lua").is_file())
+
+    def test_shared_constants_change_falls_back_to_full(self) -> None:
+        put(self.upstream, "CN/model/const/shiptype.lua", 'slot0 = class("ShipType")\nslot0.QuZhu = 2\n')
+        plan, outputs = self.plan(commit(self.upstream))
+        self.assertEqual(plan["mode"], "full")
+        self.assertEqual(outputs["needs_sources"], "true")
 
     def test_gamecfg_rebuilds_whole_affected_category(self) -> None:
         put(self.upstream, "JP/gamecfg/skill/one.lua", "return { id = 2 }\n")
@@ -227,7 +262,7 @@ class PlannerTests(FixtureTest):
         self.assertEqual(plan["gamecfg"], ["JP/GameCfg/skill.json"])
         source = Path(outputs["source_root"])
         self.assertTrue((source / "JP/gamecfg/skill/two.lua").is_file())
-        self.assertFalse((source / "CN").exists())
+        self.assertFalse((source / "CN" / "sharecfg").exists())
 
     def test_versions_only_fetches_all_version_inputs(self) -> None:
         put(self.upstream, "versions/JP.txt", "1.2.4\n")
@@ -316,6 +351,10 @@ class VerifierTests(FixtureTest):
 
     def test_full_rejects_invalid_json(self) -> None:
         put(self.out, self.report["generated_files"][0], "{broken\n")
+        self.assert_rejected_before_regeneration(self.verify())
+
+    def test_full_rejects_error_output(self) -> None:
+        put(self.out, self.report["generated_files"][0], '{"__ERROR":"conversion failed"}\n')
         self.assert_rejected_before_regeneration(self.verify())
 
     def test_full_rejects_missing_region_input(self) -> None:
