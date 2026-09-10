@@ -56,6 +56,62 @@ func TestLoadFileRejectsUnresolvedIdentifier(t *testing.T) {
 	}
 }
 
+func TestLoadFileTreatsUnknownArrayIdentifierAsNil(t *testing.T) {
+	path := writeLoaderFixture(t, filepath.Join(t.TempDir(), "JP", "gamecfg", "storyjp", "niukasier6.lua"), `return {
+		{
+			blackBgtrue,
+			actor = 202190,
+			keep = "record",
+		},
+	}
+`)
+
+	value, err := LoadFile(path)
+	if err != nil {
+		t.Fatalf("unknown array identifier rejected: %v", err)
+	}
+	rows, ok := ToPlain(value).([]any)
+	if !ok || len(rows) != 1 {
+		t.Fatalf("unexpected rows: %#v", value)
+	}
+	record, ok := rows[0].(map[string]any)
+	if !ok || record["actor"] != json.Number("202190") || record["keep"] != "record" {
+		t.Fatalf("unexpected record: %#v", rows[0])
+	}
+	if _, ok := record["1"]; ok {
+		t.Fatalf("unknown array identifier should not be emitted: %#v", record)
+	}
+}
+
+func TestLoadFileAllowsKnownLegacyNilIdentifiers(t *testing.T) {
+	path := writeLoaderFixture(t, filepath.Join(t.TempDir(), "JP", "sharecfg", "barrage_template.lua"), `return {
+		{
+			stopbgm = trur,
+			random_angle = ture,
+			keep = true,
+		},
+	}
+`)
+
+	value, err := LoadFile(path)
+	if err != nil {
+		t.Fatalf("known legacy nil identifiers rejected: %v", err)
+	}
+	rows, ok := ToPlain(value).([]any)
+	if !ok || len(rows) != 1 {
+		t.Fatalf("unexpected rows: %#v", value)
+	}
+	record, ok := rows[0].(map[string]any)
+	if !ok || record["keep"] != true {
+		t.Fatalf("unexpected record: %#v", rows[0])
+	}
+	for _, key := range []string{"stopbgm", "random_angle"} {
+		if _, ok := record[key]; ok {
+			t.Fatalf("legacy nil field %q should be omitted: %#v", key, record)
+		}
+	}
+}
+
 func TestLoadFileReturnsErrorForTruncatedTable(t *testing.T) {
 	path := writeLoaderFixture(t, filepath.Join(t.TempDir(), "JP", "sharecfg", "sample.lua"), `return {
 		{ id = 1

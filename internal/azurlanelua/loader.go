@@ -461,16 +461,8 @@ func (p *parser) parsePrimary() (any, error) {
 			name += "." + p.tokens[p.i+1].text
 			p.i += 2
 		}
-		if value, ok := p.constants[name]; ok && structuredConstant(value) {
+		if value, ok := p.resolveIdentifier(name); ok {
 			return value, nil
-		}
-		if value, ok := p.constants[name]; ok {
-			return value, nil
-		}
-		if strings.HasPrefix(name, "slot0.") {
-			if value, ok := p.constants["ShipType."+strings.TrimPrefix(name, "slot0.")]; ok && structuredConstant(value) {
-				return value, nil
-			}
 		}
 		if p.i < len(p.tokens) && p.tokens[p.i].kind == "(" {
 			return p.parseCall(name, t)
@@ -678,6 +670,54 @@ func isLocalAlias(name string) bool {
 	return true
 }
 
+func (p *parser) resolveIdentifier(name string) (any, bool) {
+	if value, ok := p.constants[name]; ok && structuredConstant(value) {
+		return value, true
+	}
+	if value, ok := p.constants[name]; ok {
+		return value, true
+	}
+	if strings.HasPrefix(name, "slot0.") {
+		if value, ok := p.constants["ShipType."+strings.TrimPrefix(name, "slot0.")]; ok && structuredConstant(value) {
+			return value, true
+		}
+	}
+	return nil, false
+}
+
+func isLuaKeyword(name string) bool {
+	switch name {
+	case "and", "break", "do", "else", "elseif", "end", "for", "function", "if", "in", "local", "not", "or", "repeat", "return", "then", "until", "while":
+		return true
+	default:
+		return false
+	}
+}
+
+func (p *parser) parseArrayValue() (any, error) {
+	name, end, ok := p.identifierPathAt(p.i)
+	if ok && !isLuaKeyword(name) {
+		if _, known := p.resolveIdentifier(name); !known && end < len(p.tokens) && (p.tokens[end].kind == "," || p.tokens[end].kind == "}") {
+			p.i = end
+			return nil, nil
+		}
+	}
+	return p.parseValue()
+}
+
+func (p *parser) identifierPathAt(start int) (string, int, bool) {
+	if start >= len(p.tokens) || p.tokens[start].kind != "ident" {
+		return "", start, false
+	}
+	name := p.tokens[start].text
+	end := start + 1
+	for end+1 < len(p.tokens) && p.tokens[end].kind == "." && p.tokens[end+1].kind == "ident" {
+		name += "." + p.tokens[end+1].text
+		end += 2
+	}
+	return name, end, true
+}
+
 func (p *parser) nextIsOr() bool {
 	return p.i < len(p.tokens) && p.tokens[p.i].kind == "ident" && p.tokens[p.i].text == "or"
 }
@@ -761,7 +801,13 @@ func (p *parser) parseTable() (any, error) {
 			key = p.tokens[p.i].text
 			p.i += 2
 		}
-		v, err := p.parseValue()
+		var v any
+		var err error
+		if keyKind == "array" {
+			v, err = p.parseArrayValue()
+		} else {
+			v, err = p.parseValue()
+		}
 		if err != nil {
 			return nil, fmt.Errorf("table value at token %d (%s): %w", p.i, p.currentToken(), err)
 		}
@@ -977,29 +1023,33 @@ func defaultConstants() map[string]any {
 		"ship_unlock":            nil,
 		"lv_max":                 nil,
 		// These source-level labels are intentionally runtime-only nil values.
-		"healthy":                        nil,
-		"sub_move":                       nil,
-		"defaultID":                      nil,
-		"itemID":                         nil,
-		"special_goods_list":             nil,
-		"special_discount_list":          nil,
-		"equipskin_discount":             nil,
-		"equipskin_discount_2":           nil,
-		"undefined":                      nil,
-		"times":                          nil,
-		"exchange":                       nil,
-		"hour":                           nil,
-		"random_buff":                    nil,
-		"wash":                           nil,
-		"a":                              nil,
-		"map_call":                       nil,
-		"sleep":                          nil,
-		"playername":                     nil,
-		"dance":                          nil,
-		"area_scout":                     nil,
-		"missile":                        nil,
-		"support_missile":                nil,
-		"expel":                          nil,
+		"healthy":               nil,
+		"sub_move":              nil,
+		"defaultID":             nil,
+		"itemID":                nil,
+		"special_goods_list":    nil,
+		"special_discount_list": nil,
+		"equipskin_discount":    nil,
+		"equipskin_discount_2":  nil,
+		"undefined":             nil,
+		"times":                 nil,
+		"exchange":              nil,
+		"hour":                  nil,
+		"random_buff":           nil,
+		"wash":                  nil,
+		"a":                     nil,
+		"map_call":              nil,
+		"sleep":                 nil,
+		"playername":            nil,
+		"dance":                 nil,
+		"area_scout":            nil,
+		"missile":               nil,
+		"support_missile":       nil,
+		"expel":                 nil,
+		// These upstream misspellings were undefined globals in the legacy
+		// target-compatible parser and therefore serialized as omitted fields.
+		"ture":                           nil,
+		"trur":                           nil,
 		"ActivityBossMediatorTemplate":   nil,
 		"ActivityBossAisaikesiScene":     nil,
 		"WEIXIANFAMINGPOJINZHONGWEITUO1": nil,
