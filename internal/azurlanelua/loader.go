@@ -258,6 +258,11 @@ func lex(src []byte) ([]token, error) {
 			long = strings.TrimPrefix(long, "\n")
 			out = append(out, token{kind: "string", text: long, pos: start})
 			l.pos += 2
+			if l.pos < len(l.src) && l.src[l.pos] == ']' && (l.pos+1 == len(l.src) || l.src[l.pos+1] == ',' || l.src[l.pos+1] == '}' || unicode.IsSpace(l.src[l.pos+1])) {
+				// A few upstream tables contain one extra closing bracket after a
+				// long string terminator. Preserve their legacy parsed output.
+				l.pos++
+			}
 			continue
 		}
 		if unicode.IsDigit(c) || (c == '.' && l.pos+1 < len(l.src) && unicode.IsDigit(l.src[l.pos+1])) {
@@ -1023,29 +1028,31 @@ func defaultConstants() map[string]any {
 		"ship_unlock":            nil,
 		"lv_max":                 nil,
 		// These source-level labels are intentionally runtime-only nil values.
-		"healthy":               nil,
-		"sub_move":              nil,
-		"defaultID":             nil,
-		"itemID":                nil,
-		"special_goods_list":    nil,
-		"special_discount_list": nil,
-		"equipskin_discount":    nil,
-		"equipskin_discount_2":  nil,
-		"undefined":             nil,
-		"times":                 nil,
-		"exchange":              nil,
-		"hour":                  nil,
-		"random_buff":           nil,
-		"wash":                  nil,
-		"a":                     nil,
-		"map_call":              nil,
-		"sleep":                 nil,
-		"playername":            nil,
-		"dance":                 nil,
-		"area_scout":            nil,
-		"missile":               nil,
-		"support_missile":       nil,
-		"expel":                 nil,
+		"healthy":                  nil,
+		"sub_move":                 nil,
+		"defaultID":                nil,
+		"itemID":                   nil,
+		"special_goods_list":       nil,
+		"special_discount_list":    nil,
+		"equipskin_discount":       nil,
+		"equipskin_discount_2":     nil,
+		"undefined":                nil,
+		"times":                    nil,
+		"exchange":                 nil,
+		"hour":                     nil,
+		"random_buff":              nil,
+		"wash":                     nil,
+		"a":                        nil,
+		"map_call":                 nil,
+		"sleep":                    nil,
+		"playername":               nil,
+		"dance":                    nil,
+		"area_scout":               nil,
+		"missile":                  nil,
+		"support_missile":          nil,
+		"expel":                    nil,
+		"BuildShipScene.PAGE_PRAY": nil,
+		"walk":                     nil,
 		// These upstream misspellings were undefined globals in the legacy
 		// target-compatible parser and therefore serialized as omitted fields.
 		"ture":                           nil,

@@ -88,6 +88,8 @@ func TestLoadFileAllowsKnownLegacyNilIdentifiers(t *testing.T) {
 		{
 			stopbgm = trur,
 			random_angle = ture,
+			page = BuildShipScene.PAGE_PRAY,
+			spine = { [4] = walk },
 			keep = true,
 		},
 	}
@@ -105,10 +107,37 @@ func TestLoadFileAllowsKnownLegacyNilIdentifiers(t *testing.T) {
 	if !ok || record["keep"] != true {
 		t.Fatalf("unexpected record: %#v", rows[0])
 	}
-	for _, key := range []string{"stopbgm", "random_angle"} {
+	for _, key := range []string{"stopbgm", "random_angle", "page"} {
 		if _, ok := record[key]; ok {
 			t.Fatalf("legacy nil field %q should be omitted: %#v", key, record)
 		}
+	}
+	spine, ok := record["spine"].(map[string]any)
+	if !ok || len(spine) != 0 {
+		t.Fatalf("legacy nil nested value should be omitted: %#v", record["spine"])
+	}
+}
+
+func TestLoadFileAcceptsLegacyExtraLongStringTerminator(t *testing.T) {
+	path := writeLoaderFixture(t, filepath.Join(t.TempDir(), "EN", "sharecfg", "skill_world_display.lua"), `return {
+		{
+			desc = [[legacy text]]],
+			keep = true,
+		},
+	}
+`)
+
+	value, err := LoadFile(path)
+	if err != nil {
+		t.Fatalf("legacy long string terminator rejected: %v", err)
+	}
+	rows, ok := ToPlain(value).([]any)
+	if !ok || len(rows) != 1 {
+		t.Fatalf("unexpected rows: %#v", value)
+	}
+	record, ok := rows[0].(map[string]any)
+	if !ok || record["desc"] != "legacy text" || record["keep"] != true {
+		t.Fatalf("unexpected record: %#v", rows[0])
 	}
 }
 
