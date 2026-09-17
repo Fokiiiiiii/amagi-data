@@ -1543,17 +1543,25 @@ func marshalGeneratedJSON(v any) ([]byte, error) {
 				return keys[i] < keys[j]
 			})
 		} else {
+			// Classify once instead of inside the comparator: sort.Slice runs
+			// O(n log n) comparisons and each failed Atoi allocates a *NumError.
+			parsed := make(map[string]int, len(keys))
+			for _, key := range keys {
+				if !mayBeNumericKey(key) {
+					continue
+				}
+				if n, err := strconv.Atoi(key); err == nil {
+					parsed[key] = n
+				}
+			}
 			sort.Slice(keys, func(i, j int) bool {
-				numI, errI := strconv.Atoi(keys[i])
-				numJ, errJ := strconv.Atoi(keys[j])
-				if errI == nil && errJ == nil {
+				numI, okI := parsed[keys[i]]
+				numJ, okJ := parsed[keys[j]]
+				if okI && okJ {
 					return numI < numJ
 				}
-				if errI == nil {
-					return true
-				}
-				if errJ == nil {
-					return false
+				if okI != okJ {
+					return okI
 				}
 				return keys[i] < keys[j]
 			})
