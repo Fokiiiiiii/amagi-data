@@ -387,14 +387,14 @@ class CommitScriptTests(FixtureTest):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.last_commit_message(), "update [JP]: 9.2.819 -> 9.2.821 [skip ci]")
 
-    def test_multi_region_version_bump_lists_each_region(self) -> None:
+    def test_multi_region_version_bump_lists_each_region_on_subject(self) -> None:
         put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.381"}))
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        message = self.last_commit_message()
-        self.assertTrue(message.startswith("update [CN, JP] [skip ci]\n\n"))
-        self.assertIn("CN: 9.7.380 -> 9.7.381", message)
-        self.assertIn("JP: 9.2.819 -> 9.2.821", message)
+        self.assertEqual(
+            self.last_commit_message(),
+            "update [CN]: 9.7.380 -> 9.7.381, [JP]: 9.2.819 -> 9.2.821 [skip ci]",
+        )
 
     def test_no_version_change_skips_commit_even_with_other_changes(self) -> None:
         before = run(["git", "rev-parse", "HEAD"], self.workspace).stdout
