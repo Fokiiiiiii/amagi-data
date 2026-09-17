@@ -231,7 +231,9 @@ type lexer struct {
 
 func lex(src []byte) ([]token, error) {
 	l := &lexer{src: []rune(string(src))}
-	var out []token
+	// Upstream tables average well under 8 bytes per token; sizing the slice up front
+	// avoids repeatedly reallocating and copying it for multi-MB sources.
+	out := make([]token, 0, len(src)/8+16)
 	for l.pos < len(l.src) {
 		c := l.src[l.pos]
 		if unicode.IsSpace(c) {

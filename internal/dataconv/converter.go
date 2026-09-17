@@ -1471,6 +1471,14 @@ func writeJSON(path string, v any) error {
 	return os.WriteFile(path, data, 0o644)
 }
 
+func mayBeNumericKey(key string) bool {
+	if key == "" {
+		return false
+	}
+	c := key[0]
+	return c == '-' || c == '+' || (c >= '0' && c <= '9')
+}
+
 func marshalGeneratedJSON(v any) ([]byte, error) {
 	switch value := v.(type) {
 	case azurlanelua.OrderedObject:
@@ -1499,6 +1507,13 @@ func marshalGeneratedJSON(v any) ([]byte, error) {
 		numeric := true
 		nums := make(map[string]int, len(keys))
 		for _, key := range keys {
+			// Most keys are field names, and strconv.Atoi allocates a *NumError for
+			// every one of them. Reject the obvious non-numbers by their first byte
+			// first: anything Atoi accepts starts with a sign or a digit.
+			if !mayBeNumericKey(key) {
+				numeric = false
+				break
+			}
 			n, err := strconv.Atoi(key)
 			if err != nil {
 				numeric = false
