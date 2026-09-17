@@ -212,15 +212,4 @@ jobs:
       # ========== Phase 8: Commit & Push ==========
       - name: "Commit: Generated data"
         if: steps.delta.outputs.needs_processing == 'true'
-        run: |
-          set -euo pipefail
-          if [ -n "$(git status --short)" ]; then
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git config user.name "github-actions[bot]"
-            git add --all
-            git commit -m "data: sync generated data [skip ci]"
-            git pull --rebase origin "${{ github.ref_name }}"
-            git push origin HEAD:${{ github.ref_name }}
-          else
-            echo "No generated file changes to commit"
-          fi
+        run: tools/ci/commit-generated.sh

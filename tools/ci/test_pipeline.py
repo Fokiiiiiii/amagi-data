@@ -377,5 +377,51 @@ class VerifierTests(FixtureTest):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class CommitScriptTests(FixtureTest):
+    def setUp(self) -> None:
+        super().setUp()
+        run(["git", "branch", "-M", "main"], self.workspace)
+        self.origin = self.base / "origin.git"
+        run(["git", "init", "-q", "--bare", str(self.origin)], self.base)
+        run(["git", "remote", "add", "origin", str(self.origin)], self.workspace)
+        put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.819", "CN": "9.7.380"}))
+        commit(self.workspace)
+        run(["git", "push", "-q", "origin", "main"], self.workspace)
+
+    def commit_generated(self) -> subprocess.CompletedProcess[str]:
+        return run(["bash", str(ROOT / "tools/ci/commit-generated.sh")], self.workspace, check=False,
+                    env={"GITHUB_REF_NAME": "main"})
+
+    def last_commit_message(self) -> str:
+        return run(["git", "log", "-1", "--pretty=%B"], self.workspace).stdout.strip()
+
+    def test_single_region_version_bump_is_summarized(self) -> None:
+        put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.380"}))
+        result = self.commit_generated()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.last_commit_message(), "update [JP]: 9.2.819 -> 9.2.821 [skip ci]")
+
+    def test_multi_region_version_bump_lists_each_region(self) -> None:
+        put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.381"}))
+        result = self.commit_generated()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        message = self.last_commit_message()
+        self.assertTrue(message.startswith("update [CN, JP] [skip ci]\n\n"))
+        self.assertIn("CN: 9.7.380 -> 9.7.381", message)
+        self.assertIn("JP: 9.2.819 -> 9.2.821", message)
+
+    def test_no_version_change_falls_back_to_generic_message(self) -> None:
+        put(self.workspace, "JP/ShareCfg/new_table.json", "{}\n")
+        result = self.commit_generated()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.last_commit_message(), "data: sync generated data [skip ci]")
+
+    def test_no_working_tree_changes_skips_commit(self) -> None:
+        before = run(["git", "rev-parse", "HEAD"], self.workspace).stdout
+        result = self.commit_generated()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(run(["git", "rev-parse", "HEAD"], self.workspace).stdout, before)
+
+
 if __name__ == "__main__":
     unittest.main()
