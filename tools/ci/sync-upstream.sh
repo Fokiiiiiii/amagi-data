@@ -56,6 +56,7 @@ source_paths=()
 required_source_paths=()
 sparse_patterns=()
 gamecfg=()
+gamecfg_sources=()
 delete_outputs=()
 versions=false
 
@@ -83,6 +84,10 @@ append_unique() {
 		gamecfg)
 			for existing in "${gamecfg[@]-}"; do [[ "$existing" == "$value" ]] && return; done
 			gamecfg+=("$value")
+			;;
+		gamecfg_sources)
+			for existing in "${gamecfg_sources[@]-}"; do [[ "$existing" == "$value" ]] && return; done
+			gamecfg_sources+=("$value")
 			;;
 		delete_outputs)
 			for existing in "${delete_outputs[@]-}"; do [[ "$existing" == "$value" ]] && return; done
@@ -193,6 +198,13 @@ if [[ "$mode" == "incremental" ]]; then
 				target_name="$source_name"
 				[[ "$region" == "JP" && "$source_name" == "storyjp" ]] && target_name="story"
 				add_gamecfg "$region" "$source_name" "$target_name"
+				# Record the individual file so the converter can refresh just this
+				# entry instead of re-parsing the whole category directory.
+				if [[ "$status" == "D" ]]; then
+					append_unique gamecfg_sources "D:$path"
+				else
+					append_unique gamecfg_sources "M:$path"
+				fi
 			elif [[ "$path" =~ ^versions/[^/]+\.txt$ ]]; then
 				versions=true
 				append_unique output_paths "global/versions.json"
@@ -210,6 +222,7 @@ if [[ "$mode" == "full" ]]; then
 	source_paths=()
 	required_source_paths=()
 	gamecfg=()
+	gamecfg_sources=()
 	delete_outputs=()
 	versions=false
 	output_paths=()
@@ -253,6 +266,8 @@ fi
 source_json="$(json_array "${source_paths[@]-}")"
 required_source_json="$(json_array "${required_source_paths[@]-}")"
 gamecfg_json="$(json_array "${gamecfg[@]-}")"
+# "M:path" / "D:path" entries become {path, deleted} objects for the converter.
+gamecfg_sources_json="$(json_array "${gamecfg_sources[@]-}" | jq -c 'map({path: .[2:], deleted: (.[0:1] == "D")})')"
 delete_json="$(json_array "${delete_outputs[@]-}")"
 jq -n \
 	--arg mode "$mode" \
@@ -262,9 +277,10 @@ jq -n \
 	--argjson required_source_paths "$required_source_json" \
 	--argjson output_paths "$(json_array "${output_paths[@]-}")" \
 	--argjson gamecfg "$gamecfg_json" \
+	--argjson gamecfg_sources "$gamecfg_sources_json" \
 	--argjson versions "$versions" \
 	--argjson delete_outputs "$delete_json" \
-	'{mode: $mode, previous_sha: $previous_sha, latest_sha: $latest_sha, source_paths: $source_paths, required_source_paths: $required_source_paths, output_paths: $output_paths, gamecfg: $gamecfg, versions: $versions, delete_outputs: $delete_outputs}' > "$plan_path"
+	'{mode: $mode, previous_sha: $previous_sha, latest_sha: $latest_sha, source_paths: $source_paths, required_source_paths: $required_source_paths, output_paths: $output_paths, gamecfg: $gamecfg, gamecfg_sources: $gamecfg_sources, versions: $versions, delete_outputs: $delete_outputs}' > "$plan_path"
 
 if [[ "$needs_sources" == "true" ]]; then
 	if [[ "$mode" == "full" ]] || (( ${#source_paths[@]} > 0 || ${#gamecfg[@]} > 0 )); then

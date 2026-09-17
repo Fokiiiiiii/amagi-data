@@ -166,3 +166,73 @@ func treeHashes(t *testing.T, root string) map[string]string {
 	}
 	return result
 }
+
+// TestIncrementalGameCfgRefreshMatchesFullRebuild covers the path where a GameCfg
+// bundle is refreshed from its previously generated JSON plus only the changed Lua
+// files, instead of re-parsing the whole category directory.
+func TestIncrementalGameCfgRefreshMatchesFullRebuild(t *testing.T) {
+	root := t.TempDir()
+	writeVersionsFixture(t, root, "1")
+	writeLuaFixture(t, filepath.Join(root, "CN", "sharecfg", "keep.lua"), `pg = pg or {}
+pg.keep = { [1] = { id = 1, value = "keep" } }
+`)
+	for _, stem := range []string{"1", "2", "10", "100", "stays", "goes"} {
+		writeLuaFixture(t, filepath.Join(root, "CN", "gamecfg", "buff", stem+".lua"),
+			`return { [1] = { id = 1, value = "`+stem+`" } }
+`)
+	}
+
+	// The repository state the converter reads previous outputs from.
+	repo := t.TempDir()
+	if _, err := ConvertMVP(Options{SourceRoot: root, LuaScriptsRoot: root, OutputRoot: repo}); err != nil {
+		t.Fatalf("seed conversion: %v", err)
+	}
+	incremental := t.TempDir()
+	copyTree(t, repo, incremental)
+
+	// One edit, one addition, one deletion inside the same category.
+	writeLuaFixture(t, filepath.Join(root, "CN", "gamecfg", "buff", "2.lua"),
+		"return { [1] = { id = 1, value = \"edited\" } }\n")
+	writeLuaFixture(t, filepath.Join(root, "CN", "gamecfg", "buff", "50.lua"),
+		"return { [1] = { id = 1, value = \"added\" } }\n")
+	if err := os.Remove(filepath.Join(root, "CN", "gamecfg", "buff", "goes.lua")); err != nil {
+		t.Fatal(err)
+	}
+
+	fullAfter := t.TempDir()
+	if _, err := ConvertMVP(Options{SourceRoot: root, LuaScriptsRoot: root, OutputRoot: fullAfter}); err != nil {
+		t.Fatalf("full after conversion: %v", err)
+	}
+
+	plan := IncrementalPlan{
+		Mode:        "incremental",
+		PreviousSHA: "before",
+		LatestSHA:   "after",
+		GameCfg:     []string{"CN/GameCfg/buff.json"},
+		GameCfgSources: []GameCfgSource{
+			{Path: "CN/gamecfg/buff/2.lua"},
+			{Path: "CN/gamecfg/buff/50.lua"},
+			{Path: "CN/gamecfg/buff/goes.lua", Deleted: true},
+		},
+	}
+	report, err := ConvertMVPIncremental(
+		Options{SourceRoot: repo, LuaScriptsRoot: root, OutputRoot: incremental}, plan)
+	if err != nil {
+		t.Fatalf("incremental conversion: %v", err)
+	}
+	if !containsString(report.GeneratedFiles, "CN/GameCfg/buff.json") {
+		t.Fatalf("expected the bundle to be regenerated, got %v", report.GeneratedFiles)
+	}
+
+	got, err := os.ReadFile(filepath.Join(incremental, "CN", "GameCfg", "buff.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := os.ReadFile(filepath.Join(fullAfter, "CN", "GameCfg", "buff.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(want) {
+		t.Fatalf("incrementally refreshed bundle differs from a full rebuild:\n got: %s\nwant: %s", got, want)
+	}
+}

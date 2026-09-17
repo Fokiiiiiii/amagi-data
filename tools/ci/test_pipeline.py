@@ -263,6 +263,20 @@ class PlannerTests(FixtureTest):
         self.assertTrue((source / "JP/gamecfg/skill/two.lua").is_file())
         self.assertFalse((source / "CN" / "sharecfg").exists())
 
+    def test_gamecfg_records_changed_files_for_incremental_refresh(self) -> None:
+        put(self.upstream, "JP/gamecfg/skill/one.lua", "return { id = 2 }\n")
+        (self.upstream / "JP/gamecfg/skill/two.lua").unlink()
+        plan, _ = self.plan(commit(self.upstream))
+        self.assertEqual(plan["gamecfg_sources"], [
+            {"path": "JP/gamecfg/skill/one.lua", "deleted": False},
+            {"path": "JP/gamecfg/skill/two.lua", "deleted": True},
+        ])
+
+    def test_gamecfg_sources_empty_on_full_build(self) -> None:
+        plan, _ = self.plan(self.previous, previous="d" * 40)
+        self.assertEqual(plan["mode"], "full")
+        self.assertEqual(plan["gamecfg_sources"], [])
+
     def test_versions_only_fetches_all_version_inputs(self) -> None:
         put(self.upstream, "versions/JP.txt", "1.2.4\n")
         plan, outputs = self.plan(commit(self.upstream))

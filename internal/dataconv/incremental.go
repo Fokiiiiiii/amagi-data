@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/Fokiiiiiii/amagi-data/internal/azurlanelua"
@@ -15,15 +16,24 @@ import (
 // planner and the converter. SourcePaths are exact Lua files; GameCfg contains
 // aggregate outputs that must be rebuilt from their whole category directory.
 type IncrementalPlan struct {
-	Mode                string   `json:"mode"`
-	PreviousSHA         string   `json:"previous_sha"`
-	LatestSHA           string   `json:"latest_sha"`
-	SourcePaths         []string `json:"source_paths"`
-	RequiredSourcePaths []string `json:"required_source_paths"`
-	OutputPaths         []string `json:"output_paths"`
-	GameCfg             []string `json:"gamecfg"`
-	Versions            bool     `json:"versions"`
-	DeleteOutputs       []string `json:"delete_outputs"`
+	Mode                string          `json:"mode"`
+	PreviousSHA         string          `json:"previous_sha"`
+	LatestSHA           string          `json:"latest_sha"`
+	SourcePaths         []string        `json:"source_paths"`
+	RequiredSourcePaths []string        `json:"required_source_paths"`
+	OutputPaths         []string        `json:"output_paths"`
+	GameCfg             []string        `json:"gamecfg"`
+	GameCfgSources      []GameCfgSource `json:"gamecfg_sources"`
+	Versions            bool            `json:"versions"`
+	DeleteOutputs       []string        `json:"delete_outputs"`
+}
+
+// GameCfgSource is a single Lua file inside a GameCfg category that changed
+// upstream. It lets the converter refresh just that entry of the bundle instead
+// of re-parsing the whole category directory.
+type GameCfgSource struct {
+	Path    string `json:"path"`
+	Deleted bool   `json:"deleted"`
 }
 
 func ReadIncrementalPlan(path string) (IncrementalPlan, error) {
@@ -43,6 +53,11 @@ func ReadIncrementalPlan(path string) (IncrementalPlan, error) {
 			if err := validatePlanPath(rel); err != nil {
 				return IncrementalPlan{}, err
 			}
+		}
+	}
+	for _, source := range plan.GameCfgSources {
+		if err := validatePlanPath(source.Path); err != nil {
+			return IncrementalPlan{}, err
 		}
 	}
 	return plan, nil
@@ -109,6 +124,7 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 		return nil, err
 	}
 
+	changedBundleSources := groupGameCfgSources(plan.GameCfgSources)
 	for _, rel := range slices.Clone(plan.GameCfg) {
 		parts := strings.Split(filepath.ToSlash(rel), "/")
 		if len(parts) != 3 || parts[1] != "GameCfg" || !strings.HasSuffix(parts[2], ".json") {
@@ -119,8 +135,18 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 		if parts[0] == "JP" && category == "story" {
 			sourceName = "storyjp"
 		}
-		if err := generateReturnedGameCfg(opts, report, parts[0], sourceName, category); err != nil {
-			return nil, err
+		refreshed := false
+		if sources := changedBundleSources[rel]; len(sources) > 0 {
+			var err error
+			refreshed, err = refreshGameCfgBundle(opts, report, parts[0], sourceName, category, sources)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if !refreshed {
+			if err := generateReturnedGameCfg(opts, report, parts[0], sourceName, category); err != nil {
+				return nil, err
+			}
 		}
 		if !slices.Contains(report.GeneratedFiles, rel) && !slices.Contains(plan.DeleteOutputs, rel) {
 			return nil, fmt.Errorf("incremental GameCfg output was not generated: %s", rel)
@@ -151,6 +177,88 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 		return nil, err
 	}
 	return report, nil
+}
+
+// groupGameCfgSources maps each changed Lua file to the bundle it belongs to.
+// A path that is not a direct child of a category directory yields no group, so
+// that bundle falls back to a full rebuild.
+func groupGameCfgSources(sources []GameCfgSource) map[string][]GameCfgSource {
+	grouped := map[string][]GameCfgSource{}
+	for _, source := range sources {
+		parts := strings.Split(filepath.ToSlash(source.Path), "/")
+		if len(parts) != 4 || parts[1] != "gamecfg" || !strings.HasSuffix(parts[3], ".lua") {
+			continue
+		}
+		region, sourceName := parts[0], parts[2]
+		targetName := sourceName
+		if region == "JP" && sourceName == "storyjp" {
+			targetName = "story"
+		}
+		rel := region + "/GameCfg/" + targetName + ".json"
+		grouped[rel] = append(grouped[rel], source)
+	}
+	return grouped
+}
+
+// refreshGameCfgBundle rewrites a GameCfg bundle from the previously generated
+// JSON plus only the Lua files that changed. A category directory holds up to
+// ~13k files, so re-parsing all of them to pick up one edit dominated the
+// incremental build. Reporting false means the previous output could not be
+// reused and the caller must rebuild the bundle from scratch.
+func refreshGameCfgBundle(opts Options, report *Report, region, sourceName, targetName string, sources []GameCfgSource) (bool, error) {
+	// reorderToReference would need the full key set, so leave that path alone.
+	if opts.SourceRoot == "" || opts.ReferenceRoot != "" {
+		return false, nil
+	}
+	previous, err := os.ReadFile(filepath.Join(opts.SourceRoot, region, "GameCfg", targetName+".json"))
+	if err != nil {
+		return false, nil
+	}
+	decoded, err := decodeOrderedJSON(previous)
+	if err != nil {
+		return false, nil
+	}
+	bundle, ok := decoded.(azurlanelua.OrderedObject)
+	if !ok {
+		return false, nil
+	}
+	prefix := region + "/gamecfg/" + sourceName + "/"
+	for _, source := range sources {
+		stem, ok := strings.CutPrefix(filepath.ToSlash(source.Path), prefix)
+		if !ok || !strings.HasSuffix(stem, ".lua") {
+			return false, nil
+		}
+		stem = strings.TrimSuffix(stem, ".lua")
+		if source.Deleted {
+			delete(bundle.Values, stem)
+			continue
+		}
+		value, loadErr := loadLuaFile(opts, filepath.Join(opts.LuaScriptsRoot, filepath.FromSlash(source.Path)))
+		if loadErr != nil {
+			report.UnsupportedFiles = append(report.UnsupportedFiles, region+"/GameCfg/"+targetName+".json")
+			return true, nil
+		}
+		if list, ok := azurlanelua.ToPlain(value).([]any); ok && len(list) == 0 {
+			value = nil
+		}
+		bundle.Values[stem] = azurlanelua.ToPlain(value)
+	}
+	// A full rebuild emits keys in sorted path order, which for files sharing one
+	// directory is the same as sorted stem order.
+	keys := make([]string, 0, len(bundle.Values))
+	for key := range bundle.Values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	bundle.Keys = keys
+
+	rel := region + "/GameCfg/" + targetName + ".json"
+	if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), bundle); err != nil {
+		return true, err
+	}
+	report.GeneratedFiles = append(report.GeneratedFiles, rel)
+	report.TotalGeneratedCount++
+	return true, nil
 }
 
 func streamBackingRank(dir string) int {
