@@ -6,3 +6,8 @@ _artifact_*/
 *.tmp
 generate_data
 belfast_data_audit
+belfast_golden_verify
+belfast_phase1_report
+__pycache__/
+*.pyc
+.serena/
