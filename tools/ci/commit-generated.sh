@@ -8,9 +8,6 @@ if [[ -z "$(git status --short)" ]]; then
 	exit 0
 fi
 
-git config user.email "github-actions[bot]@users.noreply.github.com"
-git config user.name "github-actions[bot]"
-
 prev_versions="$(git show HEAD:global/versions.json 2>/dev/null || echo '{}')"
 curr_versions="$(cat global/versions.json 2>/dev/null || echo '{}')"
 
@@ -25,7 +22,7 @@ changes = [(region, prev.get(region), curr[region])
            for region in sorted(curr) if prev.get(region) != curr[region]]
 
 if not changes:
-	print("data: sync generated data [skip ci]")
+	pass
 elif len(changes) == 1:
 	region, old, new = changes[0]
 	summary = f"{old} -> {new}" if old else new
@@ -39,6 +36,13 @@ else:
 PY
 )"
 
+if [[ -z "$message" ]]; then
+	echo "No region version change; skipping commit"
+	exit 0
+fi
+
+git config user.email "github-actions[bot]@users.noreply.github.com"
+git config user.name "github-actions[bot]"
 git add --all
 git commit -m "$message"
 git pull --rebase origin "$GITHUB_REF_NAME"

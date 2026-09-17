@@ -410,11 +410,12 @@ class CommitScriptTests(FixtureTest):
         self.assertIn("CN: 9.7.380 -> 9.7.381", message)
         self.assertIn("JP: 9.2.819 -> 9.2.821", message)
 
-    def test_no_version_change_falls_back_to_generic_message(self) -> None:
+    def test_no_version_change_skips_commit_even_with_other_changes(self) -> None:
+        before = run(["git", "rev-parse", "HEAD"], self.workspace).stdout
         put(self.workspace, "JP/ShareCfg/new_table.json", "{}\n")
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.last_commit_message(), "data: sync generated data [skip ci]")
+        self.assertEqual(run(["git", "rev-parse", "HEAD"], self.workspace).stdout, before)
 
     def test_no_working_tree_changes_skips_commit(self) -> None:
         before = run(["git", "rev-parse", "HEAD"], self.workspace).stdout
