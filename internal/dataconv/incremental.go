@@ -85,12 +85,23 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 		}
 	}
 
+	type incrementalSource struct{ region, dir, name string }
+	sources := make([]incrementalSource, 0, len(plan.SourcePaths))
 	for _, rel := range plan.SourcePaths {
 		region, dir, name, ok := incrementalLuaPath(rel)
 		if !ok {
 			return nil, fmt.Errorf("unsupported incremental source path: %s", rel)
 		}
-		if err := generateDiscoveredLuaFile(opts, report, region, dir, name); err != nil {
+		sources = append(sources, incrementalSource{region, dir, name})
+	}
+	// Convert sharecfgdata before sharecfg so a stream facade in the same plan reuses
+	// the backing file's output instead of parsing that Lua source a second time.
+	slices.SortStableFunc(sources, func(a, b incrementalSource) int {
+		return streamBackingRank(a.dir) - streamBackingRank(b.dir)
+	})
+	backed := map[string]streamBackedOutput{}
+	for _, source := range sources {
+		if err := generateDiscoveredLuaFile(opts, report, source.region, source.dir, source.name, backed); err != nil {
 			return nil, err
 		}
 	}
@@ -140,6 +151,13 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 		return nil, err
 	}
 	return report, nil
+}
+
+func streamBackingRank(dir string) int {
+	if dir == "sharecfgdata" {
+		return 0
+	}
+	return 1
 }
 
 func incrementalLuaPath(rel string) (string, string, string, bool) {

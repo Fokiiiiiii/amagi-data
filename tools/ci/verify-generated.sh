@@ -32,13 +32,26 @@ for rel in sorted(actual):
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         invalid_json.append(f"{rel}: {exc}")
 
+# Upstream writes `__stream__ = true` into the table header, a couple of hundred bytes
+# in, so a prefix read classifies a facade without pulling the whole Lua file through.
+STREAM_MARKER = b"__stream__ = true"
+
+def is_stream_facade(path):
+    with path.open("rb") as handle:
+        return STREAM_MARKER in handle.read(8192)
+
+def same_generated_output(first, second):
+    if first.read_bytes() == second.read_bytes():
+        return True
+    return json.loads(first.read_text(encoding="utf-8")) == json.loads(second.read_text(encoding="utf-8"))
+
 stream_mismatches = []
 for rel in plan.get("source_paths", []):
     parts = rel.split("/")
     if len(parts) != 3 or parts[1] != "sharecfg" or not rel.endswith(".lua"):
         continue
     facade = source / rel
-    if not facade.is_file() or "__stream__ = true" not in facade.read_text(encoding="utf-8"):
+    if not facade.is_file() or not is_stream_facade(facade):
         continue
     name = pathlib.Path(rel).with_suffix(".json").name
     upper = out / parts[0] / "ShareCfg" / name
@@ -46,7 +59,7 @@ for rel in plan.get("source_paths", []):
     if not upper.is_file() or not lower.is_file():
         stream_mismatches.append(f"{parts[0]}/{name}: missing generated pair")
         continue
-    if json.loads(upper.read_text(encoding="utf-8")) != json.loads(lower.read_text(encoding="utf-8")):
+    if not same_generated_output(upper, lower):
         stream_mismatches.append(f"{parts[0]}/{name}: ShareCfg differs from sharecfgdata")
 
 deleted_present = sorted(rel for rel in plan.get("delete_outputs", []) if (pathlib.Path.cwd() / rel).exists())
@@ -128,9 +141,22 @@ for region in ("CN", "EN", "JP", "KR", "TW"):
     for target, source_name in source_names.items():
         if (source / region / "gamecfg" / source_name).is_dir() and not (out / region / "GameCfg" / f"{target}.json").is_file():
             gamecfg_missing.append(f"{region}/GameCfg/{target}.json")
+# Upstream writes `__stream__ = true` into the table header, a couple of hundred bytes
+# in, so a prefix read classifies a facade without pulling the whole Lua file through.
+STREAM_MARKER = b"__stream__ = true"
+
+def is_stream_facade(path):
+    with path.open("rb") as handle:
+        return STREAM_MARKER in handle.read(8192)
+
+def same_generated_output(first, second):
+    if first.read_bytes() == second.read_bytes():
+        return True
+    return json.loads(first.read_text(encoding="utf-8")) == json.loads(second.read_text(encoding="utf-8"))
+
 stream_mismatches = []
 for facade in source.glob("*/sharecfg/*.lua"):
-    if "__stream__ = true" not in facade.read_text(encoding="utf-8"):
+    if not is_stream_facade(facade):
         continue
     region = facade.parents[1].name
     name = facade.with_suffix(".json").name
@@ -139,7 +165,7 @@ for facade in source.glob("*/sharecfg/*.lua"):
     if not upper.is_file() or not lower.is_file():
         stream_mismatches.append(f"{region}/{name}: missing generated pair")
         continue
-    if json.loads(upper.read_text(encoding="utf-8")) != json.loads(lower.read_text(encoding="utf-8")):
+    if not same_generated_output(upper, lower):
         stream_mismatches.append(f"{region}/{name}: ShareCfg differs from sharecfgdata")
 
 checks = {
