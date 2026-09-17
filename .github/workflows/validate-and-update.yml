@@ -60,7 +60,7 @@ jobs:
               path.startsWith("internal/dataconv/") ||
               path.startsWith("internal/azurlanelua/") ||
               path.startsWith("tools/ci/") ||
-              path.startsWith("data/global/") ||
+              path.startsWith("data/static-helpers/") ||
               [
                 ".github/workflows/validate-and-update.yml",
                 "go.mod",

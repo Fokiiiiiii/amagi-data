@@ -15,10 +15,8 @@ func main() {
 	sourceRoot := flag.String("source-root", "", "repository/source root")
 	outputRoot := flag.String("output-root", filepath.Join(os.TempDir(), "amagi_data_generation"), "output root")
 	luaScriptsRoot := flag.String("luascripts-root", "", "AzurLaneLuaScripts root")
-	fallbackRoot := flag.String("copy-helper-fallback-from", "", "existing data root for fallback helpers")
 	versionSourceMap := flag.String("version-source-map", "", "region-specific versions source map")
 	referenceRoot := flag.String("reference-root", "", "reference root used to select aggregate Lua records")
-	legacyFallbackRoot := flag.String("legacy-fallback-root", "", "repository root containing the fixed legacy fallback files")
 	reportPath := flag.String("report-path", "", "report path")
 	incrementalPlanPath := flag.String("incremental-plan", "", "incremental conversion plan")
 	flag.Parse()
@@ -28,15 +26,13 @@ func main() {
 		constantsRoot = filepath.Join(*luaScriptsRoot, "CN")
 	}
 	opts := dataconv.Options{
-		SourceRoot:               *sourceRoot,
-		OutputRoot:               *outputRoot,
-		ReportPath:               *reportPath,
-		LuaScriptsRoot:           *luaScriptsRoot,
-		ConstantsRoot:            constantsRoot,
-		ReferenceRoot:            *referenceRoot,
-		FallbackHelperSourceRoot: *fallbackRoot,
-		VersionSourceMapPath:     *versionSourceMap,
-		LegacyFallbackSourceRoot: *legacyFallbackRoot,
+		SourceRoot:           *sourceRoot,
+		OutputRoot:           *outputRoot,
+		ReportPath:           *reportPath,
+		LuaScriptsRoot:       *luaScriptsRoot,
+		ConstantsRoot:        constantsRoot,
+		ReferenceRoot:        *referenceRoot,
+		VersionSourceMapPath: *versionSourceMap,
 	}
 	var report *dataconv.Report
 	var err error

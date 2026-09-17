@@ -97,7 +97,7 @@ source = pathlib.Path(sys.argv[3])
 actual = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() and p.name != report_path.name}
 
 missing = sorted(report.get("missing_source_files", []))
-expected = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", [])) | set(report.get("fallback_files", [])) | set(report.get("fallback_helper_files", []))
+expected = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", [])) | set(report.get("fallback_helper_files", []))
 extra = sorted(actual - expected)
 missing_generated = sorted(expected - actual)
 invalid_json = []
@@ -122,13 +122,6 @@ helper_paths = {
     "global/versions.json",
 }
 helpers = len(actual & helper_paths)
-fallback = report.get("fallback_file_reports", [])
-fallback_paths = {x.get("relative_path") for x in fallback}
-expected_fallback_paths = {
-    "CN/ShareCfg/card_affix.json", "CN/ShareCfg/card_template.json",
-    "JP/ShareCfg/card_affix.json", "JP/ShareCfg/card_template.json",
-    "TW/ShareCfg/card_affix.json", "TW/ShareCfg/card_template.json",
-}
 gamecfg_missing = []
 for region in ("CN", "EN", "JP", "KR", "TW"):
     source_names = {"buff": "buff", "card": "card", "dorm": "dorm", "dungeon": "dungeon", "skill": "skill", "story": "storyjp" if region == "JP" else "story"}
@@ -159,7 +152,6 @@ checks = {
     "extra": not extra,
     "lua_generated": lua_generated >= 622,
     "helpers": helpers == 4,
-    "legacy_fallback": len(fallback) == len(expected_fallback_paths) and report.get("total_fallback_count") == len(expected_fallback_paths) and fallback_paths == expected_fallback_paths and all(x.get("source_kind") == "legacy_belfast_fallback" for x in fallback),
     "unsupported": not relevant_unsupported and not relevant_unsupported_helpers,
     "stream_backing": not stream_mismatches,
     "gamecfg": not gamecfg_missing,
@@ -197,7 +189,6 @@ rm -rf -- "$second"
 go run ./cmd/generate_data \
   -source-root "$GITHUB_WORKSPACE" \
   -luascripts-root "$source_root" \
-  -legacy-fallback-root "$GITHUB_WORKSPACE" \
   -output-root "$second"
 
 python3 - "$out" "$second" <<'PY'

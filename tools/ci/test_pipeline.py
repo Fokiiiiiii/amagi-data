@@ -21,7 +21,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 GENERATOR_PATHS = [
     "cmd/generate_data", "internal/dataconv", "internal/azurlanelua", "tools/ci",
-    "data/global", ".github/workflows/validate-and-update.yml", "go.mod", "go.sum",
+    "data/static-helpers", ".github/workflows/validate-and-update.yml", "go.mod", "go.sum",
 ]
 REGIONS = ("CN", "EN", "JP", "KR", "TW")
 ALIASES = {
@@ -306,13 +306,9 @@ class VerifierTests(FixtureTest):
             (self.source / region / "sharecfg").mkdir(parents=True)
         generated = [f"JP/ShareCfg/table_{n}.json" for n in range(622)]
         helpers = [f"global/{name}.json" for name in ("build_pools", "build_times", "requisition_ships", "versions")]
-        fallback = [f"{region}/ShareCfg/{name}.json" for region in ("CN", "JP", "TW")
-                    for name in ("card_affix", "card_template")]
         self.report = dict(generated_files=generated, generated_helper_files=helpers,
-                           fallback_files=fallback, fallback_helper_files=[],
-                           fallback_file_reports=[dict(relative_path=p, source_kind="legacy_belfast_fallback") for p in fallback],
-                           total_fallback_count=len(fallback))
-        for rel in generated + helpers + fallback:
+                           fallback_helper_files=[])
+        for rel in generated + helpers:
             put(self.out, rel)
         self.bin = self.base / "bin"
         self.bin.mkdir()

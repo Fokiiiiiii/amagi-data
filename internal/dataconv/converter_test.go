@@ -324,9 +324,9 @@ func TestVersionsGeneratedFromLuaScriptsMetadata(t *testing.T) {
 	}
 }
 
-// TestFallbackHelpersCopiedOnlyWhenSourceProvided confirms all fallback helper
-// files are present in the shared output directory.
-func TestFallbackHelpersCopiedOnlyWhenSourceProvided(t *testing.T) {
+// TestFallbackHelpersCopiedFromStaticHelpersDirectory confirms all fallback
+// helper files are present in the shared output directory.
+func TestFallbackHelpersCopiedFromStaticHelpersDirectory(t *testing.T) {
 	sc := requireSharedConv(t)
 	for _, rel := range FallbackHelperFiles() {
 		if _, err := os.Stat(filepath.Join(sc.outDir, filepath.FromSlash(rel))); err != nil {

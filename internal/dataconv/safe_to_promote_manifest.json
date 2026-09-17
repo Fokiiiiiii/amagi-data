@@ -2569,18 +2569,6 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
-      "relative_path": "CN/ShareCfg/card_affix.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
-      "relative_path": "CN/ShareCfg/card_template.json",
-      "region": "CN",
-      "category": "ShareCfg",
-      "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
       "relative_path": "CN/ShareCfg/cartoon.json",
       "region": "CN",
       "category": "ShareCfg",
@@ -9121,18 +9109,6 @@
       "classification": "match_after_dict_keyed_to_list_by_id"
     },
     {
-      "relative_path": "JP/ShareCfg/card_affix.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
-      "relative_path": "JP/ShareCfg/card_template.json",
-      "region": "JP",
-      "category": "ShareCfg",
-      "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
       "relative_path": "JP/ShareCfg/cartoon.json",
       "region": "JP",
       "category": "ShareCfg",
@@ -15638,18 +15614,6 @@
     },
     {
       "relative_path": "TW/ShareCfg/box_data_template.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
-      "relative_path": "TW/ShareCfg/card_affix.json",
-      "region": "TW",
-      "category": "ShareCfg",
-      "classification": "match_after_dict_keyed_to_list_by_id"
-    },
-    {
-      "relative_path": "TW/ShareCfg/card_template.json",
       "region": "TW",
       "category": "ShareCfg",
       "classification": "match_after_dict_keyed_to_list_by_id"
