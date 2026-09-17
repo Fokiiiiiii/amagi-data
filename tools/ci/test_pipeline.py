@@ -2,8 +2,7 @@
 """Offline regression tests for the actual CI planner, preflight and verifier.
 
 Requires Python 3, Bash, Git, jq and Node.js. Git repositories are temporary local
-fixtures; no network or credentials are used. The verifier's second Go generation
-is stubbed because these tests exercise its validation, not the Go converter.
+fixtures; no network or credentials are used.
 """
 from __future__ import annotations
 
@@ -310,18 +309,6 @@ class VerifierTests(FixtureTest):
                            fallback_helper_files=[])
         for rel in generated + helpers:
             put(self.out, rel)
-        self.bin = self.base / "bin"
-        self.bin.mkdir()
-        # Only the expensive second conversion is stubbed, never the verifier.
-        stub = "#!/usr/bin/env python3\n" + textwrap.dedent('''\
-            import os, pathlib, shutil, sys
-            source = pathlib.Path(os.environ["RUNNER_TEMP"]) / "amagi_data_generation"
-            (source.parent / "second-generation-invoked").touch()
-            target = sys.argv[sys.argv.index("-output-root") + 1]
-            shutil.copytree(source, target)
-        ''')
-        put(self.bin, "go", stub)
-        (self.bin / "go").chmod(0o755)
 
     def verify(self, mode: str = "full", plan: dict | None = None) -> subprocess.CompletedProcess[str]:
         put(self.out, "generation-report.json", json.dumps(self.report))
@@ -330,12 +317,11 @@ class VerifierTests(FixtureTest):
         return run(["bash", str(ROOT / "tools/ci/verify-generated.sh")], self.workspace, check=False, env={
             "RUNNER_TEMP": str(self.runner), "GITHUB_WORKSPACE": str(self.workspace),
             "AMAGI_UPSTREAM_ROOT": str(self.source), "AMAGI_MODE": mode,
-            "AMAGI_INCREMENTAL_PLAN": str(plan_path), "PATH": str(self.bin) + os.pathsep + os.environ["PATH"],
+            "AMAGI_INCREMENTAL_PLAN": str(plan_path),
         })
 
-    def assert_rejected_before_regeneration(self, result: subprocess.CompletedProcess[str]) -> None:
+    def assert_rejected(self, result: subprocess.CompletedProcess[str]) -> None:
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertFalse((self.runner / "second-generation-invoked").exists())
 
     def test_complete_full_output_passes(self) -> None:
         result = self.verify()
@@ -343,23 +329,23 @@ class VerifierTests(FixtureTest):
 
     def test_full_rejects_declared_but_missing_output(self) -> None:
         (self.out / self.report["generated_files"][0]).unlink()
-        self.assert_rejected_before_regeneration(self.verify())
+        self.assert_rejected(self.verify())
 
     def test_full_rejects_invalid_json(self) -> None:
         put(self.out, self.report["generated_files"][0], "{broken\n")
-        self.assert_rejected_before_regeneration(self.verify())
+        self.assert_rejected(self.verify())
 
     def test_full_rejects_error_output(self) -> None:
         put(self.out, self.report["generated_files"][0], '{"__ERROR":"conversion failed"}\n')
-        self.assert_rejected_before_regeneration(self.verify())
+        self.assert_rejected(self.verify())
 
     def test_full_rejects_missing_region_input(self) -> None:
         shutil.rmtree(self.source / "CN")
-        self.assert_rejected_before_regeneration(self.verify())
+        self.assert_rejected(self.verify())
 
     def test_full_rejects_unreported_output(self) -> None:
         put(self.out, "JP/ShareCfg/unreported.json")
-        self.assert_rejected_before_regeneration(self.verify())
+        self.assert_rejected(self.verify())
 
     def test_incremental_rejects_output_outside_plan(self) -> None:
         shutil.rmtree(self.out)

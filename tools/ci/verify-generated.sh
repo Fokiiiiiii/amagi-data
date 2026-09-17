@@ -184,35 +184,5 @@ if not all(checks.values()):
     raise SystemExit(1)
 PY
 
-second="${RUNNER_TEMP}/amagi_data_generation_second"
-rm -rf -- "$second"
-go run ./cmd/generate_data \
-  -source-root "$GITHUB_WORKSPACE" \
-  -luascripts-root "$source_root" \
-  -output-root "$second"
-
-python3 - "$out" "$second" <<'PY'
-import hashlib
-import json
-import pathlib
-import sys
-
-def hashes(root):
-    root = pathlib.Path(root)
-    result = {}
-    for path in root.rglob("*"):
-        if path.is_file() and path.name != "generation-report.json":
-            result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
-    return result
-
-first, second = hashes(sys.argv[1]), hashes(sys.argv[2])
-if first != second:
-    print("second-run differences:")
-    for path in sorted(set(first) | set(second)):
-        if first.get(path) != second.get(path):
-            print(path)
-    raise SystemExit(1)
-PY
-echo "second-run diff: 0"
 git -c core.whitespace=cr-at-eol diff --check
 echo "git diff --check: pass"

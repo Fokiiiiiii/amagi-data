@@ -63,9 +63,15 @@ func initSharedConv() {
 }
 
 // requireSharedConv returns the shared conversion result, skipping the calling
-// test if the external roots are not available.
+// test if the external roots are not available or -short is set. The CI
+// pipeline already runs a full conversion in the Generate step, so re-running
+// it here under `go test` would be redundant; it stays available for local
+// development runs (`go test ./...` without -short).
 func requireSharedConv(t *testing.T) *sharedConvResult {
 	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping full external-root conversion in -short mode")
+	}
 	initSharedConv()
 	if sharedConv == nil {
 		t.Skipf("skipping: full external roots not available for shared conversion")
