@@ -44,7 +44,7 @@ import sys
 report = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 workspace = pathlib.Path(sys.argv[2])
 expected = set()
-for key in ("generated_files", "generated_helper_files", "fallback_helper_files"):
+for key in ("generated_files", "generated_helper_files"):
   expected.update(report.get(key, []))
 
 roots = []

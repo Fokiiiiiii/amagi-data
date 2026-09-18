@@ -18,7 +18,6 @@ func TestReportMarshalEmitsEmptyArrays(t *testing.T) {
 		"categories",
 		"generated_files",
 		"generated_helper_files",
-		"fallback_helper_files",
 		"unsupported_files",
 		"unsupported_helper_files",
 		"missing_source_files",

@@ -20,12 +20,6 @@ import (
 
 const globalDir = "global"
 
-var fallbackHelperFiles = []string{
-	"global/build_pools.json",
-	"global/build_times.json",
-	"global/requisition_ships.json",
-}
-
 var supportedRegions = []string{"CN", "EN", "JP", "KR", "TW"}
 
 type Options struct {
@@ -43,7 +37,6 @@ type Report struct {
 	Categories              []string           `json:"categories"`
 	GeneratedFiles          []string           `json:"generated_files"`
 	GeneratedHelperFiles    []string           `json:"generated_helper_files"`
-	FallbackHelperFiles     []string           `json:"fallback_helper_files"`
 	UnsupportedFiles        []string           `json:"unsupported_files"`
 	UnsupportedHelperFiles  []string           `json:"unsupported_helper_files"`
 	MissingSourceFiles      []string           `json:"missing_source_files"`
@@ -57,8 +50,6 @@ type Report struct {
 	CategoryCounts          map[string]int     `json:"category_counts,omitempty"`
 	CategoryIDs             map[string][]int64 `json:"category_ids,omitempty"`
 }
-
-func FallbackHelperFiles() []string { return slices.Clone(fallbackHelperFiles) }
 
 func loadLuaFile(opts Options, path string) (any, error) {
 	if opts.ConstantsRoot == "" {
@@ -75,7 +66,6 @@ func newReport(opts Options) *Report {
 		Categories:             []string{"GameCfg", "ShareCfg", "sharecfgdata", "root-helpers"},
 		GeneratedFiles:         []string{},
 		GeneratedHelperFiles:   []string{},
-		FallbackHelperFiles:    []string{},
 		UnsupportedFiles:       []string{},
 		UnsupportedHelperFiles: []string{},
 		MissingSourceFiles:     []string{},
@@ -94,9 +84,6 @@ func ConvertMVP(opts Options) (*Report, error) {
 
 	report := newReport(opts)
 	if err := generateDiscoveredLuaFiles(opts, report); err != nil {
-		return nil, err
-	}
-	if err := generateRootHelpers(opts, report); err != nil {
 		return nil, err
 	}
 	versions, source, err := generateVersionsJSON(opts.LuaScriptsRoot)
@@ -583,42 +570,6 @@ func streamBackingPath(root, region, dir, name string, value any) (string, error
 		return "", fmt.Errorf("stream backing data for %s/%s/%s: %w", region, dir, name, err)
 	}
 	return path, nil
-}
-
-func generateRootHelpers(opts Options, report *Report) error {
-	// Copy static helper files from the data/static-helpers directory.
-	staticHelpers := []string{
-		"global/build_pools.json",
-		"global/build_times.json",
-		"global/requisition_ships.json",
-	}
-	for _, relPath := range staticHelpers {
-		dataRoot := filepath.Join(opts.SourceRoot, "data", "static-helpers")
-		if _, err := os.Stat(dataRoot); err != nil {
-			dataRoot = filepath.Join(opts.SourceRoot, "..", "..", "data", "static-helpers")
-		}
-		dataSourcePath := filepath.Join(dataRoot, filepath.Base(filepath.FromSlash(relPath)))
-		if _, err := os.Stat(dataSourcePath); err != nil {
-			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, relPath)
-			continue
-		}
-		data, err := os.ReadFile(dataSourcePath)
-		if err != nil {
-			report.UnsupportedHelperFiles = append(report.UnsupportedHelperFiles, relPath)
-			continue
-		}
-		outPath := filepath.Join(opts.OutputRoot, filepath.FromSlash(relPath))
-		if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
-			return err
-		}
-		if err := os.WriteFile(outPath, data, 0o644); err != nil {
-			return err
-		}
-		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, relPath)
-	}
-
-	sortStrings(report.GeneratedHelperFiles)
-	return nil
 }
 
 func globalVersionsPath() string {

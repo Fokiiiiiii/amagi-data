@@ -19,7 +19,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 GENERATOR_PATHS = [
     "cmd/generate_data", "internal/dataconv", "internal/azurlanelua", "tools/ci",
-    "data/static-helpers", ".github/workflows/validate-and-update.yml", "go.mod", "go.sum",
+    ".github/workflows/validate-and-update.yml", "go.mod", "go.sum",
 ]
 REGIONS = ("CN", "EN", "JP", "KR", "TW")
 ALIASES = {
@@ -317,9 +317,8 @@ class VerifierTests(FixtureTest):
         for region in REGIONS:
             (self.source / region / "sharecfg").mkdir(parents=True)
         generated = [f"JP/ShareCfg/table_{n}.json" for n in range(622)]
-        helpers = [f"global/{name}.json" for name in ("build_pools", "build_times", "requisition_ships", "versions")]
-        self.report = dict(generated_files=generated, generated_helper_files=helpers,
-                           fallback_helper_files=[])
+        helpers = ["global/versions.json"]
+        self.report = dict(generated_files=generated, generated_helper_files=helpers)
         for rel in generated + helpers:
             put(self.out, rel)
 

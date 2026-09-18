@@ -110,7 +110,7 @@ source = pathlib.Path(sys.argv[3])
 actual = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() and p.name != report_path.name}
 
 missing = sorted(report.get("missing_source_files", []))
-expected = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", [])) | set(report.get("fallback_helper_files", []))
+expected = set(report.get("generated_files", [])) | set(report.get("generated_helper_files", []))
 extra = sorted(actual - expected)
 missing_generated = sorted(expected - actual)
 invalid_json = []
@@ -128,13 +128,6 @@ relevant_missing = set(missing)
 relevant_unsupported = set(report.get("unsupported_files", []))
 relevant_unsupported_helpers = set(report.get("unsupported_helper_files", []))
 lua_generated = len(report.get("generated_files", []))
-helper_paths = {
-    "global/build_pools.json",
-    "global/build_times.json",
-    "global/requisition_ships.json",
-    "global/versions.json",
-}
-helpers = len(actual & helper_paths)
 gamecfg_missing = []
 for region in ("CN", "EN", "JP", "KR", "TW"):
     source_names = {"buff": "buff", "card": "card", "dorm": "dorm", "dungeon": "dungeon", "skill": "skill", "story": "storyjp" if region == "JP" else "story"}
@@ -177,7 +170,7 @@ checks = {
     "missing": not relevant_missing,
     "extra": not extra,
     "lua_generated": lua_generated >= 622,
-    "helpers": helpers == 4,
+    "versions": "global/versions.json" in actual,
     "unsupported": not relevant_unsupported and not relevant_unsupported_helpers,
     "stream_backing": not stream_mismatches,
     "gamecfg": not gamecfg_missing,

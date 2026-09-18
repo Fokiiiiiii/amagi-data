@@ -268,18 +268,12 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	if !containsString(report.GeneratedHelperFiles, "JP/buff_cfg.json") || !containsString(report.GeneratedHelperFiles, "JP/skill_cfg.json") {
 		t.Fatalf("expected root helper files to be generated, got %v", report.GeneratedHelperFiles)
 	}
-	if !containsString(report.GeneratedHelperFiles, "global/build_pools.json") || !containsString(report.GeneratedHelperFiles, "global/build_times.json") || !containsString(report.GeneratedHelperFiles, "global/requisition_ships.json") {
-		t.Fatalf("expected static helper files to be generated, got %v", report.GeneratedHelperFiles)
-	}
 	if containsString(report.UnsupportedHelperFiles, "global/versions.json") {
 		t.Fatalf("versions.json should not be unsupported when generation succeeds: %v", report.UnsupportedHelperFiles)
 	}
 	for _, rel := range []string{
 		"JP/buff_cfg.json",
 		"JP/skill_cfg.json",
-		"global/build_pools.json",
-		"global/build_times.json",
-		"global/requisition_ships.json",
 		"global/versions.json",
 	} {
 		if _, err := os.Stat(filepath.Join(out, filepath.FromSlash(rel))); err != nil {
@@ -289,9 +283,6 @@ func TestConvertMVPGeneratesOnlyAuditedSafeFiles(t *testing.T) {
 	for _, rel := range []string{
 		"buff_cfg.json",
 		"skill_cfg.json",
-		"build_pools.json",
-		"build_times.json",
-		"requisition_ships.json",
 		"versions.json",
 	} {
 		if _, err := os.Stat(filepath.Join(out, filepath.FromSlash(rel))); err == nil {
@@ -327,17 +318,6 @@ func TestVersionsGeneratedFromLuaScriptsMetadata(t *testing.T) {
 	}
 	if len(versions) != 5 {
 		t.Fatalf("versions.json expected exactly 5 regions, got %d: %#v", len(versions), got)
-	}
-}
-
-// TestFallbackHelpersCopiedFromStaticHelpersDirectory confirms all fallback
-// helper files are present in the shared output directory.
-func TestFallbackHelpersCopiedFromStaticHelpersDirectory(t *testing.T) {
-	sc := requireSharedConv(t)
-	for _, rel := range FallbackHelperFiles() {
-		if _, err := os.Stat(filepath.Join(sc.outDir, filepath.FromSlash(rel))); err != nil {
-			t.Fatalf("expected fallback helper %s: %v", rel, err)
-		}
 	}
 }
 
