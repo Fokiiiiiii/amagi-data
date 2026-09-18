@@ -404,7 +404,7 @@ class CommitScriptTests(FixtureTest):
         put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.380"}))
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.subjects(1), ["update [JP]: 9.2.819 -> 9.2.821 [skip ci]"])
+        self.assertEqual(self.subjects(1), ["update [JP]: 9.2.819 -> 9.2.821"])
         self.assertEqual(self.files_in("HEAD"), ["JP/ShareCfg/table.json", "global/versions.json"])
 
     def test_each_changed_region_gets_its_own_commit(self) -> None:
@@ -414,8 +414,8 @@ class CommitScriptTests(FixtureTest):
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.subjects(2), [
-            "update [JP]: 9.2.819 -> 9.2.821 [skip ci]",
-            "update [CN]: 9.7.380 -> 9.7.381 [skip ci]",
+            "update [JP]: 9.2.819 -> 9.2.821",
+            "update [CN]: 9.7.380 -> 9.7.381",
         ])
         # Shared files ride with the last region commit only.
         self.assertEqual(self.files_in("HEAD~1"), ["CN/ShareCfg/a.json"])
@@ -425,7 +425,7 @@ class CommitScriptTests(FixtureTest):
         put(self.workspace, "CN/ShareCfg/a.json", '{"v":2}\n')
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.subjects(1), ["update [CN]: 9.7.380 -> 9.7.380 [skip ci]"])
+        self.assertEqual(self.subjects(1), ["update [CN]: 9.7.380 -> 9.7.380"])
 
     def test_shared_only_changes_are_left_for_the_next_region_commit(self) -> None:
         before = self.head()

@@ -45,7 +45,7 @@ for region in "${targets[@]}"; do
 	if [[ "$region" == "$last" ]]; then
 		git add --all
 	fi
-	git commit -m "update [$region]: ${old:-?} -> ${new:-?} [skip ci]"
+	git commit -m "update [$region]: ${old:-?} -> ${new:-?}"
 done
 
 git pull --rebase origin "$GITHUB_REF_NAME"
