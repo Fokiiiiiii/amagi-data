@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/dataconv"
+	"github.com/Fokiiiiiii/amagi-data/dataconv"
 )
 
 func main() {

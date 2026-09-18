@@ -45,7 +45,7 @@ func initSharedConv() {
 			return
 		}
 		report, err := ConvertMVP(Options{
-			SourceRoot:     filepath.Join("..", ".."),
+			SourceRoot:     "..",
 			OutputRoot:     outDir,
 			LuaScriptsRoot: luaRoot,
 			ConstantsRoot:  filepath.Join(luaRoot, "CN"),

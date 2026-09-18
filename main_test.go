@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/dataconv"
+	"github.com/Fokiiiiiii/amagi-data/dataconv"
 )
 
 func TestIncompleteReportError(t *testing.T) {

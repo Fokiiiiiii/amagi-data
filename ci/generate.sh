@@ -22,7 +22,7 @@ if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
   : "${AMAGI_INCREMENTAL_PLAN:?AMAGI_INCREMENTAL_PLAN is required for incremental generation}"
   args+=(-incremental-plan "$AMAGI_INCREMENTAL_PLAN")
 fi
-go run ./cmd/generate_data "${args[@]}"
+go run . "${args[@]}"
 
 if [ ! -d "$out" ]; then
   echo "output dir missing: $out" >&2

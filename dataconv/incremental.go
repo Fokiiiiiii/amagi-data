@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/azurlanelua"
+	"github.com/Fokiiiiiii/amagi-data/azurlanelua"
 )
 
 // IncrementalPlan is the small, source-controlled contract between the CI

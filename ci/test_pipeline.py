@@ -16,9 +16,9 @@ import tempfile
 import textwrap
 import unittest
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 GENERATOR_PATHS = [
-    "cmd/generate_data", "internal/dataconv", "internal/azurlanelua", "tools/ci",
+    "main.go", "dataconv", "azurlanelua", "ci",
     ".github/workflows/validate-and-update.yml", "go.mod", "go.sum",
 ]
 REGIONS = ("CN", "EN", "JP", "KR", "TW")
@@ -79,18 +79,18 @@ class FixtureTest(unittest.TestCase):
         self.workspace = self.base / "workspace"
         init_repo(self.workspace)
         put(self.workspace, "go.mod", "module fixture\n\ngo 1.25.5\n")
-        put(self.workspace, "tools/ci/test.sh", "#!/bin/sh\nexit 0\n")
-        (self.workspace / "tools/ci/test.sh").chmod(0o755)
-        put(self.workspace, "internal/dataconv/sample.go", "package dataconv\n")
+        put(self.workspace, "ci/test.sh", "#!/bin/sh\nexit 0\n")
+        (self.workspace / "ci/test.sh").chmod(0o755)
+        put(self.workspace, "dataconv/sample.go", "package dataconv\n")
         for n in range(8):
-            put(self.workspace, f"internal/dataconv/file_{n}.go", f"package dataconv\n// fixture {n}\n")
+            put(self.workspace, f"dataconv/file_{n}.go", f"package dataconv\n// fixture {n}\n")
         put(self.workspace, "JP/ShareCfg/ignored.json")
         commit(self.workspace)
 
 
 class WorkflowTests(unittest.TestCase):
     def test_versions_have_one_publishing_workflow(self) -> None:
-        planner = (ROOT / "tools/ci/sync-upstream.sh").read_text()
+        planner = (ROOT / "ci/sync-upstream.sh").read_text()
         self.assertIn("global/versions.json", planner)
         self.assertFalse((ROOT / ".github/workflows/sync-versions.yml").exists())
 
@@ -182,7 +182,7 @@ class PlannerTests(FixtureTest):
             f"upstream_sha: {previous or self.previous}\ngenerator_hash: {fingerprint(self.workspace)}\n")
         output = self.base / "outputs"
         output.write_text("")
-        result = run(["bash", str(ROOT / "tools/ci/sync-upstream.sh")], self.workspace, env={
+        result = run(["bash", str(ROOT / "ci/sync-upstream.sh")], self.workspace, env={
             "UPSTREAM_SHA": latest, "GITHUB_OUTPUT": str(output), "RUNNER_TEMP": str(self.runner),
             "UPSTREAM_REMOTE": remote or self.upstream.as_uri(), "FORCE_FULL": str(force).lower(),
         }, check=False)
@@ -326,7 +326,7 @@ class VerifierTests(FixtureTest):
         put(self.out, "generation-report.json", json.dumps(self.report))
         plan_path = self.base / "plan.json"
         plan_path.write_text(json.dumps(plan or {}))
-        return run(["bash", str(ROOT / "tools/ci/verify-generated.sh")], self.workspace, check=False, env={
+        return run(["bash", str(ROOT / "ci/verify-generated.sh")], self.workspace, check=False, env={
             "RUNNER_TEMP": str(self.runner), "GITHUB_WORKSPACE": str(self.workspace),
             "AMAGI_UPSTREAM_ROOT": str(self.source), "AMAGI_MODE": mode,
             "AMAGI_INCREMENTAL_PLAN": str(plan_path),
@@ -387,7 +387,7 @@ class CommitScriptTests(FixtureTest):
         run(["git", "push", "-q", "origin", "main"], self.workspace)
 
     def commit_generated(self) -> subprocess.CompletedProcess[str]:
-        return run(["bash", str(ROOT / "tools/ci/commit-generated.sh")], self.workspace, check=False,
+        return run(["bash", str(ROOT / "ci/commit-generated.sh")], self.workspace, check=False,
                    env={"GITHUB_REF_NAME": "main"})
 
     def head(self) -> str:

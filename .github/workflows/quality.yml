@@ -3,17 +3,19 @@ name: Code Quality
 on:
   push:
     paths:
-      - 'cmd/**'
-      - 'internal/**'
-      - 'tools/ci/**'
+      - 'main.go'
+      - 'dataconv/**'
+      - 'azurlanelua/**'
+      - 'ci/**'
       - '.github/workflows/**'
       - 'go.mod'
       - 'go.sum'
   pull_request:
     paths:
-      - 'cmd/**'
-      - 'internal/**'
-      - 'tools/ci/**'
+      - 'main.go'
+      - 'dataconv/**'
+      - 'azurlanelua/**'
+      - 'ci/**'
       - '.github/workflows/**'
       - 'go.mod'
       - 'go.sum'
@@ -45,14 +47,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for script in tools/ci/*.sh; do
+          for script in ci/*.sh; do
             bash -n "$script"
           done
       - name: Test converter and offline CI contracts
         shell: bash
         run: |
           set -euo pipefail
-          python3 tools/ci/test_pipeline.py -v &
+          python3 ci/test_pipeline.py -v &
           pipeline_pid=$!
           go test ./... &
           go_pid=$!

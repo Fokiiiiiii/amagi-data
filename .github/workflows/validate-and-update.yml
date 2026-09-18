@@ -67,11 +67,11 @@ jobs:
             const forceRequested = process.env.FORCE_FULL === "true";
             const shaPattern = /^[0-9a-f]{40}$/;
             const isGeneratorPath = (path) =>
-              path.startsWith("cmd/generate_data/") ||
-              path.startsWith("internal/dataconv/") ||
-              path.startsWith("internal/azurlanelua/") ||
-              path.startsWith("tools/ci/") ||
+              path.startsWith("dataconv/") ||
+              path.startsWith("azurlanelua/") ||
+              path.startsWith("ci/") ||
               [
+                "main.go",
                 ".github/workflows/validate-and-update.yml",
                 "go.mod",
                 "go.sum",
@@ -173,7 +173,7 @@ jobs:
           STATE_FILE: .github/azurlane-state
           PLAN_PATH: ${{ runner.temp }}/amagi-incremental-plan.json
           UPSTREAM_ROOT: ${{ runner.temp }}/AzurLaneLuaScripts
-        run: tools/ci/sync-upstream.sh
+        run: ci/sync-upstream.sh
 
       # ========== Phase 3: Setup tools ==========
       - name: "Setup: Go toolchain"
@@ -190,7 +190,7 @@ jobs:
         env:
           AMAGI_MODE: ${{ steps.delta.outputs.mode }}
           AMAGI_UPSTREAM_ROOT: ${{ steps.delta.outputs.source_root }}
-        run: tools/ci/test.sh
+        run: ci/test.sh
 
       # ========== Phase 5: Generate changed outputs ==========
       - name: "Generate: Data JSON"
@@ -199,7 +199,7 @@ jobs:
           AMAGI_MODE: ${{ steps.delta.outputs.mode }}
           AMAGI_INCREMENTAL_PLAN: ${{ steps.delta.outputs.plan_path }}
           AMAGI_UPSTREAM_ROOT: ${{ steps.delta.outputs.source_root }}
-        run: tools/ci/generate.sh
+        run: ci/generate.sh
 
       # ========== Phase 6: Verify changed outputs ==========
       - name: "Verify: Generated output"
@@ -208,7 +208,7 @@ jobs:
           AMAGI_MODE: ${{ steps.delta.outputs.mode }}
           AMAGI_INCREMENTAL_PLAN: ${{ steps.delta.outputs.plan_path }}
           AMAGI_UPSTREAM_ROOT: ${{ steps.delta.outputs.source_root }}
-        run: tools/ci/verify-generated.sh
+        run: ci/verify-generated.sh
 
       # ========== Phase 7: Persist the last successful upstream revision ==========
       - name: "State: Record processed upstream revision"
@@ -223,7 +223,7 @@ jobs:
       # ========== Phase 8: Commit & Push ==========
       - name: "Commit: Generated data"
         if: steps.delta.outputs.needs_processing == 'true'
-        run: tools/ci/commit-generated.sh
+        run: ci/commit-generated.sh
 
       # Saved only after the commit step succeeded, so a failed push leaves the
       # previous state in place and the next run re-processes the same delta.

@@ -4,10 +4,7 @@ work/
 _artifact_*/
 *.log
 *.tmp
-generate_data
-belfast_data_audit
-belfast_golden_verify
-belfast_phase1_report
+amagi-data
 __pycache__/
 *.pyc
 .serena/

@@ -15,7 +15,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Fokiiiiiii/amagi-data/internal/azurlanelua"
+	"github.com/Fokiiiiiii/amagi-data/azurlanelua"
 )
 
 const globalDir = "global"
