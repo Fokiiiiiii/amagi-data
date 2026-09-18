@@ -16,7 +16,6 @@ func TestReportMarshalEmitsEmptyArrays(t *testing.T) {
 	for _, field := range []string{
 		"regions",
 		"categories",
-		"converted_files",
 		"generated_files",
 		"generated_helper_files",
 		"fallback_helper_files",

@@ -1,10 +1,8 @@
 package dataconv
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -19,10 +17,7 @@ type versionSourceMapEntry struct {
 	Version string `json:"version"`
 }
 
-func generateVersionsJSON(luaScriptsRoot, sourceMapPath string) (map[string]string, string, error) {
-	if sourceMapPath != "" {
-		return generateVersionsFromSourceMap(luaScriptsRoot, sourceMapPath)
-	}
+func generateVersionsJSON(luaScriptsRoot string) (map[string]string, string, error) {
 	versionsRoot, err := findVersionsRoot(luaScriptsRoot)
 	if err != nil {
 		return nil, "", err
@@ -36,37 +31,6 @@ func generateVersionsJSON(luaScriptsRoot, sourceMapPath string) (map[string]stri
 		out[region] = version
 	}
 	return out, versionsRoot, nil
-}
-
-func generateVersionsFromSourceMap(luaScriptsRoot, sourceMapPath string) (map[string]string, string, error) {
-	data, err := os.ReadFile(sourceMapPath)
-	if err != nil {
-		return nil, "", fmt.Errorf("read version source map %s: %w", sourceMapPath, err)
-	}
-	sources := map[string]versionSourceMapEntry{}
-	if err := json.Unmarshal(data, &sources); err != nil {
-		return nil, "", fmt.Errorf("decode version source map %s: %w", sourceMapPath, err)
-	}
-	out := make(map[string]string, len(regionNames))
-	for _, region := range regionNames {
-		source, ok := sources[region]
-		if !ok || source.Commit == "" || source.Path == "" {
-			return nil, "", fmt.Errorf("version source map missing %s commit/path", region)
-		}
-		value, err := exec.Command("git", "-C", luaScriptsRoot, "show", source.Commit+":"+filepath.ToSlash(source.Path)).Output()
-		if err != nil {
-			return nil, "", fmt.Errorf("read mapped version %s from %s:%s: %w", region, source.Commit, source.Path, err)
-		}
-		actual := strings.TrimSpace(string(value))
-		if actual == "" {
-			return nil, "", fmt.Errorf("mapped version %s is empty", region)
-		}
-		if source.Version != "" && actual != source.Version {
-			return nil, "", fmt.Errorf("mapped version %s mismatch: map=%q actual=%q", region, source.Version, actual)
-		}
-		out[region] = actual
-	}
-	return out, sourceMapPath, nil
 }
 
 func writeVersionsJSON(path string, versions map[string]string) error {

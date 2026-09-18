@@ -2,7 +2,6 @@ package dataconv
 
 import (
 	"bytes"
-	"embed"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -19,9 +18,6 @@ import (
 	"github.com/Fokiiiiiii/amagi-data/internal/azurlanelua"
 )
 
-//go:embed safe_to_promote_manifest.json safe_to_promote_allowlists.json
-var safeManifestFS embed.FS
-
 const globalDir = "global"
 
 var fallbackHelperFiles = []string{
@@ -33,33 +29,11 @@ var fallbackHelperFiles = []string{
 var supportedRegions = []string{"CN", "EN", "JP", "KR", "TW"}
 
 type Options struct {
-	SourceRoot           string
-	OutputRoot           string
-	ReportPath           string
-	LuaScriptsRoot       string
-	ConstantsRoot        string
-	ReferenceRoot        string
-	VersionSourceMapPath string
-}
-
-type FileReport struct {
-	RelativePath string `json:"relative_path"`
-	Records      int    `json:"records"`
-}
-
-type SafePromoteFile struct {
-	RelativePath   string `json:"relative_path"`
-	Region         string `json:"region"`
-	Category       string `json:"category"`
-	Classification string `json:"classification"`
-}
-
-type SafeManifest struct {
-	SafeToPromoteFiles    []SafePromoteFile `json:"safe_to_promote_files"`
-	CountMismatchFiles    []string          `json:"count_mismatch_files"`
-	SchemaMismatchFiles   []string          `json:"schema_mismatch_files"`
-	MissingReferenceFiles []string          `json:"missing_reference_files"`
-	UnsupportedFiles      []string          `json:"unsupported_files"`
+	SourceRoot     string
+	OutputRoot     string
+	ReportPath     string
+	LuaScriptsRoot string
+	ConstantsRoot  string
 }
 
 type Report struct {
@@ -67,7 +41,6 @@ type Report struct {
 	OutputRoot              string             `json:"output_root"`
 	Regions                 []string           `json:"regions"`
 	Categories              []string           `json:"categories"`
-	ConvertedFiles          []FileReport       `json:"converted_files"`
 	GeneratedFiles          []string           `json:"generated_files"`
 	GeneratedHelperFiles    []string           `json:"generated_helper_files"`
 	FallbackHelperFiles     []string           `json:"fallback_helper_files"`
@@ -85,26 +58,6 @@ type Report struct {
 	CategoryIDs             map[string][]int64 `json:"category_ids,omitempty"`
 }
 
-func MVPFiles() []string {
-	manifest, err := loadSafeManifest()
-	if err != nil {
-		return []string{}
-	}
-	files := make([]string, 0, len(manifest.SafeToPromoteFiles))
-	for _, file := range manifest.SafeToPromoteFiles {
-		files = append(files, file.RelativePath)
-	}
-	slices.Sort(files)
-	return files
-}
-
-func UnsupportedHelperFiles(includeVersions bool) []string {
-	if includeVersions {
-		return []string{}
-	}
-	return []string{"global/versions.json"}
-}
-
 func FallbackHelperFiles() []string { return slices.Clone(fallbackHelperFiles) }
 
 func loadLuaFile(opts Options, path string) (any, error) {
@@ -114,77 +67,52 @@ func loadLuaFile(opts Options, path string) (any, error) {
 	return azurlanelua.LoadFileWithConstantsRoot(path, opts.ConstantsRoot)
 }
 
-func newReport(opts Options, manifest *SafeManifest) *Report {
+func newReport(opts Options) *Report {
 	return &Report{
 		SourceRoot:             opts.SourceRoot,
 		OutputRoot:             opts.OutputRoot,
 		Regions:                slices.Clone(supportedRegions),
 		Categories:             []string{"GameCfg", "ShareCfg", "sharecfgdata", "root-helpers"},
-		ConvertedFiles:         []FileReport{},
 		GeneratedFiles:         []string{},
 		GeneratedHelperFiles:   []string{},
 		FallbackHelperFiles:    []string{},
-		UnsupportedFiles:       slices.Clone(manifest.UnsupportedFiles),
-		UnsupportedHelperFiles: UnsupportedHelperFiles(opts.LuaScriptsRoot != ""),
+		UnsupportedFiles:       []string{},
+		UnsupportedHelperFiles: []string{},
 		MissingSourceFiles:     []string{},
-		MissingReferenceFiles:  slices.Clone(manifest.MissingReferenceFiles),
-		SkippedUnsafeFiles:     skippedUnsafeFiles(manifest),
+		MissingReferenceFiles:  []string{},
+		SkippedUnsafeFiles:     []string{},
 	}
 }
 
-func resetLuaReport(report *Report) {
-	report.UnsupportedFiles = []string{}
-	report.UnsupportedHelperFiles = []string{}
-	report.MissingReferenceFiles = []string{}
-	report.SkippedUnsafeFiles = []string{}
-}
-
 func ConvertMVP(opts Options) (*Report, error) {
-	if opts.SourceRoot == "" && opts.LuaScriptsRoot == "" {
-		return nil, fmt.Errorf("source root or Lua scripts root is required")
+	if opts.LuaScriptsRoot == "" {
+		return nil, fmt.Errorf("Lua scripts root is required")
 	}
 	if opts.OutputRoot == "" {
 		return nil, fmt.Errorf("output root is required")
 	}
 
-	manifest, err := loadSafeManifest()
-	if err != nil {
-		return nil, err
-	}
-	allowlists, err := loadSafeAllowlists()
-	if err != nil {
-		return nil, err
-	}
-
-	report := newReport(opts, manifest)
-
-	if opts.LuaScriptsRoot != "" {
-		resetLuaReport(report)
-		if err := generateDiscoveredLuaFiles(opts, report); err != nil {
-			return nil, err
-		}
-	} else if err := generateAuditedFiles(opts, manifest.SafeToPromoteFiles, allowlists, report); err != nil {
+	report := newReport(opts)
+	if err := generateDiscoveredLuaFiles(opts, report); err != nil {
 		return nil, err
 	}
 	if err := generateRootHelpers(opts, report); err != nil {
 		return nil, err
 	}
-	if opts.LuaScriptsRoot != "" {
-		versions, source, err := generateVersionsJSON(opts.LuaScriptsRoot, opts.VersionSourceMapPath)
-		if err != nil {
-			return nil, err
-		}
-		outPath := filepath.Join(opts.OutputRoot, filepath.FromSlash(globalVersionsPath()))
-		if err := writeVersionsJSON(outPath, versions); err != nil {
-			return nil, err
-		}
-		report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, globalVersionsPath())
-		report.GeneratedVersions = true
-		report.LuaScriptsVersionsRoot = source
-		report.LuaScriptsVersionSource = versions
-		if err := generateAdditionalLuaFiles(opts, report); err != nil {
-			return nil, err
-		}
+	versions, source, err := generateVersionsJSON(opts.LuaScriptsRoot)
+	if err != nil {
+		return nil, err
+	}
+	outPath := filepath.Join(opts.OutputRoot, filepath.FromSlash(globalVersionsPath()))
+	if err := writeVersionsJSON(outPath, versions); err != nil {
+		return nil, err
+	}
+	report.GeneratedHelperFiles = append(report.GeneratedHelperFiles, globalVersionsPath())
+	report.GeneratedVersions = true
+	report.LuaScriptsVersionsRoot = source
+	report.LuaScriptsVersionSource = versions
+	if err := generateAdditionalLuaFiles(opts, report); err != nil {
+		return nil, err
 	}
 	if err := writeReport(opts, report); err != nil {
 		return nil, err
@@ -564,65 +492,11 @@ func convertReturnedGameCfg(opts Options, region, sourceName, targetName string)
 		merged.Keys = append(merged.Keys, stem)
 		merged.Values[stem] = azurlanelua.ToPlain(value)
 	}
-	if opts.ReferenceRoot != "" {
-		refPath := filepath.Join(opts.ReferenceRoot, region, "GameCfg", targetName+".json")
-		if data, readErr := os.ReadFile(refPath); readErr == nil {
-			var reference map[string]any
-			if json.Unmarshal(data, &reference) == nil {
-				for _, key := range merged.Keys {
-					if _, ok := reference[key]; !ok {
-						delete(merged.Values, key)
-					}
-				}
-				ordered := orderedJSONKeys(data)
-				filtered := make([]string, 0, len(ordered))
-				for _, key := range ordered {
-					if _, ok := merged.Values[key]; ok {
-						filtered = append(filtered, key)
-					}
-				}
-				merged.Keys = filtered
-			}
-		}
-	}
 	rel := region + "/GameCfg/" + targetName + ".json"
-	output := any(merged)
-	if opts.ReferenceRoot != "" {
-		refPath := filepath.Join(opts.ReferenceRoot, region, "GameCfg", targetName+".json")
-		if data, readErr := os.ReadFile(refPath); readErr == nil {
-			if ordered, parseErr := decodeOrderedJSON(data); parseErr == nil {
-				output = reorderToReference(output, ordered)
-			}
-		}
-	}
-	if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), output); err != nil {
+	if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), merged); err != nil {
 		return nil, err
 	}
 	return &gameCfgResult{rel: rel}, nil
-}
-
-func orderedJSONKeys(data []byte) []string {
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	if _, err := decoder.Token(); err != nil {
-		return nil
-	}
-	keys := []string{}
-	for decoder.More() {
-		token, err := decoder.Token()
-		if err != nil {
-			return keys
-		}
-		key, ok := token.(string)
-		if !ok {
-			return keys
-		}
-		keys = append(keys, key)
-		var value json.RawMessage
-		if err := decoder.Decode(&value); err != nil {
-			return keys
-		}
-	}
-	return keys
 }
 
 func decodeOrderedJSON(data []byte) (any, error) {
@@ -672,186 +546,6 @@ func decodeOrderedJSONValue(decoder *json.Decoder) (any, error) {
 	return token, nil
 }
 
-func reorderToReference(value, reference any) any {
-	refObject, ok := reference.(azurlanelua.OrderedObject)
-	if !ok {
-		refList, listOK := reference.([]any)
-		valueList, valueOK := value.([]any)
-		if listOK && valueOK {
-			out := make([]any, len(valueList))
-			for i := range valueList {
-				if i < len(refList) {
-					out[i] = reorderToReference(valueList[i], refList[i])
-				} else {
-					out[i] = valueList[i]
-				}
-			}
-			return out
-		}
-		return value
-	}
-	if valueList, ok := value.([]any); ok {
-		out := azurlanelua.OrderedObject{Values: map[string]any{}}
-		for _, key := range refObject.Keys {
-			n, err := strconv.Atoi(key)
-			if err != nil || n < 1 || n > len(valueList) {
-				return value
-			}
-			out.Keys = append(out.Keys, key)
-			out.Values[key] = reorderToReference(valueList[n-1], refObject.Values[key])
-		}
-		if len(out.Keys) == len(valueList) {
-			return out
-		}
-	}
-	lookup := func(key string) (any, bool) {
-		switch current := value.(type) {
-		case map[string]any:
-			child, exists := current[key]
-			return child, exists
-		case azurlanelua.OrderedObject:
-			child, exists := current.Values[key]
-			return child, exists
-		default:
-			return nil, false
-		}
-	}
-	out := azurlanelua.OrderedObject{Values: map[string]any{}}
-	seen := map[string]struct{}{}
-	for _, key := range refObject.Keys {
-		child, exists := lookup(key)
-		if !exists {
-			continue
-		}
-		out.Keys = append(out.Keys, key)
-		out.Values[key] = reorderToReference(child, refObject.Values[key])
-		seen[key] = struct{}{}
-	}
-	if current, ok := value.(map[string]any); ok {
-		for key, child := range current {
-			if _, exists := seen[key]; !exists {
-				out.Keys = append(out.Keys, key)
-				out.Values[key] = child
-			}
-		}
-	}
-	return out
-}
-
-func loadSafeManifest() (*SafeManifest, error) {
-	data, err := safeManifestFS.ReadFile("safe_to_promote_manifest.json")
-	if err != nil {
-		return nil, fmt.Errorf("read safe manifest: %w", err)
-	}
-	var manifest SafeManifest
-	if err := json.Unmarshal(data, &manifest); err != nil {
-		return nil, fmt.Errorf("decode safe manifest: %w", err)
-	}
-	return &manifest, nil
-}
-
-func loadSafeAllowlists() (map[string][]int, error) {
-	data, err := safeManifestFS.ReadFile("safe_to_promote_allowlists.json")
-	if err != nil {
-		return nil, fmt.Errorf("read safe allowlists: %w", err)
-	}
-	var allowlists map[string][]int
-	if err := json.Unmarshal(data, &allowlists); err != nil {
-		return nil, fmt.Errorf("decode safe allowlists: %w", err)
-	}
-	return allowlists, nil
-}
-
-func generateAuditedFiles(opts Options, files []SafePromoteFile, allowlists map[string][]int, report *Report) error {
-	for _, file := range files {
-		sourcePath := filepath.Join(opts.SourceRoot, filepath.FromSlash(file.RelativePath))
-		var allowlist []int
-		if list, ok := allowlists[file.RelativePath]; ok {
-			allowlist = list
-		}
-		var converted any
-		var err error
-		if opts.LuaScriptsRoot != "" {
-			luaPath, resolveErr := completeLuaPath(opts, file.RelativePath)
-			if resolveErr != nil {
-				err = resolveErr
-			} else if _, statErr := os.Stat(luaPath); statErr != nil {
-				report.MissingSourceFiles = append(report.MissingSourceFiles, file.RelativePath)
-				continue
-			} else {
-				converted, err = convertLuaFile(opts, luaPath, file.RelativePath, file.Classification, allowlist)
-			}
-		} else {
-			if _, statErr := os.Stat(sourcePath); statErr != nil {
-				report.MissingSourceFiles = append(report.MissingSourceFiles, file.RelativePath)
-				continue
-			}
-			converted, err = convertAuditedFile(file.RelativePath, sourcePath, file.Classification, allowlist)
-		}
-		if err != nil {
-			report.UnsupportedFiles = append(report.UnsupportedFiles, file.RelativePath)
-			report.TotalUnsupportedCount++
-			continue
-		}
-		if opts.ReferenceRoot != "" && strings.HasSuffix(file.RelativePath, "/ShareCfg/ship_skin_words_add.json") {
-			converted = filterToReferenceIDs(converted, filepath.Join(opts.ReferenceRoot, file.Region, "ShareCfg", "ship_skin_words_add.json"))
-		}
-		outPath := filepath.Join(opts.OutputRoot, filepath.FromSlash(file.RelativePath))
-		if err := writeJSON(outPath, converted); err != nil {
-			return err
-		}
-		report.ConvertedFiles = append(report.ConvertedFiles, FileReport{
-			RelativePath: file.RelativePath,
-			Records:      recordCount(converted),
-		})
-		report.GeneratedFiles = append(report.GeneratedFiles, file.RelativePath)
-		report.TotalGeneratedCount++
-	}
-	sortStrings(report.GeneratedFiles)
-	sortFileReports(report.ConvertedFiles)
-	return nil
-}
-
-func filterToReferenceIDs(value any, referencePath string) any {
-	data, err := os.ReadFile(referencePath)
-	if err != nil {
-		return value
-	}
-	var reference []map[string]any
-	if json.Unmarshal(data, &reference) != nil {
-		return value
-	}
-	allowed := map[int]map[string]any{}
-	for _, record := range reference {
-		if id, ok := intFromAny(record["id"]); ok {
-			allowed[id] = record
-		}
-	}
-	records, ok := value.([]any)
-	if !ok {
-		return value
-	}
-	out := make([]any, 0, len(records))
-	for _, raw := range records {
-		record, ok := raw.(map[string]any)
-		if !ok {
-			continue
-		}
-		if id, ok := intFromAny(record["id"]); ok {
-			if referenceRecord, exists := allowed[id]; exists {
-				projected := make(map[string]any, len(referenceRecord))
-				for key := range referenceRecord {
-					if child, exists := record[key]; exists {
-						projected[key] = child
-					}
-				}
-				out = append(out, projected)
-			}
-		}
-	}
-	return out
-}
-
 func luaPathFor(root, rel string) string {
 	parts := strings.Split(filepath.ToSlash(rel), "/")
 	if len(parts) != 3 {
@@ -889,185 +583,6 @@ func streamBackingPath(root, region, dir, name string, value any) (string, error
 		return "", fmt.Errorf("stream backing data for %s/%s/%s: %w", region, dir, name, err)
 	}
 	return path, nil
-}
-
-func completeLuaPath(opts Options, rel string) (string, error) {
-	path := luaPathFor(opts.LuaScriptsRoot, rel)
-	parts := strings.Split(filepath.ToSlash(rel), "/")
-	if len(parts) != 3 || parts[1] != "ShareCfg" {
-		return path, nil
-	}
-	value, err := loadLuaFile(opts, path)
-	if err != nil {
-		return path, nil
-	}
-	backingPath, err := streamBackingPath(opts.LuaScriptsRoot, parts[0], "sharecfg", filepath.Base(path), azurlanelua.ToPlain(value))
-	if err != nil || backingPath == "" {
-		return path, err
-	}
-	return backingPath, nil
-}
-
-func convertLuaFile(opts Options, path, rel, classification string, allowlist []int) (any, error) {
-	decoded, err := loadLuaFile(opts, path)
-	if err != nil {
-		return nil, err
-	}
-	decoded = azurlanelua.ToPlain(decoded)
-	if strings.HasSuffix(rel, "/sharecfgdata/expedition_data_template.json") ||
-		strings.HasSuffix(rel, "/sharecfgdata/activity_coloring_template.json") {
-		decoded = normalizeNumericTables(decoded)
-	}
-	if strings.HasSuffix(rel, "/ShareCfg/battle_environment_behaviour_template.json") {
-		decoded = restoreBattleRouteShape(decoded)
-	}
-	converted, err := applyClassification(rel, decoded, classification, allowlist)
-	if err != nil {
-		return nil, err
-	}
-	if strings.HasSuffix(rel, "/ShareCfg/error_message.json") {
-		converted = stabilizeErrorMessageOrder(converted)
-	}
-	return converted, nil
-}
-
-func stabilizeErrorMessageOrder(value any) any {
-	records, ok := value.([]any)
-	if !ok {
-		return value
-	}
-	sort.SliceStable(records, func(i, j int) bool {
-		left, leftErr := marshalGeneratedJSON(records[i])
-		right, rightErr := marshalGeneratedJSON(records[j])
-		if leftErr != nil || rightErr != nil {
-			return false
-		}
-		return bytes.Compare(left, right) < 0
-	})
-	return records
-}
-
-func restoreBattleRouteShape(v any) any {
-	switch value := v.(type) {
-	case []any:
-		out := make([]any, len(value))
-		for i, child := range value {
-			out[i] = restoreBattleRouteShape(child)
-		}
-		return out
-	case map[string]any:
-		out := make(map[string]any, len(value))
-		isRecordFour := false
-		if id, ok := intFromAny(value["id"]); ok && (id == 10003 || id == 10026 || id == 10100) {
-			isRecordFour = true
-		}
-		for key, child := range value {
-			if key == "10003" || key == "10026" || key == "10100" {
-				if record, ok := child.(map[string]any); ok {
-					out[key] = restoreRecordFourRoute(record)
-					continue
-				}
-			}
-			if key == "behaviour_list" && isRecordFour {
-				out[key] = restoreRouteLists(child)
-				continue
-			}
-			out[key] = restoreBattleRouteShape(child)
-		}
-		return out
-	default:
-		return v
-	}
-}
-
-func restoreRecordFourRoute(record map[string]any) map[string]any {
-	out := make(map[string]any, len(record))
-	for key, child := range record {
-		if key == "behaviour_list" {
-			out[key] = restoreRouteLists(child)
-		} else {
-			out[key] = restoreBattleRouteShape(child)
-		}
-	}
-	return out
-}
-
-func restoreRouteLists(v any) any {
-	switch value := v.(type) {
-	case []any:
-		out := make([]any, len(value))
-		for i, child := range value {
-			out[i] = restoreRouteLists(child)
-		}
-		return out
-	case map[string]any:
-		out := make(map[string]any, len(value))
-		for key, child := range value {
-			if key == "route" {
-				if list, ok := child.([]any); ok {
-					mapped := make(map[string]any, len(list))
-					for i, entry := range list {
-						mapped[strconv.Itoa(i+1)] = restoreRouteLists(entry)
-					}
-					out[key] = mapped
-					continue
-				}
-			}
-			out[key] = restoreRouteLists(child)
-		}
-		return out
-	default:
-		return v
-	}
-}
-
-func applyClassification(rel string, decoded any, classification string, allowlist []int) (any, error) {
-	switch classification {
-	case "exact_raw_match":
-		return decoded, nil
-	case "match_after_empty_normalization":
-		return normalizeEmpty(decoded), nil
-	case "match_after_dict_keyed_to_list_by_id":
-		return dictKeyedToSortedList(decoded)
-	case "match_after_both_transformations":
-		return dictKeyedToSortedList(normalizeEmpty(decoded))
-	case "match_after_reference_id_subset":
-		src := decoded
-		var err error
-		if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-			src, err = dictKeyedToSortedList(normalizeEmpty(decoded))
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			src = normalizeEmpty(decoded)
-		}
-		srcRecords, _ := extractComparableRecords(src)
-		allowed := make(map[int]struct{}, len(allowlist))
-		for _, id := range allowlist {
-			allowed[id] = struct{}{}
-		}
-		filtered := make([]map[string]any, 0, len(srcRecords))
-		for _, rec := range srcRecords {
-			if id, ok := intFromAny(rec["id"]); ok {
-				if _, ok := allowed[id]; ok {
-					filtered = append(filtered, rec)
-				}
-			}
-		}
-		slices.SortFunc(filtered, func(a, b map[string]any) int {
-			idA, _ := intFromAny(a["id"])
-			idB, _ := intFromAny(b["id"])
-			return idA - idB
-		})
-		return filtered, nil
-	case "match_after_auto_pilot_template_key_id_rewrite", "match_after_class_upgrade_group_key_id_rewrite":
-		return keyedRecordListWithIDFromKey(decoded)
-	case "match_after_guildset_empty_key_args_array":
-		return guildsetEmptyKeyArgsToArray(decoded)
-	default:
-		return nil, fmt.Errorf("unsupported audited classification for %s: %s", rel, classification)
-	}
 }
 
 func generateRootHelpers(opts Options, report *Report) error {
@@ -1108,72 +623,6 @@ func generateRootHelpers(opts Options, report *Report) error {
 
 func globalVersionsPath() string {
 	return filepath.ToSlash(filepath.Join(globalDir, "versions.json"))
-}
-
-func convertAuditedFile(rel, sourcePath, classification string, allowlist []int) (any, error) {
-	data, err := os.ReadFile(sourcePath)
-	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", rel, err)
-	}
-	var decoded any
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		return nil, fmt.Errorf("decode %s: %w", rel, err)
-	}
-	switch classification {
-	case "exact_raw_match":
-		return decoded, nil
-	case "match_after_empty_normalization":
-		return normalizeEmpty(decoded), nil
-	case "match_after_dict_keyed_to_list_by_id":
-		return dictKeyedToSortedList(decoded)
-	case "match_after_both_transformations":
-		return dictKeyedToSortedList(normalizeEmpty(decoded))
-	case "match_after_reference_id_subset":
-		// For item_data_statistics.json which is match_after_reference_id_subset,
-		// it requires BOTH transformations first to extract the list, then filter!
-		var src any
-		if strings.HasSuffix(rel, "/sharecfgdata/item_data_statistics.json") {
-			src, err = dictKeyedToSortedList(normalizeEmpty(decoded))
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			src = normalizeEmpty(decoded)
-		}
-
-		srcRecords, _ := extractComparableRecords(src)
-		allowedIDs := make(map[int]struct{}, len(allowlist))
-		for _, id := range allowlist {
-			allowedIDs[id] = struct{}{}
-		}
-		filtered := make([]map[string]any, 0, len(srcRecords))
-		for _, rec := range srcRecords {
-			if id, ok := intFromAny(rec["id"]); ok {
-				if _, ok := allowedIDs[id]; ok {
-					filtered = append(filtered, rec)
-				}
-			}
-		}
-		slices.SortFunc(filtered, func(a, b map[string]any) int {
-			idA, _ := intFromAny(a["id"])
-			idB, _ := intFromAny(b["id"])
-			return idA - idB
-		})
-		return filtered, nil
-	case "match_after_auto_pilot_template_key_id_rewrite", "match_after_class_upgrade_group_key_id_rewrite":
-		return keyedRecordListWithIDFromKey(decoded)
-	case "match_after_guildset_empty_key_args_array":
-		return guildsetEmptyKeyArgsToArray(decoded)
-	default:
-		return nil, fmt.Errorf("unsupported audited classification for %s: %s", rel, classification)
-	}
-}
-
-func skippedUnsafeFiles(manifest *SafeManifest) []string {
-	files := append([]string{}, manifest.CountMismatchFiles...)
-	files = append(files, manifest.SchemaMismatchFiles...)
-	sortStrings(files)
-	return files
 }
 
 func normalizeEmpty(v any) any {
@@ -1311,108 +760,6 @@ func dictKeyedToSortedList(v any) (any, error) {
 	out := make([]any, 0, len(pairs))
 	for _, pair := range pairs {
 		out = append(out, pair.val)
-	}
-	return out, nil
-}
-
-func listToMapKeyedById(v any) (any, error) {
-	arr, ok := v.([]any)
-	if !ok {
-		return v, nil
-	}
-	out := make(map[string]any, len(arr))
-	for _, raw := range arr {
-		val, ok := raw.(map[string]any)
-		if !ok {
-			return v, nil
-		}
-		id, ok := intFromAny(val["id"])
-		if !ok {
-			return v, nil
-		}
-		out[strconv.Itoa(id)] = val
-	}
-	return out, nil
-}
-
-func singletonObjectToOneItemList(v any) (any, error) {
-	obj, ok := v.(map[string]any)
-	if !ok {
-		return v, nil
-	}
-	if _, ok := obj["id"]; ok {
-		return []any{obj}, nil
-	}
-	return v, nil
-}
-
-func keyedRecordListWithIDFromKey(v any) (any, error) {
-	obj, ok := v.(map[string]any)
-	if !ok {
-		return v, nil
-	}
-	type pair struct {
-		key string
-		id  int
-		val map[string]any
-	}
-	pairs := make([]pair, 0, len(obj))
-	for key, raw := range obj {
-		id, err := strconv.Atoi(key)
-		if err != nil {
-			continue
-		}
-		val, ok := raw.(map[string]any)
-		if !ok {
-			return v, fmt.Errorf("non-record value for %s", key)
-		}
-		cloned := make(map[string]any, len(val)+1)
-		for k, value := range val {
-			cloned[k] = value
-		}
-		cloned["id"] = float64(id)
-		pairs = append(pairs, pair{key: key, id: id, val: cloned})
-	}
-	if len(pairs) == 0 {
-		return v, nil
-	}
-	slices.SortFunc(pairs, func(a, b pair) int {
-		if a.id < b.id {
-			return -1
-		}
-		if a.id > b.id {
-			return 1
-		}
-		return strings.Compare(a.key, b.key)
-	})
-	out := make([]any, 0, len(pairs))
-	for _, pair := range pairs {
-		out = append(out, pair.val)
-	}
-	return out, nil
-}
-
-func guildsetEmptyKeyArgsToArray(v any) (any, error) {
-	obj, ok := v.(map[string]any)
-	if !ok {
-		return v, nil
-	}
-	out := make(map[string]any, len(obj))
-	for key, raw := range obj {
-		record, ok := raw.(map[string]any)
-		if !ok {
-			out[key] = raw
-			continue
-		}
-		cloned := make(map[string]any, len(record))
-		for field, value := range record {
-			if field == "key_args" && value == "" {
-				cloned[field] = []any{}
-				continue
-			}
-			cloned[field] = value
-		}
-		out[key] = cloned
 	}
 	return out, nil
 }
@@ -1630,12 +977,6 @@ func writeReport(opts Options, report *Report) error {
 
 func sortStrings(values []string) {
 	slices.Sort(values)
-}
-
-func sortFileReports(values []FileReport) {
-	slices.SortFunc(values, func(a, b FileReport) int {
-		return strings.Compare(a.RelativePath, b.RelativePath)
-	})
 }
 
 func extractComparableRecords(v any) ([]map[string]any, bool) {

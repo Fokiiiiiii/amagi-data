@@ -78,12 +78,7 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 	if opts.OutputRoot == "" {
 		return nil, fmt.Errorf("output root is required")
 	}
-	manifest, err := loadSafeManifest()
-	if err != nil {
-		return nil, err
-	}
-	report := newReport(opts, manifest)
-	resetLuaReport(report)
+	report := newReport(opts)
 	report.CategoryCounts = map[string]int{}
 	report.CategoryIDs = map[string][]int64{}
 
@@ -154,7 +149,7 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 	}
 
 	if plan.Versions {
-		versions, source, err := generateVersionsJSON(opts.LuaScriptsRoot, "")
+		versions, source, err := generateVersionsJSON(opts.LuaScriptsRoot)
 		if err != nil {
 			return nil, err
 		}
@@ -206,8 +201,7 @@ func groupGameCfgSources(sources []GameCfgSource) map[string][]GameCfgSource {
 // incremental build. Reporting false means the previous output could not be
 // reused and the caller must rebuild the bundle from scratch.
 func refreshGameCfgBundle(opts Options, report *Report, region, sourceName, targetName string, sources []GameCfgSource) (bool, error) {
-	// reorderToReference would need the full key set, so leave that path alone.
-	if opts.SourceRoot == "" || opts.ReferenceRoot != "" {
+	if opts.SourceRoot == "" {
 		return false, nil
 	}
 	previous, err := os.ReadFile(filepath.Join(opts.SourceRoot, region, "GameCfg", targetName+".json"))

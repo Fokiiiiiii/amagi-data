@@ -15,8 +15,6 @@ func main() {
 	sourceRoot := flag.String("source-root", "", "repository/source root")
 	outputRoot := flag.String("output-root", filepath.Join(os.TempDir(), "amagi_data_generation"), "output root")
 	luaScriptsRoot := flag.String("luascripts-root", "", "AzurLaneLuaScripts root")
-	versionSourceMap := flag.String("version-source-map", "", "region-specific versions source map")
-	referenceRoot := flag.String("reference-root", "", "reference root used to select aggregate Lua records")
 	reportPath := flag.String("report-path", "", "report path")
 	incrementalPlanPath := flag.String("incremental-plan", "", "incremental conversion plan")
 	flag.Parse()
@@ -26,13 +24,11 @@ func main() {
 		constantsRoot = filepath.Join(*luaScriptsRoot, "CN")
 	}
 	opts := dataconv.Options{
-		SourceRoot:           *sourceRoot,
-		OutputRoot:           *outputRoot,
-		ReportPath:           *reportPath,
-		LuaScriptsRoot:       *luaScriptsRoot,
-		ConstantsRoot:        constantsRoot,
-		ReferenceRoot:        *referenceRoot,
-		VersionSourceMapPath: *versionSourceMap,
+		SourceRoot:     *sourceRoot,
+		OutputRoot:     *outputRoot,
+		ReportPath:     *reportPath,
+		LuaScriptsRoot: *luaScriptsRoot,
+		ConstantsRoot:  constantsRoot,
 	}
 	var report *dataconv.Report
 	var err error
@@ -54,7 +50,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Printf("converted=%d generated_helpers=%d\n", len(report.ConvertedFiles), len(report.GeneratedHelperFiles))
+	fmt.Printf("generated=%d generated_helpers=%d\n", len(report.GeneratedFiles), len(report.GeneratedHelperFiles))
 }
 
 func incompleteReportError(report *dataconv.Report) error {

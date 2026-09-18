@@ -8,7 +8,6 @@ func (r Report) MarshalJSON() ([]byte, error) {
 	out := reportJSON(r)
 	out.Regions = stringsOrEmpty(out.Regions)
 	out.Categories = stringsOrEmpty(out.Categories)
-	out.ConvertedFiles = fileReportsOrEmpty(out.ConvertedFiles)
 	out.GeneratedFiles = stringsOrEmpty(out.GeneratedFiles)
 	out.GeneratedHelperFiles = stringsOrEmpty(out.GeneratedHelperFiles)
 	out.FallbackHelperFiles = stringsOrEmpty(out.FallbackHelperFiles)
@@ -23,13 +22,6 @@ func (r Report) MarshalJSON() ([]byte, error) {
 func stringsOrEmpty(values []string) []string {
 	if values == nil {
 		return []string{}
-	}
-	return values
-}
-
-func fileReportsOrEmpty(values []FileReport) []FileReport {
-	if values == nil {
-		return []FileReport{}
 	}
 	return values
 }
