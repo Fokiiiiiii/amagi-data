@@ -6,7 +6,6 @@ fixtures; no network or credentials are used.
 """
 from __future__ import annotations
 
-import base64
 import hashlib
 import json
 import os
@@ -108,9 +107,13 @@ class PreflightTests(FixtureTest):
             metadata, path = line.split("\t", 1)
             mode, kind, sha = metadata.split()
             entries.append(dict(mode=mode, type=kind, sha=sha, path=path))
-        state = f"upstream_sha: {old}\ngenerator_hash: {old_hash or fingerprint(self.workspace)}\n"
-        fixture = dict(tree=list(reversed(entries)), truncated=truncated,
-                       state=base64.b64encode(state.encode()).decode(), state_missing=state_missing)
+        state_path = self.workspace / ".github" / "azurlane-state"
+        if state_missing:
+            state_path.unlink(missing_ok=True)
+        else:
+            put(self.workspace, ".github/azurlane-state",
+                f"upstream_sha: {old}\ngenerator_hash: {old_hash or fingerprint(self.workspace)}\n")
+        fixture = dict(tree=list(reversed(entries)), truncated=truncated)
         runner = r'''
 const fs = require("fs");
 const fixture = JSON.parse(fs.readFileSync(0, "utf8"));
@@ -119,10 +122,6 @@ const core = {setOutput: (key, value) => outputs[key] = value, info: () => {}, w
 const context = {repo: {owner: "fixture", repo: "fixture"}, sha: "fixture"};
 const github = {rest: {
   git: {getTree: async () => ({data: {tree: fixture.tree, truncated: fixture.truncated}})},
-  repos: {getContent: async () => {
-    if (fixture.state_missing) { const error = new Error("missing"); error.status = 404; throw error; }
-    return {data: {content: fixture.state}};
-  }}
 }};
 (async () => {
 ''' + script + r'''
@@ -390,39 +389,57 @@ class CommitScriptTests(FixtureTest):
 
     def commit_generated(self) -> subprocess.CompletedProcess[str]:
         return run(["bash", str(ROOT / "tools/ci/commit-generated.sh")], self.workspace, check=False,
-                    env={"GITHUB_REF_NAME": "main"})
+                   env={"GITHUB_REF_NAME": "main"})
 
-    def last_commit_message(self) -> str:
-        return run(["git", "log", "-1", "--pretty=%B"], self.workspace).stdout.strip()
+    def head(self) -> str:
+        return run(["git", "rev-parse", "HEAD"], self.workspace).stdout.strip()
 
-    def test_single_region_version_bump_is_summarized(self) -> None:
+    def subjects(self, count: int) -> list[str]:
+        return run(["git", "log", f"-{count}", "--pretty=%s"], self.workspace).stdout.strip().splitlines()
+
+    def files_in(self, rev: str) -> list[str]:
+        return sorted(run(["git", "show", "--name-only", "--format=", rev], self.workspace).stdout.split())
+
+    def test_region_change_commits_with_its_version_delta(self) -> None:
+        put(self.workspace, "JP/ShareCfg/table.json", '{"v":2}\n')
         put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.380"}))
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.last_commit_message(), "update [JP]: 9.2.819 -> 9.2.821 [skip ci]")
+        self.assertEqual(self.subjects(1), ["update [JP]: 9.2.819 -> 9.2.821 [skip ci]"])
+        self.assertEqual(self.files_in("HEAD"), ["JP/ShareCfg/table.json", "global/versions.json"])
 
-    def test_multi_region_version_bump_lists_each_region_on_subject(self) -> None:
+    def test_each_changed_region_gets_its_own_commit(self) -> None:
+        put(self.workspace, "CN/ShareCfg/a.json", '{"v":2}\n')
+        put(self.workspace, "JP/ShareCfg/b.json", '{"v":2}\n')
         put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.381"}))
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(
-            self.last_commit_message(),
-            "update [CN]: 9.7.380 -> 9.7.381, [JP]: 9.2.819 -> 9.2.821 [skip ci]",
-        )
+        self.assertEqual(self.subjects(2), [
+            "update [JP]: 9.2.819 -> 9.2.821 [skip ci]",
+            "update [CN]: 9.7.380 -> 9.7.381 [skip ci]",
+        ])
+        # Shared files ride with the last region commit only.
+        self.assertEqual(self.files_in("HEAD~1"), ["CN/ShareCfg/a.json"])
+        self.assertEqual(self.files_in("HEAD"), ["JP/ShareCfg/b.json", "global/versions.json"])
 
-    def test_no_version_change_skips_commit_even_with_other_changes(self) -> None:
-        before = run(["git", "rev-parse", "HEAD"], self.workspace).stdout
-        put(self.workspace, "JP/ShareCfg/new_table.json", "{}\n")
+    def test_data_change_without_version_bump_still_commits(self) -> None:
+        put(self.workspace, "CN/ShareCfg/a.json", '{"v":2}\n')
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(run(["git", "rev-parse", "HEAD"], self.workspace).stdout, before)
+        self.assertEqual(self.subjects(1), ["update [CN]: 9.7.380 -> 9.7.380 [skip ci]"])
+
+    def test_shared_only_changes_are_left_for_the_next_region_commit(self) -> None:
+        before = self.head()
+        put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.380"}))
+        result = self.commit_generated()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.head(), before)
 
     def test_no_working_tree_changes_skips_commit(self) -> None:
-        before = run(["git", "rev-parse", "HEAD"], self.workspace).stdout
+        before = self.head()
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(run(["git", "rev-parse", "HEAD"], self.workspace).stdout, before)
-
+        self.assertEqual(self.head(), before)
 
 if __name__ == "__main__":
     unittest.main()

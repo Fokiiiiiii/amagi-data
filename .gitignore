@@ -11,3 +11,4 @@ belfast_phase1_report
 __pycache__/
 *.pyc
 .serena/
+.github/azurlane-state

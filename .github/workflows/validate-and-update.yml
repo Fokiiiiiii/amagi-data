@@ -43,6 +43,16 @@ jobs:
             echo "Could not read the upstream SHA; build will use the safe fallback path" >&2
           fi
 
+      # The processed-upstream state lives in the Actions cache rather than in a
+      # committed file, so state-only updates never land in the commit history.
+      - name: "Preflight: Restore processed upstream state"
+        uses: actions/cache/restore@v4
+        with:
+          path: .github/azurlane-state
+          key: azurlane-state-${{ github.run_id }}
+          restore-keys: |
+            azurlane-state-
+
       - name: "Preflight: Read state and generator fingerprint"
         id: check
         uses: actions/github-script@v8
@@ -52,6 +62,7 @@ jobs:
         with:
           script: |
             const crypto = require("crypto");
+            const fs = require("fs");
             const latest = process.env.UPSTREAM_SHA || "";
             const forceRequested = process.env.FORCE_FULL === "true";
             const shaPattern = /^[0-9a-f]{40}$/;
@@ -95,23 +106,16 @@ jobs:
                 .join("\n");
               generatorHash = crypto.createHash("sha256").update(lines ? `${lines}\n` : "").digest("hex");
 
+              let state = "";
               try {
-                const stateResponse = await github.rest.repos.getContent({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  path: ".github/azurlane-state",
-                  ref: context.sha,
-                });
-                if (!Array.isArray(stateResponse.data) && stateResponse.data.content) {
-                  const state = Buffer.from(stateResponse.data.content.replace(/\s/g, ""), "base64").toString("utf8");
-                  previousSHA = state.match(/^upstream_sha:\s*([0-9a-f]{40})\s*$/m)?.[1] || "";
-                  previousGeneratorHash = state.match(/^generator_hash:\s*([0-9a-f]{64})\s*$/m)?.[1] || "";
-                }
+                state = fs.readFileSync(".github/azurlane-state", "utf8");
               } catch (error) {
-                if (error.status !== 404) {
+                if (error.code !== "ENOENT") {
                   throw error;
                 }
               }
+              previousSHA = state.match(/^upstream_sha:\s*([0-9a-f]{40})\s*$/m)?.[1] || "";
+              previousGeneratorHash = state.match(/^generator_hash:\s*([0-9a-f]{64})\s*$/m)?.[1] || "";
 
               forceFull = forceRequested || !shaPattern.test(previousSHA) || previousGeneratorHash !== generatorHash;
               needsBuild = forceFull || previousSHA !== latest;
@@ -139,6 +143,14 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
+
+      - name: "State: Restore processed upstream revision"
+        uses: actions/cache/restore@v4
+        with:
+          path: .github/azurlane-state
+          key: azurlane-state-${{ github.run_id }}
+          restore-keys: |
+            azurlane-state-
 
       # ========== Phase 2: Detect upstream delta and plan dependencies ==========
       - name: "Data: Get latest AzurLaneLuaScripts SHA"
@@ -213,3 +225,12 @@ jobs:
       - name: "Commit: Generated data"
         if: steps.delta.outputs.needs_processing == 'true'
         run: tools/ci/commit-generated.sh
+
+      # Saved only after the commit step succeeded, so a failed push leaves the
+      # previous state in place and the next run re-processes the same delta.
+      - name: "State: Save processed upstream revision"
+        if: steps.delta.outputs.needs_processing == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .github/azurlane-state
+          key: azurlane-state-${{ github.run_id }}

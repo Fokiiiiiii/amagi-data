@@ -11,35 +11,42 @@ fi
 prev_versions="$(git show HEAD:global/versions.json 2>/dev/null || echo '{}')"
 curr_versions="$(cat global/versions.json 2>/dev/null || echo '{}')"
 
-message="$(PREV_VERSIONS="$prev_versions" CURR_VERSIONS="$curr_versions" python3 - <<'PY'
-import json
-import os
+version_of() {
+	printf '%s' "$1" | jq -r --arg region "$2" '.[$region] // ""'
+}
 
-prev = json.loads(os.environ["PREV_VERSIONS"])
-curr = json.loads(os.environ["CURR_VERSIONS"])
+# Mirror the upstream repository's history: one "update [XX]: old -> new" commit per
+# region whose files changed, even when the version itself did not move. Shared
+# files (global/versions.json and friends) ride along with the last region commit,
+# so the versions entry in a file listing points at a region update just as the
+# upstream versions/ directory does.
+regions=(CN EN JP KR TW)
+targets=()
+for region in "${regions[@]}"; do
+	if [[ -n "$(git status --short -- "$region/")" ]]; then
+		targets+=("$region")
+	fi
+done
 
-changes = [(region, prev.get(region), curr[region])
-           for region in sorted(curr) if prev.get(region) != curr[region]]
-
-if changes:
-	# Every bumped region goes on the subject line: a commit list only shows that
-	# line, so the versions have to be visible there rather than in the body.
-	summary = ", ".join(
-		f"[{region}]: {old} -> {new}" if old else f"[{region}]: {new}"
-		for region, old, new in changes
-	)
-	print(f"update {summary} [skip ci]")
-PY
-)"
-
-if [[ -z "$message" ]]; then
-	echo "No region version change; skipping commit"
+if (( ${#targets[@]} == 0 )); then
+	echo "No region data changed; leaving shared files uncommitted"
+	git status --short
 	exit 0
 fi
 
 git config user.email "github-actions[bot]@users.noreply.github.com"
 git config user.name "github-actions[bot]"
-git add --all
-git commit -m "$message"
+
+last="${targets[${#targets[@]}-1]}"
+for region in "${targets[@]}"; do
+	old="$(version_of "$prev_versions" "$region")"
+	new="$(version_of "$curr_versions" "$region")"
+	git add -- "$region/"
+	if [[ "$region" == "$last" ]]; then
+		git add --all
+	fi
+	git commit -m "update [$region]: ${old:-?} -> ${new:-?} [skip ci]"
+done
+
 git pull --rebase origin "$GITHUB_REF_NAME"
 git push origin "HEAD:$GITHUB_REF_NAME"
