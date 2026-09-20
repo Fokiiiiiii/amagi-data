@@ -75,9 +75,15 @@ publish_entry() {
       exit 1
       ;;
   esac
-  mkdir -p -- "$(dirname "$destination")"
-  rm -rf -- "$destination"
-  cp -r -- "$entry" "$destination"
+  # Merge rather than replace: global/ also holds hand-maintained files that
+  # are never regenerated, and stale region outputs were already removed above.
+  if [[ -d "$entry" ]]; then
+    mkdir -p -- "$destination"
+    cp -r -- "$entry"/. "$destination"/
+  else
+    mkdir -p -- "$(dirname "$destination")"
+    cp -- "$entry" "$destination"
+  fi
   echo "  - $rel"
 }
 

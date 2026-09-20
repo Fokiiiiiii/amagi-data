@@ -340,6 +340,12 @@ class VerifierTests(FixtureTest):
     def assert_rejected(self, result: subprocess.CompletedProcess[str]) -> None:
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_rejects_deleted_hand_maintained_global_file(self) -> None:
+        put(self.workspace, "global/build_pools.json")
+        commit(self.workspace)
+        (self.workspace / "global/build_pools.json").unlink()
+        self.assert_rejected(self.verify())
+
     def test_complete_full_output_passes(self) -> None:
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -378,6 +384,53 @@ class VerifierTests(FixtureTest):
         self.report = dict(generated_files=[rel], generated_helper_files=[])
         result = self.verify("incremental", {"output_paths": [rel, "JP/sharecfgdata/normal.json"]})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class GenerateScriptTests(FixtureTest):
+    """Drive ci/generate.sh with a stand-in `go` so publishing is tested without a conversion."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.runner = self.base / "runner"
+        self.runner.mkdir()
+        self.source = self.base / "lua"
+        self.source.mkdir()
+        fake_bin = self.base / "bin"
+        fake_bin.mkdir()
+        fake_go = fake_bin / "go"
+        fake_go.write_text(textwrap.dedent("""\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            out=""
+            while (( $# )); do
+                [[ $1 == -output-root ]] && out=$2
+                shift
+            done
+            mkdir -p "$out/JP/ShareCfg" "$out/global"
+            printf '{}\\n' > "$out/JP/ShareCfg/fresh.json"
+            printf '{"JP": "1.2.4"}\\n' > "$out/global/versions.json"
+            printf '%s\\n' '{"generated_files": ["JP/ShareCfg/fresh.json"], "generated_helper_files": ["global/versions.json"]}' \\
+                > "$out/generation-report.json"
+            """))
+        fake_go.chmod(0o755)
+        self.path = f"{fake_bin}{os.pathsep}{os.environ['PATH']}"
+
+    def generate(self) -> subprocess.CompletedProcess[str]:
+        return run(["bash", str(ROOT / "ci/generate.sh")], self.workspace, check=False, env={
+            "PATH": self.path, "GITHUB_WORKSPACE": str(self.workspace),
+            "RUNNER_TEMP": str(self.runner), "AMAGI_UPSTREAM_ROOT": str(self.source),
+        })
+
+    def test_full_publish_keeps_hand_maintained_global_files(self) -> None:
+        put(self.workspace, "global/build_pools.json", '{"hand": "maintained"}\n')
+        put(self.workspace, "global/versions.json", '{"JP": "1.2.3"}\n')
+        put(self.workspace, "JP/ShareCfg/stale.json")
+        result = self.generate()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.workspace / "global/build_pools.json").read_text(), '{"hand": "maintained"}\n')
+        self.assertEqual((self.workspace / "global/versions.json").read_text(), '{"JP": "1.2.4"}\n')
+        self.assertTrue((self.workspace / "JP/ShareCfg/fresh.json").is_file())
+        self.assertFalse((self.workspace / "JP/ShareCfg/stale.json").exists())
 
 
 class CommitScriptTests(FixtureTest):

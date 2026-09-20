@@ -5,6 +5,14 @@ out="${RUNNER_TEMP:?}/amagi_data_generation"
 report="$out/generation-report.json"
 source_root="${AMAGI_UPSTREAM_ROOT:-$GITHUB_WORKSPACE/_external/AzurLaneLuaScripts}"
 
+# generate.sh publishes into the working tree; hand-maintained files under
+# global/ (build_pools, build_times, requisition_ships) must survive that.
+if git status --short -- global/ | grep -qE '^( D|D )'; then
+	echo "generation deleted tracked files under global/:" >&2
+	git status --short -- global/ >&2
+	exit 1
+fi
+
 if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
 python3 - "$out" "$report" "$AMAGI_INCREMENTAL_PLAN" "$source_root" <<'PY'
 import json
