@@ -9,7 +9,7 @@ on:
         default: false
         type: boolean
   schedule:
-    - cron: "0 * * * *" # every hour
+    - cron: "17 * * * *" # hourly, off the congested top of the hour where GitHub delays or drops runs
 
 permissions:
   contents: read

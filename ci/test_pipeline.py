@@ -34,7 +34,12 @@ ALIASES = {
 def run(args: list[str], cwd: Path, *, env: dict[str, str] | None = None,
         check: bool = True, input: str | None = None) -> subprocess.CompletedProcess[str]:
     clean_env = dict(os.environ, GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
-                     GIT_TERMINAL_PROMPT="0")
+                     GIT_TERMINAL_PROMPT="0",
+                     # commit/fetch otherwise detach `git maintenance run --auto`, which
+                     # keeps writing under .git/objects while TemporaryDirectory cleanup
+                     # runs and makes teardown fail with "Directory not empty".
+                     GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="maintenance.auto",
+                     GIT_CONFIG_VALUE_0="false")
     # Do not inherit repository selection or object-store settings from a caller.
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY",
                 "GIT_ALTERNATE_OBJECT_DIRECTORIES"):
@@ -381,6 +386,9 @@ class CommitScriptTests(FixtureTest):
         run(["git", "branch", "-M", "main"], self.workspace)
         self.origin = self.base / "origin.git"
         run(["git", "init", "-q", "--bare", str(self.origin)], self.base)
+        # git-receive-pack is started with GIT_CONFIG_COUNT unset, so the
+        # environment-level maintenance.auto in run() does not reach the push target.
+        run(["git", "config", "maintenance.auto", "false"], self.origin)
         run(["git", "remote", "add", "origin", str(self.origin)], self.workspace)
         put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.819", "CN": "9.7.380"}))
         commit(self.workspace)
