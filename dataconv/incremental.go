@@ -1,7 +1,9 @@
 package dataconv
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,8 +26,11 @@ type IncrementalPlan struct {
 	OutputPaths         []string        `json:"output_paths"`
 	GameCfg             []string        `json:"gamecfg"`
 	GameCfgSources      []GameCfgSource `json:"gamecfg_sources"`
-	Versions            bool            `json:"versions"`
-	DeleteOutputs       []string        `json:"delete_outputs"`
+	// GameCfgPartial lists bundles whose category directory was checked out with
+	// only the changed Lua files, so they cannot be rebuilt from scratch.
+	GameCfgPartial []string `json:"gamecfg_partial"`
+	Versions       bool     `json:"versions"`
+	DeleteOutputs  []string `json:"delete_outputs"`
 }
 
 // GameCfgSource is a single Lua file inside a GameCfg category that changed
@@ -35,6 +40,12 @@ type GameCfgSource struct {
 	Path    string `json:"path"`
 	Deleted bool   `json:"deleted"`
 }
+
+// ErrPartialGameCfgSources reports that a bundle planned for an entry-by-entry
+// refresh could not reuse its previous output. Its category directory holds only
+// the changed files, so a rebuild from it would silently drop every other entry;
+// the caller must check out the whole category and run again.
+var ErrPartialGameCfgSources = errors.New("AMAGI_PARTIAL_GAMECFG: previous GameCfg bundle is unusable and only changed sources are checked out")
 
 func ReadIncrementalPlan(path string) (IncrementalPlan, error) {
 	data, err := os.ReadFile(path)
@@ -48,7 +59,7 @@ func ReadIncrementalPlan(path string) (IncrementalPlan, error) {
 	if plan.Mode != "incremental" {
 		return IncrementalPlan{}, fmt.Errorf("incremental plan mode must be incremental, got %q", plan.Mode)
 	}
-	for _, paths := range [][]string{plan.SourcePaths, plan.RequiredSourcePaths, plan.OutputPaths, plan.GameCfg, plan.DeleteOutputs} {
+	for _, paths := range [][]string{plan.SourcePaths, plan.RequiredSourcePaths, plan.OutputPaths, plan.GameCfg, plan.GameCfgPartial, plan.DeleteOutputs} {
 		for _, rel := range paths {
 			if err := validatePlanPath(rel); err != nil {
 				return IncrementalPlan{}, err
@@ -138,6 +149,9 @@ func ConvertMVPIncremental(opts Options, plan IncrementalPlan) (*Report, error) 
 				return nil, err
 			}
 		}
+		if !refreshed && slices.Contains(plan.GameCfgPartial, rel) {
+			return nil, fmt.Errorf("%w: %s", ErrPartialGameCfgSources, rel)
+		}
 		if !refreshed {
 			if err := generateReturnedGameCfg(opts, report, parts[0], sourceName, category); err != nil {
 				return nil, err
@@ -208,11 +222,7 @@ func refreshGameCfgBundle(opts Options, report *Report, region, sourceName, targ
 	if err != nil {
 		return false, nil
 	}
-	decoded, err := decodeOrderedJSON(previous)
-	if err != nil {
-		return false, nil
-	}
-	bundle, ok := decoded.(azurlanelua.OrderedObject)
+	bundle, ok := decodeRawBundle(previous)
 	if !ok {
 		return false, nil
 	}
@@ -232,10 +242,7 @@ func refreshGameCfgBundle(opts Options, report *Report, region, sourceName, targ
 			report.UnsupportedFiles = append(report.UnsupportedFiles, region+"/GameCfg/"+targetName+".json")
 			return true, nil
 		}
-		if list, ok := azurlanelua.ToPlain(value).([]any); ok && len(list) == 0 {
-			value = nil
-		}
-		bundle.Values[stem] = azurlanelua.ToPlain(value)
+		bundle.Values[stem] = gameCfgEntry(value)
 	}
 	// A full rebuild emits keys in sorted path order, which for files sharing one
 	// directory is the same as sorted stem order.
@@ -253,6 +260,40 @@ func refreshGameCfgBundle(opts Options, report *Report, region, sourceName, targ
 	report.GeneratedFiles = append(report.GeneratedFiles, rel)
 	report.TotalGeneratedCount++
 	return true, nil
+}
+
+// decodeRawBundle splits a generated GameCfg bundle into its top-level entries,
+// keeping each entry's JSON bytes as they are. Unchanged entries are written
+// back verbatim, so the story, skill and dungeon payloads are never expanded
+// into maps and slices just to be serialized again.
+func decodeRawBundle(data []byte) (azurlanelua.OrderedObject, bool) {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	if token, err := decoder.Token(); err != nil || token != json.Delim('{') {
+		return azurlanelua.OrderedObject{}, false
+	}
+	bundle := azurlanelua.OrderedObject{Values: map[string]any{}}
+	for decoder.More() {
+		token, err := decoder.Token()
+		if err != nil {
+			return azurlanelua.OrderedObject{}, false
+		}
+		key, ok := token.(string)
+		if !ok {
+			return azurlanelua.OrderedObject{}, false
+		}
+		var raw json.RawMessage
+		if err := decoder.Decode(&raw); err != nil {
+			return azurlanelua.OrderedObject{}, false
+		}
+		if _, dup := bundle.Values[key]; !dup {
+			bundle.Keys = append(bundle.Keys, key)
+		}
+		bundle.Values[key] = raw
+	}
+	if token, err := decoder.Token(); err != nil || token != json.Delim('}') {
+		return azurlanelua.OrderedObject{}, false
+	}
+	return bundle, true
 }
 
 func streamBackingRank(dir string) int {

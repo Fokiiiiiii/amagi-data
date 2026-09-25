@@ -18,11 +18,43 @@ args=(
   -luascripts-root "$AMAGI_DATA_TEST_LUASCRIPTS_ROOT"
   -output-root "$out"
 )
+
+# Returns 3 when the converter refused to rebuild a GameCfg bundle from a
+# category checked out with only its changed files (ErrPartialGameCfgSources).
+convert() {
+  local err_log="$RUNNER_TEMP/amagi-convert.stderr"
+  local status=0
+  go run . "$@" 2>"$err_log" || status=$?
+  cat "$err_log" >&2
+  if (( status != 0 )) && grep -q 'AMAGI_PARTIAL_GAMECFG' "$err_log"; then
+    return 3
+  fi
+  return "$status"
+}
+
 if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
   : "${AMAGI_INCREMENTAL_PLAN:?AMAGI_INCREMENTAL_PLAN is required for incremental generation}"
-  args+=(-incremental-plan "$AMAGI_INCREMENTAL_PLAN")
+  status=0
+  convert "${args[@]}" -incremental-plan "$AMAGI_INCREMENTAL_PLAN" || status=$?
+  if (( status == 3 )); then
+    # The previous bundle could not be reused: fetch the whole categories and
+    # rebuild those bundles from scratch instead of publishing partial ones.
+    echo "previous GameCfg output unusable; checking out full categories and retrying"
+    mapfile -t categories < <(jq -r '.gamecfg_partial[]
+      | split("/")
+      | "/\(.[0])/gamecfg/\(if .[0] == "JP" and .[2] == "story.json" then "storyjp" else (.[2] | rtrimstr(".json")) end)/**/*.lua"' \
+      "$AMAGI_INCREMENTAL_PLAN")
+    git -C "$AMAGI_DATA_TEST_LUASCRIPTS_ROOT" sparse-checkout add "${categories[@]}"
+    retry_plan="$RUNNER_TEMP/amagi-incremental-plan.full-gamecfg.json"
+    jq '.gamecfg_partial = []' "$AMAGI_INCREMENTAL_PLAN" > "$retry_plan"
+    rm -rf -- "$out"
+    status=0
+    convert "${args[@]}" -incremental-plan "$retry_plan" || status=$?
+  fi
+  (( status == 0 )) || exit "$status"
+else
+  convert "${args[@]}"
 fi
-go run . "${args[@]}"
 
 if [ ! -d "$out" ]; then
   echo "output dir missing: $out" >&2

@@ -473,17 +473,24 @@ func convertReturnedGameCfg(opts Options, region, sourceName, targetName string)
 		if loadErr != nil {
 			return &gameCfgResult{rel: region + "/GameCfg/" + targetName + ".json", unsupported: true}, nil
 		}
-		if list, ok := azurlanelua.ToPlain(value).([]any); ok && len(list) == 0 {
-			value = nil
-		}
 		merged.Keys = append(merged.Keys, stem)
-		merged.Values[stem] = azurlanelua.ToPlain(value)
+		merged.Values[stem] = gameCfgEntry(value)
 	}
 	rel := region + "/GameCfg/" + targetName + ".json"
 	if err := writeJSON(filepath.Join(opts.OutputRoot, filepath.FromSlash(rel)), merged); err != nil {
 		return nil, err
 	}
 	return &gameCfgResult{rel: rel}, nil
+}
+
+// gameCfgEntry converts one GameCfg Lua file's value, storing an empty table as
+// null. ToPlain walks the whole value, so it runs once and the result is reused.
+func gameCfgEntry(value any) any {
+	plain := azurlanelua.ToPlain(value)
+	if list, ok := plain.([]any); ok && len(list) == 0 {
+		return nil
+	}
+	return plain
 }
 
 func decodeOrderedJSON(data []byte) (any, error) {
@@ -778,25 +785,63 @@ func mayBeNumericKey(key string) bool {
 }
 
 func marshalGeneratedJSON(v any) ([]byte, error) {
+	var enc generatedJSONEncoder
+	return enc.append(nil, v)
+}
+
+// generatedJSONEncoder appends every value to one output slice instead of
+// building a buffer per nested map, list and leaf and copying it into its parent.
+// Leaves without a fast path share one json.Encoder and scratch buffer.
+type generatedJSONEncoder struct {
+	scratch bytes.Buffer
+	leaf    *json.Encoder
+}
+
+// plainJSONString reports whether s encodes as itself between quotes: printable
+// ASCII without a quote or backslash, and, when escapeHTML is set (map keys go
+// through json.Marshal), without <, > or &.
+func plainJSONString(s string, escapeHTML bool) bool {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c < 0x20 || c > 0x7e || c == '"' || c == '\\' {
+			return false
+		}
+		if escapeHTML && (c == '<' || c == '>' || c == '&') {
+			return false
+		}
+	}
+	return true
+}
+
+func appendGeneratedJSONKey(dst []byte, key string) []byte {
+	if plainJSONString(key, true) {
+		dst = append(dst, '"')
+		dst = append(dst, key...)
+		return append(dst, '"')
+	}
+	kb, _ := json.Marshal(key)
+	return append(dst, kb...)
+}
+
+func (e *generatedJSONEncoder) append(dst []byte, v any) ([]byte, error) {
+	var err error
 	switch value := v.(type) {
 	case azurlanelua.OrderedObject:
-		var b bytes.Buffer
-		b.WriteByte('{')
+		dst = append(dst, '{')
 		for i, key := range value.Keys {
 			if i > 0 {
-				b.WriteByte(',')
+				dst = append(dst, ',')
 			}
-			kb, _ := json.Marshal(key)
-			b.Write(kb)
-			b.WriteByte(':')
-			child, err := marshalGeneratedJSON(value.Values[key])
-			if err != nil {
+			dst = appendGeneratedJSONKey(dst, key)
+			dst = append(dst, ':')
+			if dst, err = e.append(dst, value.Values[key]); err != nil {
 				return nil, err
 			}
-			b.Write(child)
 		}
-		b.WriteByte('}')
-		return b.Bytes(), nil
+		return append(dst, '}'), nil
+	case json.RawMessage:
+		// Already generated output, reused verbatim (see refreshGameCfgBundle).
+		return append(dst, value...), nil
 	case map[string]any:
 		keys := make([]string, 0, len(value))
 		for key := range value {
@@ -864,58 +909,56 @@ func marshalGeneratedJSON(v any) ([]byte, error) {
 				return keys[i] < keys[j]
 			})
 		}
-		var b bytes.Buffer
-		b.WriteByte('{')
+		dst = append(dst, '{')
 		for i, key := range keys {
 			if i > 0 {
-				b.WriteByte(',')
+				dst = append(dst, ',')
 			}
-			kb, _ := json.Marshal(key)
-			b.Write(kb)
-			b.WriteByte(':')
-			child, err := marshalGeneratedJSON(value[key])
-			if err != nil {
+			dst = appendGeneratedJSONKey(dst, key)
+			dst = append(dst, ':')
+			if dst, err = e.append(dst, value[key]); err != nil {
 				return nil, err
 			}
-			b.Write(child)
 		}
-		b.WriteByte('}')
-		return b.Bytes(), nil
+		return append(dst, '}'), nil
 	case []any:
-		var b bytes.Buffer
-		b.WriteByte('[')
+		dst = append(dst, '[')
 		for i, childValue := range value {
 			if i > 0 {
-				b.WriteByte(',')
+				dst = append(dst, ',')
 			}
-			child, err := marshalGeneratedJSON(childValue)
-			if err != nil {
+			if dst, err = e.append(dst, childValue); err != nil {
 				return nil, err
 			}
-			b.Write(child)
 		}
-		b.WriteByte(']')
-		return b.Bytes(), nil
+		return append(dst, ']'), nil
 	case json.Number:
 		if value == "-0" || value == "-0.0" {
-			return []byte("0"), nil
+			return append(dst, '0'), nil
 		}
 		parsed, err := strconv.ParseFloat(string(value), 64)
 		if err == nil && math.Trunc(parsed) == parsed {
-			return []byte(strconv.FormatFloat(parsed, 'f', -1, 64)), nil
+			return strconv.AppendFloat(dst, parsed, 'f', -1, 64), nil
 		}
-		return []byte(value), nil
+		return append(dst, value...), nil
 	case generatedID:
-		return []byte(strconv.Itoa(int(value))), nil
-	default:
-		var b bytes.Buffer
-		enc := json.NewEncoder(&b)
-		enc.SetEscapeHTML(false)
-		if err := enc.Encode(v); err != nil {
-			return nil, err
+		return strconv.AppendInt(dst, int64(value), 10), nil
+	case string:
+		if plainJSONString(value, false) {
+			dst = append(dst, '"')
+			dst = append(dst, value...)
+			return append(dst, '"'), nil
 		}
-		return bytes.TrimSuffix(b.Bytes(), []byte{'\n'}), nil
 	}
+	if e.leaf == nil {
+		e.leaf = json.NewEncoder(&e.scratch)
+		e.leaf.SetEscapeHTML(false)
+	}
+	e.scratch.Reset()
+	if err := e.leaf.Encode(v); err != nil {
+		return nil, err
+	}
+	return append(dst, bytes.TrimSuffix(e.scratch.Bytes(), []byte{'\n'})...), nil
 }
 
 func writeReport(opts Options, report *Report) error {

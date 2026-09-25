@@ -11,8 +11,8 @@ else
 fi
 
 if [[ "${AMAGI_MODE:-full}" == "incremental" ]]; then
-  echo "Running focused incremental/full equivalence test"
-  go test ./dataconv -run '^TestConvertMVPIncrementalMatchesFullBuildAfterUpstreamChanges$' -count=1
+  echo "Running focused incremental/full equivalence tests"
+  go test ./dataconv -run '^(TestConvertMVPIncrementalMatchesFullBuildAfterUpstreamChanges|TestIncrementalGameCfgRefreshMatchesFullRebuild)$' -count=1
   exit
 fi
 
