@@ -138,10 +138,22 @@ jobs:
       contents: write
     steps:
       # ========== Phase 1: Main setup ==========
+      # Only code, CI and global/ are checked out here; the region data (hundreds
+      # of MB) is added after planning, limited to the outputs this run touches.
       - name: "Checkout: Main repository"
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/*/
+            /.github/
+            /azurlanelua/
+            /ci/
+            /dataconv/
+            /global/
 
       - name: "State: Restore processed upstream revision"
         uses: actions/cache/restore@v4
@@ -174,6 +186,13 @@ jobs:
           PLAN_PATH: ${{ runner.temp }}/amagi-incremental-plan.json
           UPSTREAM_ROOT: ${{ runner.temp }}/AzurLaneLuaScripts
         run: ci/sync-upstream.sh
+
+      - name: "Checkout: Planned outputs"
+        if: steps.delta.outputs.needs_sources == 'true'
+        env:
+          AMAGI_MODE: ${{ steps.delta.outputs.mode }}
+          AMAGI_INCREMENTAL_PLAN: ${{ steps.delta.outputs.plan_path }}
+        run: ci/checkout-outputs.sh
 
       # ========== Phase 3: Setup tools ==========
       - name: "Setup: Go toolchain"

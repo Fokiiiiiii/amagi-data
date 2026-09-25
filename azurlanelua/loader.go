@@ -229,8 +229,10 @@ type lexer struct {
 	pos int
 }
 
-func lex(src []byte) ([]token, error) {
-	l := &lexer{src: []rune(string(src))}
+// lex tokenizes src, already decoded to runes so the parser can share the same
+// slice for error context instead of decoding the source a second time.
+func lex(src []rune) ([]token, error) {
+	l := &lexer{src: src}
 	// Upstream tables average well under 8 bytes per token; sizing the slice up front
 	// avoids repeatedly reallocating and copying it for multi-MB sources.
 	out := make([]token, 0, len(src)/8+16)
@@ -869,10 +871,11 @@ func loadFile(path, constantsRoot string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(strings.TrimSpace(string(b))) == 0 {
+	if len(bytes.TrimSpace(b)) == 0 {
 		return []any{}, nil
 	}
-	ts, err := lex(b)
+	source := []rune(string(b))
+	ts, err := lex(source)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
@@ -881,14 +884,14 @@ func loadFile(path, constantsRoot string) (any, error) {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 	aliasDataset := ""
-	if i := strings.Index(string(b), "slot0."); i >= 0 {
-		rest := string(b)[i+6:]
-		if j := strings.Index(rest, " = {}"); j > 0 {
-			aliasDataset = strings.TrimSpace(rest[:j])
+	if i := bytes.Index(b, []byte("slot0.")); i >= 0 {
+		rest := b[i+6:]
+		if j := bytes.Index(rest, []byte(" = {}")); j > 0 {
+			aliasDataset = string(bytes.TrimSpace(rest[:j]))
 		}
 	}
 	root := map[string]any{}
-	p := &parser{tokens: ts, constants: constants, source: []rune(string(b))}
+	p := &parser{tokens: ts, constants: constants, source: source}
 	for p.i < len(ts) {
 		start := p.i
 		if ts[p.i].kind != "ident" || (ts[p.i].text != "_G" && ts[p.i].text != "pg" && !(ts[p.i].text == "uv0" && aliasDataset != "")) {
@@ -1070,11 +1073,12 @@ func loadGlobalConstants(constants map[string]any, constPath string) error {
 	if err != nil {
 		return fmt.Errorf("read constants %s: %w", constPath, err)
 	}
-	ts, err := lex(b)
+	source := []rune(string(b))
+	ts, err := lex(source)
 	if err != nil {
 		return fmt.Errorf("parse constants %s: %w", constPath, err)
 	}
-	p := &parser{tokens: ts, constants: constants, source: []rune(string(b))}
+	p := &parser{tokens: ts, constants: constants, source: source}
 	depth := 0
 	for i := 0; i < len(ts); i++ {
 		if depth == 0 && ts[i].kind == "ident" && i+1 < len(ts) && ts[i+1].kind == "=" {
@@ -1104,11 +1108,12 @@ func loadShipTypeConstants(constants map[string]any, constPath string) error {
 	if err != nil {
 		return fmt.Errorf("read constants %s: %w", constPath, err)
 	}
-	ts, err := lex(b)
+	source := []rune(string(b))
+	ts, err := lex(source)
 	if err != nil {
 		return fmt.Errorf("parse constants %s: %w", constPath, err)
 	}
-	p := &parser{tokens: ts, constants: constants, source: []rune(string(b))}
+	p := &parser{tokens: ts, constants: constants, source: source}
 	for i := 0; i+3 < len(ts); i++ {
 		if ts[i].kind != "ident" || ts[i].text != "slot0" || ts[i+1].kind != "." || ts[i+2].kind != "ident" || ts[i+3].kind != "=" {
 			continue

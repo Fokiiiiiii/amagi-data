@@ -276,6 +276,29 @@ class PlannerTests(FixtureTest):
             {"path": "JP/gamecfg/skill/two.lua", "deleted": True},
         ])
 
+    def test_gamecfg_with_committed_bundle_checks_out_changed_files_only(self) -> None:
+        put(self.workspace, "JP/GameCfg/skill.json")
+        commit(self.workspace)
+        put(self.upstream, "JP/gamecfg/skill/one.lua", "return { id = 2 }\n")
+        plan, outputs = self.plan(commit(self.upstream))
+        self.assertEqual(plan["gamecfg_partial"], ["JP/GameCfg/skill.json"])
+        source = Path(outputs["source_root"])
+        self.assertTrue((source / "JP/gamecfg/skill/one.lua").is_file())
+        self.assertFalse((source / "JP/gamecfg/skill/two.lua").exists())
+
+    def test_gamecfg_without_committed_bundle_is_not_partial(self) -> None:
+        put(self.upstream, "JP/gamecfg/skill/one.lua", "return { id = 2 }\n")
+        plan, _ = self.plan(commit(self.upstream))
+        self.assertEqual(plan["gamecfg_partial"], [])
+
+    def test_gamecfg_category_listed_once_for_many_changes(self) -> None:
+        for n in range(5):
+            put(self.upstream, f"JP/gamecfg/skill/new{n}.lua", "return {}\n")
+        plan, _ = self.plan(commit(self.upstream))
+        self.assertEqual(plan["gamecfg"], ["JP/GameCfg/skill.json"])
+        self.assertEqual(plan["output_paths"], ["JP/GameCfg/skill.json"])
+        self.assertEqual(len(plan["gamecfg_sources"]), 5)
+
     def test_gamecfg_sources_empty_on_full_build(self) -> None:
         plan, _ = self.plan(self.previous, previous="d" * 40)
         self.assertEqual(plan["mode"], "full")
@@ -433,6 +456,108 @@ class GenerateScriptTests(FixtureTest):
         self.assertFalse((self.workspace / "JP/ShareCfg/stale.json").exists())
 
 
+class GenerateRetryTests(FixtureTest):
+    """An unusable previous GameCfg bundle widens the upstream checkout and retries."""
+
+    def test_partial_gamecfg_failure_retries_with_whole_category(self) -> None:
+        runner = self.base / "runner"
+        runner.mkdir()
+        upstream = self.base / "upstream"
+        init_repo(upstream)
+        put(upstream, "JP/gamecfg/skill/one.lua", "return {}\n")
+        put(upstream, "JP/gamecfg/skill/two.lua", "return {}\n")
+        commit(upstream)
+        run(["git", "sparse-checkout", "set", "--no-cone", "/JP/gamecfg/skill/one.lua"], upstream)
+        self.assertFalse((upstream / "JP/gamecfg/skill/two.lua").exists())
+        plan = self.base / "plan.json"
+        plan.write_text(json.dumps({"mode": "incremental", "output_paths": [], "delete_outputs": [],
+                                    "gamecfg_partial": ["JP/GameCfg/skill.json"]}))
+        fake_bin = self.base / "bin"
+        fake_bin.mkdir()
+        (fake_bin / "go").write_text(textwrap.dedent("""\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            out="" plan=""
+            while (( $# )); do
+                [[ $1 == -output-root ]] && out=$2
+                [[ $1 == -incremental-plan ]] && plan=$2
+                shift
+            done
+            if [[ "$(jq -c .gamecfg_partial "$plan")" != "[]" ]]; then
+                echo "AMAGI_PARTIAL_GAMECFG: previous GameCfg bundle is unusable" >&2
+                exit 1
+            fi
+            mkdir -p "$out"
+            printf '%s\\n' '{"generated_files": [], "generated_helper_files": []}' > "$out/generation-report.json"
+            """))
+        (fake_bin / "go").chmod(0o755)
+        result = run(["bash", str(ROOT / "ci/generate.sh")], self.workspace, check=False, env={
+            "PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}", "GITHUB_WORKSPACE": str(self.workspace),
+            "RUNNER_TEMP": str(runner), "AMAGI_UPSTREAM_ROOT": str(upstream),
+            "AMAGI_MODE": "incremental", "AMAGI_INCREMENTAL_PLAN": str(plan),
+        })
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("retrying", result.stdout)
+        self.assertTrue((upstream / "JP/gamecfg/skill/two.lua").is_file())
+
+
+class CheckoutOutputsTests(FixtureTest):
+    """ci/checkout-outputs.sh widens the workflow's sparse checkout to the plan."""
+
+    SPARSE = ["/*", "!/*/", "/.github/", "/azurlanelua/", "/ci/", "/dataconv/", "/global/"]
+
+    def setUp(self) -> None:
+        super().setUp()
+        put(self.workspace, "global/versions.json", '{"JP": "1"}\n')
+        put(self.workspace, "JP/GameCfg/skill.json")
+        put(self.workspace, "JP/GameCfg/story.json")
+        put(self.workspace, "EN/ShareCfg/gone.json")
+        commit(self.workspace)
+        run(["git", "config", "uploadpack.allowFilter", "true"], self.workspace)
+        self.clone = self.base / "clone"
+        run(["git", "clone", "-q", "--no-checkout", "--filter=blob:none",
+             self.workspace.as_uri(), str(self.clone)], self.base)
+        run(["git", "sparse-checkout", "set", "--no-cone", *self.SPARSE], self.clone)
+        run(["git", "checkout", "-q", "HEAD"], self.clone)
+        run(["git", "reset", "-q", "--hard"], self.clone)
+        self.plan_path = self.base / "plan.json"
+
+    def widen(self, mode: str, plan: dict | None = None) -> None:
+        self.plan_path.write_text(json.dumps(plan or {}))
+        run(["bash", str(ROOT / "ci/checkout-outputs.sh")], self.clone, env={
+            "AMAGI_MODE": mode, "AMAGI_INCREMENTAL_PLAN": str(self.plan_path)})
+
+    def test_workflow_checkout_matches_initial_patterns(self) -> None:
+        workflow = (ROOT / ".github/workflows/validate-and-update.yml").read_text()
+        self.assertIn("sparse-checkout-cone-mode: false", workflow)
+        for pattern in self.SPARSE:
+            self.assertIn(f"            {pattern}\n", workflow)
+        self.assertIn("ci/checkout-outputs.sh", workflow)
+
+    def test_initial_checkout_skips_region_data(self) -> None:
+        self.assertTrue((self.clone / "global/versions.json").is_file())
+        self.assertTrue((self.clone / "dataconv/sample.go").is_file())
+        self.assertFalse((self.clone / "JP").exists())
+
+    def test_incremental_adds_only_planned_outputs(self) -> None:
+        self.widen("incremental", {"output_paths": ["JP/GameCfg/skill.json", "JP/ShareCfg/new.json"],
+                                   "delete_outputs": ["EN/ShareCfg/gone.json"]})
+        self.assertTrue((self.clone / "JP/GameCfg/skill.json").is_file())
+        self.assertTrue((self.clone / "EN/ShareCfg/gone.json").is_file())
+        self.assertFalse((self.clone / "JP/GameCfg/story.json").exists())
+        # A new output and a deletion are staged without touching unplanned files.
+        put(self.clone, "JP/ShareCfg/new.json")
+        (self.clone / "EN/ShareCfg/gone.json").unlink()
+        run(["git", "add", "--all"], self.clone)
+        staged = run(["git", "diff", "--cached", "--no-renames", "--name-status"], self.clone).stdout.splitlines()
+        self.assertEqual(sorted(staged), ["A\tJP/ShareCfg/new.json", "D\tEN/ShareCfg/gone.json"])
+
+    def test_full_checks_out_everything(self) -> None:
+        self.widen("full")
+        self.assertTrue((self.clone / "JP/GameCfg/story.json").is_file())
+        self.assertTrue((self.clone / "EN/ShareCfg/gone.json").is_file())
+
+
 class CommitScriptTests(FixtureTest):
     def setUp(self) -> None:
         super().setUp()
@@ -488,12 +613,21 @@ class CommitScriptTests(FixtureTest):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.subjects(1), ["update [CN]: 9.7.380 -> 9.7.380"])
 
-    def test_shared_only_changes_are_left_for_the_next_region_commit(self) -> None:
-        before = self.head()
+    def test_version_only_change_is_committed_and_pushed(self) -> None:
         put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.380"}))
         result = self.commit_generated()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.head(), before)
+        self.assertEqual(self.subjects(1), ["update [JP]: 9.2.819 -> 9.2.821"])
+        self.assertEqual(self.files_in("HEAD"), ["global/versions.json"])
+        self.assertEqual(run(["git", "status", "--porcelain"], self.workspace).stdout, "")
+        remote = run(["git", "rev-parse", "origin/main"], self.workspace).stdout.strip()
+        self.assertEqual(remote, self.head())
+
+    def test_multi_region_version_only_change_uses_shared_subject(self) -> None:
+        put(self.workspace, "global/versions.json", json.dumps({"JP": "9.2.821", "CN": "9.7.381"}))
+        result = self.commit_generated()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.subjects(1), ["update shared files"])
 
     def test_no_working_tree_changes_skips_commit(self) -> None:
         before = self.head()

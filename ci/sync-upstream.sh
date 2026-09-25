@@ -60,40 +60,19 @@ gamecfg_sources=()
 delete_outputs=()
 versions=false
 
+gamecfg_partial=()
+declare -A seen=()
+declare -A gamecfg_category=()
+declare -A gamecfg_nested=()
+
+# Arrays double as insertion-ordered sets: the `seen` lookup keeps large diffs
+# linear instead of rescanning each array for every appended value.
 append_unique() {
-	local array_name=$1
-	local value=$2
-	local existing
-	case "$array_name" in
-		source_paths)
-			for existing in "${source_paths[@]-}"; do [[ "$existing" == "$value" ]] && return; done
-			source_paths+=("$value")
-			;;
-		required_source_paths)
-			for existing in "${required_source_paths[@]-}"; do [[ "$existing" == "$value" ]] && return; done
-			required_source_paths+=("$value")
-			;;
-		sparse_patterns)
-			for existing in "${sparse_patterns[@]-}"; do [[ "$existing" == "$value" ]] && return; done
-			sparse_patterns+=("$value")
-			;;
-		output_paths)
-			for existing in "${output_paths[@]-}"; do [[ "$existing" == "$value" ]] && return; done
-			output_paths+=("$value")
-			;;
-		gamecfg)
-			for existing in "${gamecfg[@]-}"; do [[ "$existing" == "$value" ]] && return; done
-			gamecfg+=("$value")
-			;;
-		gamecfg_sources)
-			for existing in "${gamecfg_sources[@]-}"; do [[ "$existing" == "$value" ]] && return; done
-			gamecfg_sources+=("$value")
-			;;
-		delete_outputs)
-			for existing in "${delete_outputs[@]-}"; do [[ "$existing" == "$value" ]] && return; done
-			delete_outputs+=("$value")
-			;;
-		esac
+	local key="$1"$'\t'"$2"
+	[[ -n "${seen[$key]+x}" ]] && return 0
+	seen[$key]=1
+	local -n array_ref=$1
+	array_ref+=("$2")
 }
 
 add_source_pair() {
@@ -159,9 +138,11 @@ add_gamecfg() {
 	local target_name=$3
 	local target="$region/GameCfg/$target_name.json"
 	local files
+	# One upstream tree walk per bundle, however many of its files changed.
+	[[ -n "${gamecfg_category[$target]+x}" ]] && return 0
+	gamecfg_category[$target]="$region/gamecfg/$source_name"
 	append_unique gamecfg "$target"
 	append_unique output_paths "$target"
-	append_unique sparse_patterns "/$region/gamecfg/$source_name/**/*.lua"
 	files="$(git -C "$upstream_root" ls-tree -r --name-only "$latest_sha" -- "$region/gamecfg/$source_name")"
 	if [[ -z "$files" ]] || ! printf '%s\n' "$files" | grep '\.lua$' >/dev/null; then
 		append_unique delete_outputs "$target"
@@ -198,6 +179,9 @@ if [[ "$mode" == "incremental" ]]; then
 				target_name="$source_name"
 				[[ "$region" == "JP" && "$source_name" == "storyjp" ]] && target_name="story"
 				add_gamecfg "$region" "$source_name" "$target_name"
+				# The converter refreshes an existing bundle entry by entry only for
+				# direct children of the category directory.
+				[[ "$path" =~ ^[^/]+/gamecfg/[^/]+/[^/]+\.lua$ ]] || gamecfg_nested["$region/GameCfg/$target_name.json"]=1
 				# Record the individual file so the converter can refresh just this
 				# entry instead of re-parsing the whole category directory.
 				if [[ "$status" == "D" ]]; then
@@ -215,6 +199,24 @@ if [[ "$mode" == "incremental" ]]; then
 		if [[ "$versions" == "true" ]]; then
 			append_unique sparse_patterns "/versions/*.txt"
 		fi
+		# A bundle whose previous output is committed here is refreshed from that
+		# JSON plus the changed Lua files, so only those files are checked out.
+		# Anything else needs the whole category; if the previous JSON later proves
+		# unusable, ci/generate.sh widens the checkout and retries.
+		for target in "${gamecfg[@]}"; do
+			category="${gamecfg_category[$target]}"
+			if [[ -z "${gamecfg_nested[$target]+x}" && -z "${seen[delete_outputs$'\t'$target]+x}" ]] &&
+				[[ -n "$(git ls-tree --name-only HEAD -- "$target")" ]]; then
+				append_unique gamecfg_partial "$target"
+				for entry in "${gamecfg_sources[@]}"; do
+					if [[ "$entry" == "M:$category/"* ]]; then
+						append_unique sparse_patterns "/${entry#M:}"
+					fi
+				done
+			else
+				append_unique sparse_patterns "/$category/**/*.lua"
+			fi
+		done
 	fi
 fi
 
@@ -223,22 +225,27 @@ if [[ "$mode" == "full" ]]; then
 	required_source_paths=()
 	gamecfg=()
 	gamecfg_sources=()
+	gamecfg_partial=()
 	delete_outputs=()
 	versions=false
 	output_paths=()
 	sparse_patterns=()
+	seen=()
 	for region in CN EN JP KR TW; do
-		sparse_patterns+=("/$region/sharecfg/**/*.lua" "/$region/sharecfgdata/**/*.lua")
+		append_unique sparse_patterns "/$region/sharecfg/**/*.lua"
+		append_unique sparse_patterns "/$region/sharecfgdata/**/*.lua"
 		for category in buff card dorm dungeon skill; do
-			sparse_patterns+=("/$region/gamecfg/$category/**/*.lua")
+			append_unique sparse_patterns "/$region/gamecfg/$category/**/*.lua"
 		done
 		if [[ "$region" == "JP" ]]; then
-			sparse_patterns+=("/$region/gamecfg/storyjp/**/*.lua")
+			append_unique sparse_patterns "/$region/gamecfg/storyjp/**/*.lua"
 		else
-			sparse_patterns+=("/$region/gamecfg/story/**/*.lua")
+			append_unique sparse_patterns "/$region/gamecfg/story/**/*.lua"
 		fi
 	done
-	sparse_patterns+=("/versions/*.txt" "/CN/const.lua" "/CN/model/const/shiptype.lua")
+	append_unique sparse_patterns "/versions/*.txt"
+	append_unique sparse_patterns "/CN/const.lua"
+	append_unique sparse_patterns "/CN/model/const/shiptype.lua"
 elif [[ "$mode" == "incremental" ]]; then
 	if (( ${#source_paths[@]} == 0 && ${#gamecfg[@]} == 0 )) && [[ "$versions" != "true" ]]; then
 		mode="noop"
@@ -269,6 +276,7 @@ gamecfg_json="$(json_array "${gamecfg[@]-}")"
 # "M:path" / "D:path" entries become {path, deleted} objects for the converter.
 gamecfg_sources_json="$(json_array "${gamecfg_sources[@]-}" | jq -c 'map({path: .[2:], deleted: (.[0:1] == "D")})')"
 delete_json="$(json_array "${delete_outputs[@]-}")"
+gamecfg_partial_json="$(json_array "${gamecfg_partial[@]-}")"
 jq -n \
 	--arg mode "$mode" \
 	--arg previous_sha "$previous_sha" \
@@ -278,9 +286,10 @@ jq -n \
 	--argjson output_paths "$(json_array "${output_paths[@]-}")" \
 	--argjson gamecfg "$gamecfg_json" \
 	--argjson gamecfg_sources "$gamecfg_sources_json" \
+	--argjson gamecfg_partial "$gamecfg_partial_json" \
 	--argjson versions "$versions" \
 	--argjson delete_outputs "$delete_json" \
-	'{mode: $mode, previous_sha: $previous_sha, latest_sha: $latest_sha, source_paths: $source_paths, required_source_paths: $required_source_paths, output_paths: $output_paths, gamecfg: $gamecfg, gamecfg_sources: $gamecfg_sources, versions: $versions, delete_outputs: $delete_outputs}' > "$plan_path"
+	'{mode: $mode, previous_sha: $previous_sha, latest_sha: $latest_sha, source_paths: $source_paths, required_source_paths: $required_source_paths, output_paths: $output_paths, gamecfg: $gamecfg, gamecfg_sources: $gamecfg_sources, gamecfg_partial: $gamecfg_partial, versions: $versions, delete_outputs: $delete_outputs}' > "$plan_path"
 
 if [[ "$needs_sources" == "true" ]]; then
 	if [[ "$mode" == "full" ]] || (( ${#source_paths[@]} > 0 || ${#gamecfg[@]} > 0 )); then

@@ -2,6 +2,7 @@ package dataconv
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -209,6 +210,8 @@ pg.keep = { [1] = { id = 1, value = "keep" } }
 		PreviousSHA: "before",
 		LatestSHA:   "after",
 		GameCfg:     []string{"CN/GameCfg/buff.json"},
+		// Partial: the bundle must be refreshed from the previous output.
+		GameCfgPartial: []string{"CN/GameCfg/buff.json"},
 		GameCfgSources: []GameCfgSource{
 			{Path: "CN/gamecfg/buff/2.lua"},
 			{Path: "CN/gamecfg/buff/50.lua"},
@@ -234,5 +237,25 @@ pg.keep = { [1] = { id = 1, value = "keep" } }
 	}
 	if string(got) != string(want) {
 		t.Fatalf("incrementally refreshed bundle differs from a full rebuild:\n got: %s\nwant: %s", got, want)
+	}
+}
+
+// A bundle planned as partial has only its changed Lua files checked out, so an
+// unusable previous output must stop the build instead of shrinking the bundle.
+func TestIncrementalPartialGameCfgRefusesRebuildFromChangedFilesOnly(t *testing.T) {
+	root := t.TempDir()
+	writeVersionsFixture(t, root, "1")
+	writeLuaFixture(t, filepath.Join(root, "CN", "gamecfg", "buff", "2.lua"),
+		"return { [1] = { id = 1, value = \"edited\" } }\n")
+	plan := IncrementalPlan{
+		Mode:           "incremental",
+		GameCfg:        []string{"CN/GameCfg/buff.json"},
+		GameCfgSources: []GameCfgSource{{Path: "CN/gamecfg/buff/2.lua"}},
+		GameCfgPartial: []string{"CN/GameCfg/buff.json"},
+	}
+	_, err := ConvertMVPIncremental(
+		Options{SourceRoot: t.TempDir(), LuaScriptsRoot: root, OutputRoot: t.TempDir()}, plan)
+	if !errors.Is(err, ErrPartialGameCfgSources) {
+		t.Fatalf("expected ErrPartialGameCfgSources, got %v", err)
 	}
 }
